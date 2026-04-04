@@ -1,0 +1,86 @@
+# Environment
+.env
+.env.local
+*.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+.venv/
+
+# Jupyter Notebook
+.ipynb_checkpoints/
+*.ipynb
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Data & Models
+data/raw/*.pdf
+data/processed/chroma_db/
+*.pkl
+*.pickle
+*.pt
+*.pth
+*.bin
+*.h5
+*.hdf5
+
+# Logs
+*.log
+logs/
+
+# API Keys & Secrets (already ignored via .env)
+secrets/
+keys/
+
+# Test outputs
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Temporary files
+*.tmp
+*.temp
+tmp/
+temp/
+
+# Evaluation results (optional, uncomment if needed)
+# data/processed/hasil_audit.txt
+# data/processed/report_*.txt
