@@ -1,9 +1,14 @@
 """
-ingest.py — Data Ingestion Pipeline untuk NLP Compliance Auditor
-================================================================
+ingest.py — Data Ingestion Pipeline untuk Multi-Agent NLP Compliance Auditor
+===================================================================================
 Skrip ini membaca file PDF regulasi (PBI dan POJK), mengekstrak teksnya
-menggunakan LlamaParse, melakukan chunking, mengubahnya menjadi embedding
-vektor, lalu menyimpannya ke ChromaDB lokal.
+menggunakan LlamaParse, melakukan chunking, dan menyimpannya keChromaDB
+dengan SEPARATE COLLECTIONS per regulator (BI & OJK).
+
+Struktur Collections:
+- bi_regulations: Khusus regulasi Bank Indonesia
+- ojk_regulations: Khusus regulasi Otoritas Jasa Keuangan
+- pdp_regulations: Khusus UU Perlindungan Data Pribadi (opsional)
 
 Cara pakai:
     cd nlp-compliance-rag
@@ -15,22 +20,21 @@ import os
 import sys
 import glob
 from pathlib import Path
+from typing import Dict, List
 from dotenv import load_dotenv
 
-# ── 0. Load env & validasi ──────────────────────────────────────────
 load_dotenv()
 
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 LLAMA_CLOUD_API_KEY = os.getenv("LLAMA_CLOUD_API_KEY")
 
 if not OPENAI_API_KEY or OPENAI_API_KEY.startswith("sk-proj-xxx"):
-    print("❌ OPENAI_API_KEY belum diisi di file .env!")
+    print("OPENAI_API_KEY belum diisi di file .env!")
     sys.exit(1)
 if not LLAMA_CLOUD_API_KEY or LLAMA_CLOUD_API_KEY.startswith("llx-xxx"):
-    print("❌ LLAMA_CLOUD_API_KEY belum diisi di file .env!")
+    print("LLAMA_CLOUD_API_KEY belum diisi di file .env!")
     sys.exit(1)
 
-# ── 1. Import library ──────────────────────────────────────────────
 from llama_index.core import (
     VectorStoreIndex,
     StorageContext,
@@ -44,159 +48,198 @@ from llama_index.llms.openai import OpenAI
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 
-# ── 2. Konfigurasi path ────────────────────────────────────────────
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR = BASE_DIR / "data" / "raw"
 CHROMA_DB_DIR = BASE_DIR / "data" / "processed" / "chroma_db"
 
-# ── 3. Setup komponen global LlamaIndex ─────────────────────────────
-print("🔧 Mengkonfigurasi LlamaIndex Settings...")
+REGULATOR_MAPPING = {
+    "PBI": "Bank Indonesia (BI)",
+    "POJK": "Otoritas Jasa Keuangan (OJK)",
+    "OJK": "Otoritas Jasa Keuangan (OJK)",
+    "SEBI": "Bank Indonesia (BI)",
+    "UU": "Undang-Undang (UU)",
+    "PDP": "Undang-Undang (UU)",
+}
 
-# Model Embedding: OpenAI text-embedding-3-large (terbaik untuk semantik hukum)
+COLLECTION_NAMES = {
+    "Bank Indonesia (BI)": "bi_regulations",
+    "Otoritas Jasa Keuangan (OJK)": "ojk_regulations",
+    "Undang-Undang (UU)": "pdp_regulations",
+}
+
+print("Mengkonfigurasi LlamaIndex Settings...")
+
 Settings.embed_model = OpenAIEmbedding(
     model="text-embedding-3-large",
     api_key=OPENAI_API_KEY,
 )
 
-# LLM: GPT-4o digunakan nanti untuk klasifikasi kepatuhan (audit.py)
 Settings.llm = OpenAI(
     model="gpt-4o",
     api_key=OPENAI_API_KEY,
-    temperature=0.1,  # Suhu rendah = jawaban konsisten & tidak kreatif
+    temperature=0.1,
 )
 
-# Chunk size & overlap untuk node parser
 Settings.chunk_size = 1024
 Settings.chunk_overlap = 128
 
-print("✅ Embedding: text-embedding-3-large")
-print("✅ LLM: GPT-4o (temperature=0.1)")
+print("Embedding: text-embedding-3-large")
+print("LLM: GPT-4o (temperature=0.1)")
 
 
-def parse_pdfs() -> list[Document]:
-    """
-    Tahap 1: Ekstraksi PDF → Markdown menggunakan LlamaParse.
-    LlamaParse unggul dalam membaca PDF format regulasi yang punya:
-    - Tabel dua kolom
-    - Daftar nomor/ayat bertingkat (Pasal 1 ayat (1) huruf a)
-    - Header/footer halaman berulang
-    """
+def detect_regulator(filename: str) -> str:
+    filename_upper = filename.upper()
+    for keyword, regulator in REGULATOR_MAPPING.items():
+        if keyword in filename_upper:
+            return regulator
+    return "Unknown"
+
+
+def parse_pdfs() -> Dict[str, List[Document]]:
     pdf_files = glob.glob(str(RAW_DATA_DIR / "*.pdf"))
 
     if not pdf_files:
-        print(f"❌ Tidak ada file PDF ditemukan di {RAW_DATA_DIR}")
+        print(f"Tidak ada file PDF ditemukan di {RAW_DATA_DIR}")
         sys.exit(1)
 
-    print(f"\n📄 Ditemukan {len(pdf_files)} file PDF:")
+    print(f"\nDitemukan {len(pdf_files)} file PDF:")
     for f in pdf_files:
-        print(f"   → {os.path.basename(f)}")
+        print(f"   -> {os.path.basename(f)}")
 
-    # Konfigurasi LlamaParse
     parser = LlamaParse(
-        api_key=LLAMA_CLOUD_API_KEY,
-        result_type="markdown",  # Output sebagai Markdown agar struktur BAB/Pasal terbaca
+        api_key=LLAMA_CLOUD_API_KEY or "",
+        result_type="markdown",
         verbose=True,
-        language="id",  # Bahasa Indonesia
+        language="id",
     )
 
-    all_documents = []
+    documents_by_regulator: Dict[str, List[Document]] = {}
+
     for pdf_path in pdf_files:
         filename = os.path.basename(pdf_path)
-        print(f"\n🔍 Memproses: {filename}...")
+        print(f"\nMemproses: {filename}...")
 
-        # Tentukan sumber regulasi dari nama file
-        if "PBI" in filename.upper():
-            source_regulator = "Bank Indonesia (BI)"
-        elif "POJK" in filename.upper() or "OJK" in filename.upper():
-            source_regulator = "Otoritas Jasa Keuangan (OJK)"
-        else:
-            source_regulator = "Unknown"
+        regulator = detect_regulator(filename)
+        if regulator == "Unknown":
+            print(f"   Lewati {filename} (regulator tidak terdeteksi)")
+            continue
 
         docs = parser.load_data(pdf_path)
 
-        # Tambahkan metadata ke setiap dokumen
         for doc in docs:
             doc.metadata["source_file"] = filename
-            doc.metadata["regulator"] = source_regulator
+            doc.metadata["regulator"] = regulator
 
-        all_documents.extend(docs)
-        print(f"   ✅ Berhasil mengekstrak {len(docs)} halaman dari {filename}")
+        if regulator not in documents_by_regulator:
+            documents_by_regulator[regulator] = []
+        documents_by_regulator[regulator].extend(docs)
 
-    print(f"\n📊 Total dokumen diekstrak: {len(all_documents)} halaman")
-    return all_documents
+        print(f"   [OK] {len(docs)} halaman dari {filename} ({regulator})")
+
+    for regulator, docs in documents_by_regulator.items():
+        print(f"\n[{regulator}] Total: {len(docs)} halaman")
+
+    return documents_by_regulator
 
 
-def chunk_documents(documents: list[Document]):
-    """
-    Tahap 2: Hierarchical Chunking berbasis Markdown.
-    Karena LlamaParse mengeluarkan output berformat Markdown (dengan heading #, ##, ###),
-    MarkdownNodeParser akan memotong teks berdasarkan heading level.
-    Ini jauh lebih cerdas daripada memotong berdasarkan jumlah karakter,
-    karena setiap 'node' (potongan) akan berisi satu pasal/ayat utuh.
-    """
-    print("\n✂️  Melakukan Hierarchical Chunking (berbasis heading Markdown)...")
+def chunk_documents(documents: List[Document]) -> List:
+    print("\nMelakukan Hierarchical Chunking (berbasis heading Markdown)...")
 
     node_parser = MarkdownNodeParser()
     nodes = node_parser.get_nodes_from_documents(documents)
 
-    print(f"   ✅ Dihasilkan {len(nodes)} chunks (potongan pasal/ayat)")
+    print(f"   [OK] Dihasilkan {len(nodes)} chunks")
 
-    # Tampilkan 3 contoh node pertama untuk verifikasi
-    print("\n📋 Pratinjau 3 chunks pertama:")
-    for i, node in enumerate(nodes[:3]):
-        preview = node.get_content()[:200].replace("\n", " ")
-        regulator = node.metadata.get("regulator", "N/A")
-        print(f"   [{i+1}] ({regulator}) {preview}...")
+    if nodes:
+        print("\nPratinjau 3 chunks pertama:")
+        for i, node in enumerate(nodes[:3]):
+            preview = node.get_content()[:150].replace("\n", " ")
+            regulator = node.metadata.get("regulator", "N/A")
+            print(f"   [{i+1}] ({regulator}) {preview}...")
 
     return nodes
 
 
-def build_vector_index(nodes):
-    """
-    Tahap 3: Vektorisasi & Penyimpanan ke ChromaDB.
-    Setiap chunk pasal diubah menjadi vektor numerik oleh text-embedding-3-large,
-    lalu disimpan secara persisten ke folder data/processed/chroma_db/.
-    """
-    print(f"\n💾 Menyimpan vektor ke ChromaDB di: {CHROMA_DB_DIR}")
+def build_separate_vector_stores(
+    documents_by_regulator: Dict[str, List[Document]]
+) -> Dict[str, VectorStoreIndex]:
+    print(f"\nMenyimpan vektor ke ChromaDB (separate collections)...")
 
-    # Inisialisasi ChromaDB lokal (persisten di disk M1 Pro)
     db = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
-    chroma_collection = db.get_or_create_collection("regulations_bi_ojk_v1")
-    vector_store = ChromaVectorStore(chroma_collection=chroma_collection)
-    storage_context = StorageContext.from_defaults(vector_store=vector_store)
 
-    # Bangun index dari nodes (embedding otomatis dilakukan di sini)
-    print("⏳ Proses embedding sedang berjalan (membutuhkan beberapa menit)...")
-    index = VectorStoreIndex(
-        nodes=nodes,
-        storage_context=storage_context,
-        show_progress=True,
-    )
+    indices = {}
 
-    doc_count = chroma_collection.count()
-    print(f"\n🎉 SUKSES! {doc_count} vektor pasal/ayat tersimpan di ChromaDB.")
-    print(f"   Database tersimpan di: {CHROMA_DB_DIR}")
-    return index
+    for regulator, documents in documents_by_regulator.items():
+        collection_name = COLLECTION_NAMES.get(regulator)
+        if not collection_name:
+            print(f"   [Lewati] {regulator} (tidak ada collection mapping)")
+            continue
+
+        print(f"\n[{regulator}] -> Collection: {collection_name}")
+
+        nodes = chunk_documents(documents)
+
+        collection = db.get_or_create_collection(collection_name)
+        
+        collection.delete()
+
+        vector_store = ChromaVectorStore(chroma_collection=collection)
+        storage_context = StorageContext.from_defaults(vector_store=vector_store)
+
+        print(f"   Proses embedding {len(nodes)} nodes...")
+        index = VectorStoreIndex(
+            nodes=nodes,
+            storage_context=storage_context,
+            show_progress=True,
+        )
+
+        indices[regulator] = index
+        doc_count = collection.count()
+        print(f"   [OK] {doc_count} vektor tersimpan di {collection_name}")
+
+    print(f"\nDatabase tersimpan di: {CHROMA_DB_DIR}")
+    return indices
+
+
+def print_summary(indices: Dict[str, VectorStoreIndex]):
+    print("\n" + "=" * 60)
+    print("RINGKASAN INGESTION")
+    print("=" * 60)
+
+    db = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
+
+    total_vectors = 0
+    for regulator, collection_name in COLLECTION_NAMES.items():
+        try:
+            collection = db.get_collection(collection_name)
+            count = collection.count()
+            total_vectors += count
+            print(f"   [{regulator}] {collection_name}: {count} vektor")
+        except Exception:
+            print(f"   [{regulator}] {collection_name}: (kosong)")
+
+    print("-" * 60)
+    print(f"   Total: {total_vectors} vektor regulasi")
+    print("=" * 60)
 
 
 def main():
     print("=" * 60)
-    print("🏛️  NLP Compliance Auditor — Data Ingestion Pipeline")
+    print("NLP Compliance Auditor - Multi-Agent Data Ingestion")
     print("=" * 60)
 
-    # Tahap 1: Parse PDF
-    documents = parse_pdfs()
+    documents_by_regulator = parse_pdfs()
 
-    # Tahap 2: Chunk Documents
-    nodes = chunk_documents(documents)
+    if not documents_by_regulator:
+        print("\nTidak ada dokumen yang berhasil diproses!")
+        sys.exit(1)
 
-    # Tahap 3: Build Vector Index
-    index = build_vector_index(nodes)
+    indices = build_separate_vector_stores(documents_by_regulator)
 
-    print("\n" + "=" * 60)
-    print("✅ Pipeline Ingestion Selesai!")
-    print("   Langkah selanjutnya: Jalankan 'python src/audit.py'")
-    print("=" * 60)
+    print_summary(indices)
+
+    print("\nPipeline Ingestion Selesai!")
+    print("Langkah selanjutnya: Jalankan 'python src/agents/run_audit.py'")
 
 
 if __name__ == "__main__":
