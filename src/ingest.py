@@ -179,9 +179,12 @@ def build_separate_vector_stores(
 
         nodes = chunk_documents(documents)
 
-        collection = db.get_or_create_collection(collection_name)
+        try:
+            db.delete_collection(collection_name)
+        except Exception:
+            pass
         
-        collection.delete()
+        collection = db.get_or_create_collection(collection_name)
 
         vector_store = ChromaVectorStore(chroma_collection=collection)
         storage_context = StorageContext.from_defaults(vector_store=vector_store)

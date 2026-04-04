@@ -223,8 +223,12 @@ class CoordinatorAgent:
         print(f"   Risk: {result.final_verdict.risk_score}")
         print(f"   Confidence: {result.final_verdict.overall_confidence:.2f}")
         
-        if result.final_verdict.violated_articles:
-            print(f"   Violations: {len(result.final_verdict.violated_articles)} found")
+        bi_violations = len(result.bi_verdict.get("violated_articles", []))
+        ojk_violations = len(result.ojk_verdict.get("violated_articles", []))
+        total_violations = bi_violations + ojk_violations
+        
+        if total_violations > 0:
+            print(f"   Violations: {total_violations} found (BI: {bi_violations}, OJK: {ojk_violations})")
     
     def _save_results(self, results: list, output_path: str):
         """

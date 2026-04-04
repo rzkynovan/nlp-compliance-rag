@@ -69,7 +69,7 @@ class OJKSpecialistAgent(BaseAgent):
             collection_name="ojk_regulations"
         )
     
-def initialize(self, api_key: str, chroma_path: Optional[str] = None):
+    def initialize(self, api_key: str, chroma_path: Optional[str] = None):
         """
         Inisialisasi komponen untuk OJK Specialist.
         """
@@ -80,11 +80,6 @@ def initialize(self, api_key: str, chroma_path: Optional[str] = None):
             model="gpt-4o",
             api_key=api_key,
             temperature=0.1
-        )
-        
-        Settings.embed_model = OpenAIEmbedding(
-            model="text-embedding-3-large",
-            api_key=api_key
         )
         
         Settings.embed_model = OpenAIEmbedding(
