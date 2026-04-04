@@ -1,0 +1,114 @@
+LAPORAN AUDIT DOKUMEN: Syarat dan Ketentuan GoPay.pdf
+============================================================
+
+KLAUSA [1]:
+Teks: # 32. Keterpisahan
+
+Jika ketentuan apapun dalam Ketentuan ini dinyatakan ditentukan sebagai ketentuan yang tidak sesuai dengan hukum, tidak sah atau tidak dapat dilaksanakan, secara seluruh ataupun sebagian, berdasarkan peraturan atau prinsip hukum manapun, bahwa ketentuan atau sebagian daripadanya, sejauh hal tersebut tidak sesuai dengan hukum, tidak sah atau tidak dapat dilaksanakan, akan dianggap bukan merupakan bagian dari Ketentuan ini namun demikian legalitas, validitas atau pelaksanaan dari ketentuan lainnya dari Ketentuan ini tidak akan terpengaruh.
+
+HASIL ANALISIS:
+Penilaian kepatuhan terhadap klausa keterpisahan dalam SOP/T&C ini dapat dilakukan dengan mempertimbangkan prinsip-prinsip umum hukum kontrak dan regulasi yang berlaku. Klausa keterpisahan ini menyatakan bahwa jika ada bagian dari ketentuan yang dianggap tidak sah atau tidak dapat dilaksanakan, bagian tersebut akan dianggap bukan bagian dari ketentuan, namun tidak mempengaruhi legalitas dan validitas bagian lainnya.
+
+1. **Kepatuhan terhadap Prinsip Hukum**: Klausa ini umumnya sejalan dengan prinsip hukum kontrak yang mengizinkan pemisahan bagian yang tidak sah dari kontrak tanpa membatalkan keseluruhan kontrak. Ini memastikan bahwa kontrak tetap berlaku sejauh mungkin.
+
+2. **Kepatuhan terhadap Regulasi OJK**: Regulasi OJK menekankan perlindungan konsumen dan kepatuhan terhadap hukum yang berlaku. Klausa ini mendukung kepatuhan dengan memastikan bahwa bagian yang tidak sah tidak mempengaruhi bagian lain yang sah, sehingga melindungi hak-hak konsumen dan memastikan pelaksanaan kontrak sesuai hukum.
+
+3. **Kepatuhan terhadap Regulasi BI**: Meskipun konteks spesifik mengenai regulasi BI tidak tersedia, prinsip keterpisahan ini umumnya tidak bertentangan dengan regulasi perbankan dan keuangan yang mengedepankan kepatuhan hukum dan perlindungan konsumen.
+
+Secara keseluruhan, klausa keterpisahan ini tampaknya mematuhi prinsip-prinsip hukum kontrak dan regulasi yang relevan, dengan syarat bahwa pelaksanaannya tidak bertentangan dengan ketentuan hukum spesifik lainnya yang berlaku.
+------------------------------------------------------------
+
+KLAUSA [2]:
+Teks: # 3. Syarat dan Ketentuan GoPay
+
+Kami akan memeriksa atau melakukan verifikasi keluhan Anda dan menyampaikan respon Kami sesuai dengan kebijakan dan prosedur yang berlaku di perusahaan Kami setelah memperoleh penyampaian keluhan yang lengkap dari Anda.
+
+HASIL ANALISIS:
+The clause from the SOP/T&C regarding GoPay's process for handling complaints aligns with the regulatory requirements set by the Otoritas Jasa Keuangan (OJK). The clause indicates that GoPay will verify complaints and respond according to their internal policies and procedures, which is consistent with the requirement for financial service providers to have a written procedure for handling complaints. This is in line with the regulations that mandate a structured complaint handling mechanism, as outlined in the relevant financial service regulations. Therefore, the clause appears to be compliant with the regulatory framework provided by OJK.
+------------------------------------------------------------
+
+KLAUSA [3]:
+Teks: Syarat dan Ketentuan GoPay
+
+10. Jenis Alat Pembayaran Dompet Elektronik GoPay
+
+Dompet elektronik GoPay dapat digunakan untuk menyimpan saldo uang elektronik GoPay Anda dan instrumen pembayaran yang diterbitkan pihak lain, baik berupa kartu debit, kartu kredit, uang elektronik dari penerbit lainnya serta instrumen pembayaran lain sebagaimana tersedia. Ketika Anda menautkan dan/atau menyimpan instrumen pembayaran di dompet elektronik GoPay melalui Aplikasi dan/atau kanal Mitra Platform Resmi, penautan dan/atau penyimpanan tersebut diproses berdasarkan izin dompet elektronik Kami.
+
+11. Risiko Dompet Elektronik GoPay
+
+Jika Anda bermaksud untuk menyimpan dan/atau menautkan instrumen pembayaran yang diterbitkan pihak lain ke dompet elektronik GoPay, Anda dapat diminta untuk mengikuti proses penautan yang Kami dan penerbit instrumen pembayaran syaratkan, termasuk dengan melakukan verifikasi password rahasia dan/atau kode verifikasi berupa Kode Sandi Sekali Pakai (One Time Password/OTP) yang dikirimkan oleh penerbit instrumen pembayaran melalui Layanan Pesan Singkat (Short Messaging Service/SMS) ke nomor telepon Anda yang terdaftar dengan penerbit instrumen pembayaran dan/atau mengikuti proses lainnya sebagaimana disyaratkan secara wajar. Password rahasia dan/atau kode verifikasi (termasuk OTP) penerbit instrumen pembayaran hanya akan secara resmi diminta melalui dan hanya akan Anda kirim ke laman verifikasi instrumen pembayaran anda, Kami atau petugas Kami tidak pernah menanyakan password dan/atau kode verifikasi (termasuk OTP) rahasia penerbit instrumen pembayaran dengan cara apapun. Anda setuju untuk menanggung setiap risiko terkait pengungkapan informasi penautan instrumen pembayaran Anda kepada pihak ketiga manapun dan bertanggung jawab penuh atas setiap konsekuensi yang berkaitan dengan hal tersebut. Setiap penyampaian OTP yang diverifikasi dari akun Anda saat penautan instrumen pembayaran akan dianggap sebagai penautan resmi.
+
+12. Manfaat dan Penggunaan Uang Elektronik dan Dompet Elektronik GoPay
+
+- a. Anda dapat mengakses akun uang elektronik dan dompet elektronik GoPay Anda melalui Aplikasi dan/atau melalui Mitra Platform Resmi. Jika Anda mengakses akun GoPay Anda melalui Mitra Platform Resmi, maka Anda perlu membaca syarat dan ketentuan dari Mitra Platform Resmi yang terkait dan memastikan keamanan dan keandalan sistem Mitra Platform Resmi tersebut. Anda mengakui dan menyetujui bahwa keamanan dan keandalan sistem Mitra Resmi merupakan tanggung jawab dari sistem Mitra Resmi tersebut dan berada di luar kendali Kami.
+- b. Saldo uang elektronik GoPay dan/atau instrumen pembayaran yang disimpan dalam dompet elektronik GoPay dapat digunakan untuk pembayaran layanan yang tersedia baik di Aplikasi maupun layanan lain di luar Aplikasi sebagaimana Kami informasikan, tunduk pada kebijakan penerbit instrumen pembayaran.
+- c. Saldo uang elektronik GoPay Anda dapat digunakan seluruhnya sampai bersaldo nihil tunduk pada Ketentuan ini.
+- d. Perubahan atas cara penggunaan dan/atau pembayaran akan kami informasikan kepada Anda. Perubahan dan/atau penambahan tersebut dapat menyebabkan suatu kebutuhan untuk dilakukannya update atas Aplikasi Anda dan/atau
+
+https://gopay.co.id/syarat-dan-ketentuan
+
+HASIL ANALISIS:
+Klausa SOP/T&C GoPay yang disajikan dapat dianalisis terhadap regulasi yang dikeluarkan oleh Bank Indonesia (BI) dan Otoritas Jasa Keuangan (OJK) sebagai berikut:
+
+1. **Jenis Alat Pembayaran Dompet Elektronik GoPay**:
+   - **Kepatuhan terhadap BI**: Penggunaan dompet elektronik untuk menyimpan saldo uang elektronik dan instrumen pembayaran lain sejalan dengan ketentuan BI yang mengatur penatausahaan Sumber Dana dan penerbitan uang elektronik. Namun, penting untuk memastikan bahwa data pengguna hanya digunakan sebatas yang diperlukan, sesuai dengan ketentuan perlindungan konsumen.
+   - **Kepatuhan terhadap OJK**: Tidak ada pelanggaran langsung terhadap ketentuan OJK yang tersedia, namun penting untuk memastikan bahwa perjanjian elektronik yang melibatkan konsumen memenuhi standar perlindungan konsumen.
+
+2. **Risiko Dompet Elektronik GoPay**:
+   - **Kepatuhan terhadap BI**: Proses verifikasi dan otentikasi melalui OTP dan password rahasia sesuai dengan ketentuan BI mengenai otorisasi transaksi pembayaran yang memerlukan verifikasi identitas dan validasi akses ke Sumber Dana.
+   - **Kepatuhan terhadap OJK**: Penekanan pada tanggung jawab pengguna atas pengungkapan informasi penautan instrumen pembayaran kepada pihak ketiga sejalan dengan prinsip perlindungan konsumen, namun harus dipastikan bahwa pengguna diberikan informasi yang jelas dan tidak ada penyalahgunaan keadaan.
+
+3. **Manfaat dan Penggunaan Uang Elektronik dan Dompet Elektronik GoPay**:
+   - **Kepatuhan terhadap BI**: Penggunaan saldo uang elektronik untuk berbagai layanan dan informasi perubahan penggunaan sesuai dengan ketentuan BI yang mengatur penyelenggaraan aktivitas uang elektronik dan perlindungan konsumen.
+   - **Kepatuhan terhadap OJK**: Pengguna harus diberi informasi yang jelas mengenai syarat dan ketentuan dari Mitra Platform Resmi, dan tanggung jawab keamanan sistem harus dijelaskan dengan baik untuk melindungi konsumen.
+
+Secara keseluruhan, klausa SOP/T&C GoPay tampaknya mematuhi ketentuan yang relevan dari BI dan OJK, namun perlu memastikan bahwa semua informasi dan persetujuan pengguna dilakukan dengan transparansi dan sesuai dengan standar perlindungan konsumen yang berlaku.
+------------------------------------------------------------
+
+KLAUSA [4]:
+Teks: # 18. Penutupan Akun
+
+a. Akun GoPay Anda dapat ditutup karena hal-hal sebagai berikut:
+
+i. Permintaan oleh Anda;
+
+ii. Kebijakan Kami berdasarkan hukum dan peraturan perundang-undangan yang berlaku;
+
+iii. Keadaan kahar terjadi selama 3 (tiga) bulan atau lebih secara berturut-turut; dan/atau
+
+iv. Alasan lain sehubungan dengan pemblokiran akun sebagaimana tertera pada butir 17 di atas.
+
+b. Kami akan mengembalikan saldo uang elektronik GoPay Anda melalui metode yang Kami tentukan, setelah dikurangi dengan biaya yang terutang (jika ada), kecuali jika berdasarkan pertimbangan Kami diperlukan adanya penahanan bagian tertentu dari saldo uang elektronik GoPay Anda, misalnya karena keyakinan yang wajar bahwa bagian tersebut berhubungan dengan atau disebabkan oleh penipuan, penyalahgunaan dan/atau tindak pelanggaran hukum lainnya.
+
+c. Akun GoPay Anda dapat diakhiri secara otomatis atau dinonaktifkan sementara waktu ketika Anda mengakhiri atau menonaktifkan akun Gojek Anda.
+
+HASIL ANALISIS:
+Klausa SOP/T&C terkait penutupan akun GoPay dapat dianalisis sebagai berikut:
+
+1. **Penutupan Akun oleh Permintaan Pengguna:**
+   - Sesuai dengan prinsip perlindungan konsumen, pengguna memiliki hak untuk mengakhiri penggunaan produk atau layanan. Hal ini sejalan dengan regulasi yang mengharuskan penyedia layanan untuk menghormati keputusan konsumen setelah kewajiban diselesaikan.
+
+2. **Penutupan Akun Berdasarkan Kebijakan Penyedia:**
+   - Penutupan akun berdasarkan kebijakan penyedia harus sesuai dengan hukum dan peraturan yang berlaku. Regulasi mengharuskan penyedia layanan untuk memastikan bahwa tindakan tersebut tidak melanggar hak konsumen dan dilakukan dengan alasan yang sah.
+
+3. **Penutupan Akun karena Keadaan Kahar:**
+   - Keadaan kahar sebagai alasan penutupan akun harus jelas dan terdefinisi dalam peraturan internal penyedia layanan. Regulasi tidak secara spesifik menyebutkan keadaan kahar, namun penyedia layanan harus memastikan bahwa alasan tersebut tidak merugikan konsumen secara tidak adil.
+
+4. **Pengembalian Saldo Uang Elektronik:**
+   - Regulasi mengharuskan penyedia layanan untuk memiliki mekanisme penggantian kerugian finansial kepada pengguna uang elektronik. Pengembalian saldo setelah penutupan akun harus dilakukan dengan adil, dan penahanan saldo harus didasarkan pada alasan yang sah, seperti penipuan atau pelanggaran hukum.
+
+5. **Penutupan Akun Otomatis atau Penonaktifan Sementara:**
+   - Penutupan otomatis atau penonaktifan sementara harus dilakukan dengan pemberitahuan yang jelas kepada konsumen dan tidak boleh melanggar hak konsumen. Regulasi menekankan pentingnya komunikasi yang transparan dan adil dalam setiap tindakan yang mempengaruhi konsumen.
+
+Secara keseluruhan, klausa SOP/T&C ini harus memastikan bahwa setiap tindakan penutupan akun dilakukan dengan mematuhi prinsip-prinsip perlindungan konsumen yang diatur oleh OJK dan BI, termasuk transparansi, keadilan, dan kepatuhan terhadap hukum yang berlaku.
+------------------------------------------------------------
+
+KLAUSA [5]:
+Teks: # 33. Hukum yang Mengatur
+
+Ketentuan ini diatur berdasarkan hukum Republik Indonesia. Setiap dan seluruh perselisihan yang timbul dari penggunaan layanan Kami akan tunduk pada yurisdiksi eksklusif di Pengadilan Negeri Jakarta Selatan.
+
+HASIL ANALISIS:
+Klausa SOP yang menyatakan bahwa ketentuan diatur berdasarkan hukum Republik Indonesia dan perselisihan tunduk pada yurisdiksi eksklusif di Pengadilan Negeri Jakarta Selatan menunjukkan kepatuhan terhadap regulasi yang mengharuskan penerapan hukum nasional. Ini sejalan dengan ketentuan yang mengatur penerapan kewajiban penggunaan hukum lokal, seperti yang disebutkan dalam peraturan perundang-undangan terkait persaingan usaha yang sehat, informasi dan transaksi elektronik, serta perlindungan konsumen. Selain itu, penetapan yurisdiksi eksklusif di Pengadilan Negeri Jakarta Selatan dapat dianggap sesuai dengan praktik umum dalam penyelesaian sengketa di Indonesia. Namun, penting untuk memastikan bahwa semua aspek lain dari layanan juga mematuhi ketentuan perlindungan konsumen dan data pribadi sebagaimana diatur oleh Bank Indonesia dan Otoritas Jasa Keuangan.
+------------------------------------------------------------
+

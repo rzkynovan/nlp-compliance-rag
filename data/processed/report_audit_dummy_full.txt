@@ -1,0 +1,127 @@
+LAPORAN AUDIT DOKUMEN: SOP_Dummy_EWallet_Palsu.md
+============================================================
+
+KLAUSA [1]:
+Teks: # SOP Internal: PT Dompet Digital Nusantara (DUMMY)
+**Status Dokumen:** RAHASIA PERUSAHAAN (Simulasi untuk Tugas Akhir)
+**Tanggal Efektif:** 1 Januari 2026
+
+---
+
+HASIL ANALISIS:
+Untuk menilai kepatuhan klausa SOP/T&C dari PT Dompet Digital Nusantara terhadap regulasi yang dikeluarkan oleh Otoritas Jasa Keuangan (OJK), beberapa poin penting perlu diperhatikan:
+
+1. **Persetujuan Perjanjian**: Pastikan bahwa metode persetujuan perjanjian yang digunakan oleh PT Dompet Digital Nusantara sesuai dengan yang diizinkan, seperti melalui telemarketing, media elektronik, atau penandatanganan langsung.
+
+2. **Penyampaian Informasi Produk/Layanan**: Klausa SOP harus memastikan bahwa ringkasan informasi produk dan/atau layanan disampaikan melalui media elektronik yang sesuai, seperti aplikasi, perangkat digital, atau situs web.
+
+3. **Kerahasiaan Dokumen**: Status dokumen sebagai "RAHASIA PERUSAHAAN" harus dipastikan tidak melanggar ketentuan transparansi dan keterbukaan informasi yang mungkin diwajibkan oleh OJK.
+
+4. **Tanggal Efektif**: Meskipun tanggal efektif adalah 1 Januari 2026, penting untuk memastikan bahwa semua ketentuan yang berlaku pada saat itu telah dipertimbangkan dan dipatuhi.
+
+5. **Kesesuaian dengan Pasal Terkait**: Pastikan bahwa semua pasal yang relevan dalam regulasi OJK telah dipertimbangkan dan SOP tidak bertentangan dengan ketentuan yang ada.
+
+Penilaian kepatuhan harus dilakukan dengan memeriksa setiap elemen dalam SOP terhadap ketentuan yang berlaku untuk memastikan tidak ada pelanggaran terhadap regulasi yang ditetapkan oleh OJK.
+------------------------------------------------------------
+
+KLAUSA [2]:
+Teks: ## BAB I: KETENTUAN UMUM
+1. SOP ini mengatur standar operasional layanan uang elektronik "NusantaraPay" (selanjutnya disebut "Perusahaan").
+2. SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan.
+
+---
+
+HASIL ANALISIS:
+Klausa SOP yang menyatakan bahwa SOP mengatur standar operasional layanan uang elektronik dan wajib dipatuhi oleh seluruh karyawan dan mitra kerja perusahaan dapat dianalisis dari perspektif regulasi Bank Indonesia (BI) yang relevan.
+
+1. **Kepatuhan terhadap Perlindungan Konsumen**: Berdasarkan regulasi BI, perusahaan yang menyelenggarakan layanan uang elektronik harus membatasi permintaan dan penggunaan data pengguna, menyediakan sarana pengisian ulang yang luas, dan memiliki mekanisme penggantian kerugian finansial. SOP ini harus mencakup ketentuan yang memastikan perlindungan konsumen sesuai dengan Pasal 177.
+
+2. **Aspek Tata Kelola dan Risiko**: SOP harus mencakup aspek tata kelola yang baik, termasuk manajemen risiko operasional, risiko hukum, dan risiko reputasi. Ini sejalan dengan Pasal 90 yang menekankan pentingnya penerapan perlindungan konsumen dan manajemen risiko.
+
+3. **Kerja Sama dengan Pihak Lain**: Jika perusahaan bekerja sama dengan pihak lain, seperti penyelenggara penunjang, SOP harus memastikan adanya asesmen terhadap pihak tersebut dan tanggung jawab penuh atas keamanan dan kelancaran transaksi, sesuai dengan Pasal 127.
+
+4. **Standar Operasional dan Audit**: SOP harus memenuhi standar operasional dan audit yang ditetapkan, termasuk sertifikasi dan verifikasi auditor sistem informasi, sebagaimana diatur dalam regulasi BI.
+
+Secara keseluruhan, SOP harus dirancang untuk memastikan bahwa semua aspek operasional dan kerja sama mematuhi ketentuan yang ditetapkan oleh BI, termasuk perlindungan konsumen, manajemen risiko, dan tata kelola yang baik.
+------------------------------------------------------------
+
+KLAUSA [3]:
+Teks: ## BAB II: PENANGANAN DATA PRIBADI NASABAH
+**(Catatan Desain: Bagian ini dibuat PATUH / COMPLIANT terhadap UU PDP & POJK)**
+1. Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (*explicit consent*) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi.
+2. Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat *in-transit* maupun *at-rest*.
+3. Nasabah berhak untuk meminta penghapusan permanen (*Right to Erasure*) atas Data Pribadi mereka kapan saja melalui aplikasi, dan Perusahaan wajib memprosesnya selambat-lambatnya 3x24 jam.
+4. Data Pribadi Nasabah tidak akan pernah dijual kepada pihak ketiga mana pun tanpa izin eksplisit yang terpisah.
+
+---
+
+HASIL ANALISIS:
+KLAUSA SOP: BAB II: PENANGANAN DATA PRIBADI NASABAH
+
+1. **Persetujuan Tertulis atau Elektronik**: Kewajiban untuk memperoleh persetujuan tertulis atau elektronik dari nasabah sebelum mengumpulkan dan memproses data pribadi sejalan dengan ketentuan yang mengharuskan PUJK menjelaskan tujuan dan konsekuensi dari persetujuan konsumen terkait pemberian data. Ini menunjukkan kepatuhan terhadap prinsip dasar pemrosesan data pribadi.
+
+2. **Enkripsi Data Pribadi**: Penggunaan enkripsi standar keamanan AES-256 untuk data pribadi nasabah baik saat *in-transit* maupun *at-rest* menunjukkan upaya menjaga kerahasiaan dan keamanan data, yang merupakan kewajiban PUJK dalam menjaga data konsumen.
+
+3. **Hak untuk Menghapus Data**: Memberikan hak kepada nasabah untuk meminta penghapusan permanen data pribadi mereka dan memproses permintaan tersebut dalam waktu 3x24 jam menunjukkan kepatuhan terhadap hak konsumen untuk mengontrol data pribadi mereka.
+
+4. **Larangan Penjualan Data ke Pihak Ketiga**: Ketentuan bahwa data pribadi nasabah tidak akan dijual kepada pihak ketiga tanpa izin eksplisit yang terpisah mendukung prinsip perlindungan data pribadi dan memastikan bahwa data tidak disalahgunakan tanpa persetujuan konsumen.
+
+Secara keseluruhan, klausa SOP ini menunjukkan kepatuhan terhadap regulasi yang mengatur perlindungan data pribadi dan keamanan informasi di sektor jasa keuangan, sesuai dengan ketentuan yang ditetapkan oleh OJK.
+------------------------------------------------------------
+
+KLAUSA [4]:
+Teks: ## BAB III: KAPAN DAN BAGAIMANA MENANGANI KELUHAN KONSUMEN
+**(Catatan Desain: Bagian ini sengaja dibuat TIDAK PATUH / NON-COMPLIANT terhadap regulasi OJK / BI)**
+1. Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin hingga Jumat (09:00 - 15:00 WIB). Keluhan yang masuk di luar jam tersebut akan diabaikan.
+    * *(Analisis Gap NLP: OJK mewajibkan layanan pengaduan konsumen tersedia penuh atau memiliki SLA yang jelas dan responsif).*
+2. Tim Customer Service memiliki waktu maksimal **60 hari kerja** sejak keluhan diterima untuk menyelesaikan masalah nasabah dan memberikan kompensasi (jika ada).
+    * *(Analisis Gap NLP: POJK No. 22/POJK.07/2023 mengatur bahwa PUJK wajib menyelesaikan pengaduan selambat-lambatnya 20 hari kerja).*
+3. Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan sementara akunnya selama 7 hari tanpa pemberitahuan sebelumnya untuk "investigasi keamanan".
+    * *(Analisis Gap NLP: Merugikan hak pelindungan dan kebebasan konsumen, masuk kategori Klausula Baku yang dilarang OJK).*
+
+---
+
+HASIL ANALISIS:
+KLAUSA SOP BAB III: KAPAN DAN BAGAIMANA MENANGANI KELUHAN KONSUMEN
+
+1. **Jam Operasional Pengaduan:**
+   - **Kepatuhan:** Tidak patuh
+   - **Analisis:** Pembatasan penerimaan pengaduan hanya pada jam operasional kerja dan mengabaikan keluhan di luar jam tersebut tidak sesuai dengan ketentuan yang mengharuskan layanan pengaduan konsumen tersedia penuh atau memiliki SLA yang jelas dan responsif.
+
+2. **Waktu Penyelesaian Keluhan:**
+   - **Kepatuhan:** Tidak patuh
+   - **Analisis:** Memberikan waktu maksimal 60 hari kerja untuk menyelesaikan keluhan tidak sesuai dengan ketentuan yang mewajibkan penyelesaian pengaduan selambat-lambatnya 20 hari kerja.
+
+3. **Pembekuan Akun Berdasarkan Rating:**
+   - **Kepatuhan:** Tidak patuh
+   - **Analisis:** Pembekuan akun secara otomatis tanpa pemberitahuan sebelumnya merugikan hak pelindungan dan kebebasan konsumen, dan termasuk dalam kategori Klausula Baku yang dilarang oleh OJK.
+------------------------------------------------------------
+
+KLAUSA [5]:
+Teks: ## BAB IV: BATAS SALDO DAN TRANSAKSI E-WALLET
+**(Catatan Desain: Bagian ini sengaja dibuat TIDAK PATUH / NON-COMPLIANT terhadap regulasi BI)**
+1. **Akun Unverified (Belum KYC):** Nasabah yang belum mengunggah KTP (*Unregistered*) dapat menyimpan saldo maksimal hingga **Rp 10.000.000** (Sepuluh Juta Rupiah).
+    * *(Analisis Gap NLP: Peraturan BI menetapkan batas saldo untuk akun unregistered E-Wallet maksimal hanya Rp 2.000.000).*
+2. **Akun Verified (Sudah KYC):** Nasabah yang sudah diverifikasi identitasnya dapat menyimpan saldo maksimal **Rp 500.000.000** (Lima Ratus Juta Rupiah).
+    * *(Analisis Gap NLP: Peraturan BI menetapkan batas saldo maksimal akun registered E-Wallet adalah Rp 20.000.000).*
+3. Batas transaksi masuk bulanan (*Monthly Incoming Limit*) untuk semua pengguna tidak dibatasi untuk mendorong pertumbuhan *Gross Transaction Value* (GTV) perusahaan.
+    * *(Analisis Gap NLP: PBI membatasi batas masuk bulanan ke uang elektronik sebesar Rp 40.000.000).*
+
+---
+**Dokumen ini adalah data sintetis (dummy) yang dirancang secara khusus untuk dievaluasi oleh Model Natural Language Processing (NLP) dalam mendeteksi _Compliance Gap_ secara otomatis.**
+
+HASIL ANALISIS:
+Dalam analisis terhadap klausa SOP/T&C yang diberikan, terdapat beberapa ketidaksesuaian dengan regulasi yang ditetapkan oleh Bank Indonesia:
+
+1. **Akun Unverified (Belum KYC):** 
+   - SOP menyatakan bahwa saldo maksimal untuk akun unregistered adalah Rp 10.000.000, sedangkan regulasi Bank Indonesia menetapkan batas maksimal hanya Rp 2.000.000. Ini menunjukkan ketidakpatuhan terhadap regulasi BI.
+
+2. **Akun Verified (Sudah KYC):**
+   - SOP menetapkan saldo maksimal untuk akun registered sebesar Rp 500.000.000, sementara regulasi Bank Indonesia menetapkan batas maksimal Rp 10.000.000. Ini juga merupakan ketidakpatuhan terhadap regulasi BI.
+
+3. **Batas Transaksi Masuk Bulanan:**
+   - SOP menyatakan bahwa tidak ada batasan untuk transaksi masuk bulanan, sedangkan regulasi Bank Indonesia menetapkan batas transaksi masuk bulanan sebesar Rp 20.000.000. Ini menunjukkan ketidakpatuhan terhadap regulasi BI.
+
+Secara keseluruhan, klausa SOP/T&C yang disajikan tidak mematuhi batasan yang ditetapkan oleh Bank Indonesia terkait saldo dan transaksi e-wallet.
+------------------------------------------------------------
+

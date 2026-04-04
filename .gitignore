@@ -1,9 +1,38 @@
-# Environment
+# ===================
+# CREDENTIALS & SECRETS
+# ===================
+# Environment files - CRITICAL
 .env
+.env.*
 .env.local
+.env.production
+.env.development
 *.env
+!.env.example
+!.env.example.*
 
-# Python
+# Docker environment
+docker/.env
+docker/.env.*
+
+# Secrets directory
+secrets/
+keys/
+credentials/
+.creds
+*.pem
+*.key
+*.crt
+
+# API Keys
+*_api_key*
+*_secret*
+*_token*
+*_password*
+
+# ===================
+# PYTHON
+# ===================
 __pycache__/
 *.py[cod]
 *$py.class
@@ -30,30 +59,51 @@ venv/
 ENV/
 env/
 .venv/
+.env/
 
 # Jupyter Notebook
 .ipynb_checkpoints/
 *.ipynb
 
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-*~
+# ===================
+# NODE.JS / FRONTEND
+# ===================
+node_modules/
+.next/
+.nuxt/
+out/
+.nuxt/
+.cache/
+.vuepress/dist/
+.serverless/
 
-# OS
-.DS_Store
-.DS_Store?
-._*
-.Spotlight-V100
-.Trashes
-ehthumbs.db
-Thumbs.db
+# Build outputs
+frontend/dist/
+frontend/.next/
+frontend/node_modules/
+frontend/.pnpm-store/
 
-# Data & Models
-data/raw/*.pdf
+# ===================
+# DATA & MODELS
+# ===================
+# ChromaDB - large binary files
 data/processed/chroma_db/
+*.chroma
+*.chromadb
+
+# Source PDFs - optional, uncomment if needed
+# data/raw/*.pdf
+
+# Cache files
+data/cache/
+*.cache
+cache/
+
+# Cost tracking
+data/costs/
+*.cost
+
+# Model files
 *.pkl
 *.pickle
 *.pt
@@ -61,19 +111,19 @@ data/processed/chroma_db/
 *.bin
 *.h5
 *.hdf5
+*.onnx
 
-# Logs
+# Embeddings
+*.npy
+*.npz
+embeddings/
+
+# ===================
+# LOGS & TEMP FILES
+# ===================
 *.log
 logs/
-
-# API Keys & Secrets (already ignored via .env)
-secrets/
-keys/
-
-# Test outputs
-.pytest_cache/
-.coverage
-htmlcov/
+*.out
 
 # Temporary files
 *.tmp
@@ -81,6 +131,55 @@ htmlcov/
 tmp/
 temp/
 
-# Evaluation results (optional, uncomment if needed)
+# IDE & Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===================
+# OS FILES
+# ===================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===================
+# TESTING & COVERAGE
+# ===================
+.pytest_cache/
+.coverage
+htmlcov/
+coverage.xml
+.tox/
+.nox/
+
+# ===================
+# MLFLOW
+# ===================
+mlruns/
+mlartifacts/
+mlflow.db
+
+# ===================
+# MISCELLANEOUS
+# ===================
+# Evaluation results (optional)
 # data/processed/hasil_audit.txt
 # data/processed/report_*.txt
+# data/audit_results/
+
+# LlamaParse cache
+*.llama_cache
+llama_cache/
+
+# Database
+*.db
+*.sqlite
+*.sqlite3

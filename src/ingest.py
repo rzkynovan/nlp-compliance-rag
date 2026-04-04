@@ -1,8 +1,8 @@
 """
 ingest.py — Data Ingestion Pipeline untuk Multi-Agent NLP Compliance Auditor
-===================================================================================
+==================================================================================
 Skrip ini membaca file PDF regulasi (PBI dan POJK), mengekstrak teksnya
-menggunakan LlamaParse, melakukan chunking, dan menyimpannya keChromaDB
+menggunakan LlamaParse, melakukan chunking, dan menyimpannya ke ChromaDB
 dengan SEPARATE COLLECTIONS per regulator (BI & OJK).
 
 Struktur Collections:
@@ -14,11 +14,16 @@ Cara pakai:
     cd nlp-compliance-rag
     source venv/bin/activate
     python src/ingest.py
+    
+Optimasi Biaya:
+    --skip-cache  : Force re-parse semua PDF (bakal kena biaya LlamaParse)
+    --clear-cache : Hapus cache lama sebelum parse
 """
 
 import os
 import sys
 import glob
+import argparse
 from pathlib import Path
 from typing import Dict, List
 from dotenv import load_dotenv
@@ -48,6 +53,9 @@ from llama_index.llms.openai import OpenAI
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 
+# Import caching module
+from llama_cache import get_cache, LlamaParseCache
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR = BASE_DIR / "data" / "raw"
 CHROMA_DB_DIR = BASE_DIR / "data" / "processed" / "chroma_db"
@@ -70,12 +78,12 @@ COLLECTION_NAMES = {
 print("Mengkonfigurasi LlamaIndex Settings...")
 
 Settings.embed_model = OpenAIEmbedding(
-    model="text-embedding-3-large",
+    model="text-embedding-3-small",  # Changed from large for cost optimization
     api_key=OPENAI_API_KEY,
 )
 
 Settings.llm = OpenAI(
-    model="gpt-4o",
+    model="gpt-4o-mini",  # Changed from gpt-4o for cost optimization
     api_key=OPENAI_API_KEY,
     temperature=0.1,
 )
@@ -83,8 +91,8 @@ Settings.llm = OpenAI(
 Settings.chunk_size = 1024
 Settings.chunk_overlap = 128
 
-print("Embedding: text-embedding-3-large")
-print("LLM: GPT-4o (temperature=0.1)")
+print("Embedding: text-embedding-3-small (optimized)")
+print("LLM: GPT-4o-mini (optimized)")
 
 
 def detect_regulator(filename: str) -> str:
@@ -95,7 +103,20 @@ def detect_regulator(filename: str) -> str:
     return "Unknown"
 
 
-def parse_pdfs() -> Dict[str, List[Document]]:
+def parse_pdfs(
+    use_cache: bool = True,
+    clear_cache: bool = False
+) -> Dict[str, List[Document]]:
+    """
+    Parse PDF files dengan caching untuk optimasi biaya LlamaParse.
+    
+    Args:
+        use_cache: Gunakan cache jika ada (default True)
+        clear_cache: Hapus cache lama sebelum parse (default False)
+    
+    Returns:
+        Dict regulator -> List of Documents
+    """
     pdf_files = glob.glob(str(RAW_DATA_DIR / "*.pdf"))
 
     if not pdf_files:
@@ -106,14 +127,30 @@ def parse_pdfs() -> Dict[str, List[Document]]:
     for f in pdf_files:
         print(f"   -> {os.path.basename(f)}")
 
+    # Initialize cache
+    cache = get_cache()
+    
+    if clear_cache:
+        print("\n[MENGHAPUS CACHE LAMA]")
+        cache.clear()
+    
+    # Check cache stats
+    stats = cache.get_stats()
+    print(f"\nCache stats: {stats['total_entries']} files, {stats['total_pages_cached']} pages")
+    print(f"Estimated savings: ${stats['estimated_savings_usd']}")
+
     parser = LlamaParse(
         api_key=LLAMA_CLOUD_API_KEY or "",
         result_type="markdown",
         verbose=True,
         language="id",
+        num_workers=4,  # Parallel parsing
     )
 
     documents_by_regulator: Dict[str, List[Document]] = {}
+    cached_count = 0
+    parsed_count = 0
+    saved_cost = 0.0
 
     for pdf_path in pdf_files:
         filename = os.path.basename(pdf_path)
@@ -124,7 +161,33 @@ def parse_pdfs() -> Dict[str, List[Document]]:
             print(f"   Lewati {filename} (regulator tidak terdeteksi)")
             continue
 
+        # Check cache first
+        if use_cache:
+            cached_docs = cache.get(pdf_path)
+            if cached_docs:
+                print(f"   [CACHE HIT] {len(cached_docs)} halaman dari cache")
+                cached_count += len(cached_docs)
+                
+                # Convert cached docs back to Document objects
+                for doc_dict in cached_docs:
+                    doc = Document(
+                        text=doc_dict["text"],
+                        metadata=doc_dict["metadata"]
+                    )
+                    if regulator not in documents_by_regulator:
+                        documents_by_regulator[regulator] = []
+                    documents_by_regulator[regulator].append(doc)
+                continue
+
+        # Parse PDF (costs money)
+        print(f"   [PARSING] Menggunakan LlamaParse API...")
         docs = parser.load_data(pdf_path)
+        parsed_count += len(docs)
+
+        # Save to cache
+        if use_cache:
+            cache.set(pdf_path, docs, metadata={"regulator": regulator})
+            saved_cost += len(docs) * 0.003  # Estimasi hemat
 
         for doc in docs:
             doc.metadata["source_file"] = filename
@@ -136,6 +199,14 @@ def parse_pdfs() -> Dict[str, List[Document]]:
 
         print(f"   [OK] {len(docs)} halaman dari {filename} ({regulator})")
 
+    # Summary
+    print(f"\n{'='*60}")
+    print("RINGKASAN PARSING:")
+    print(f"{'='*60}")
+    print(f"   Dari cache: {cached_count} halaman")
+    print(f"   Baru diparse: {parsed_count} halaman")
+    print(f"   Estimasi hemat: ${saved_cost:.4f}")
+    
     for regulator, docs in documents_by_regulator.items():
         print(f"\n[{regulator}] Total: {len(docs)} halaman")
 
@@ -262,11 +333,40 @@ def main():
         action="store_true",
         help="Force rebuild all collections (menggunakan LlamaParse API)"
     )
+    parser.add_argument(
+        "--skip-cache",
+        action="store_true",
+        help="Skip LlamaParse cache, re-parse all PDFs"
+    )
+    parser.add_argument(
+        "--clear-cache",
+        action="store_true",
+        help="Clear LlamaParse cache before parsing"
+    )
+    parser.add_argument(
+        "--cache-stats",
+        action="store_true",
+        help="Show cache statistics and exit"
+    )
     args = parser.parse_args()
     
     print("=" * 60)
     print("NLP Compliance Auditor - Multi-Agent Data Ingestion")
     print("=" * 60)
+    
+    # Show cache stats if requested
+    if args.cache_stats:
+        cache = get_cache()
+        stats = cache.get_stats()
+        print(f"\nCache Statistics:")
+        print(f"   Directory: {stats['cache_dir']}")
+        print(f"   Total entries: {stats['total_entries']}")
+        print(f"   Total pages cached: {stats['total_pages_cached']}")
+        print(f"   Estimated savings: ${stats['estimated_savings_usd']}")
+        print(f"\nCached files:")
+        for entry in stats['entries']:
+            print(f"   - {entry['file']}: {entry['pages']} pages")
+        return
     
     if args.force:
         print("\n[MODE: FORCE REBUILD]")
@@ -274,7 +374,15 @@ def main():
         print("Ini akan menggunakan quota LlamaParse API Anda!")
         print("-" * 60)
 
-    documents_by_regulator = parse_pdfs()
+    if args.skip_cache:
+        print("\n[MODE: SKIP CACHE]")
+        print("Cache akan di-skip, semua PDF akan di-parse ulang.")
+        print("-" * 60)
+
+    documents_by_regulator = parse_pdfs(
+        use_cache=not args.skip_cache,
+        clear_cache=args.clear_cache
+    )
 
     if not documents_by_regulator:
         print("\nTidak ada dokumen yang berhasil diproses!")

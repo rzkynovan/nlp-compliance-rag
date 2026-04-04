@@ -1,0 +1,41 @@
+HASIL AUDIT KEPATUHAN REGULASI
+============================================================
+
+[KLAUSA-01] SOP Dummy NusantaraPay — Bab II (Seharusnya COMPLIANT)
+Klausa: Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi.
+
+Klausa SOP yang menyatakan bahwa "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi" menunjukkan kepatuhan terhadap regulasi yang berlaku dari Bank Indonesia (BI) dan Otoritas Jasa Keuangan (OJK).
+
+1. **Kepatuhan terhadap Regulasi BI**: Regulasi BI menekankan pentingnya persetujuan pengguna jasa atas penggunaan data pribadinya. Klausa SOP ini sejalan dengan prinsip tersebut, karena menuntut persetujuan eksplisit dari nasabah sebelum data pribadi dikumpulkan dan diproses.
+
+2. **Kepatuhan terhadap Regulasi OJK**: Regulasi OJK juga mengharuskan adanya persetujuan konsumen terkait penggunaan data pribadi, serta penjelasan mengenai tujuan dan konsekuensi dari persetujuan tersebut. Dengan mensyaratkan persetujuan tertulis atau elektronik, klausa SOP ini memenuhi ketentuan OJK mengenai persetujuan konsumen.
+
+Secara keseluruhan, klausa SOP ini menunjukkan kepatuhan terhadap ketentuan yang ditetapkan oleh BI dan OJK mengenai perlindungan data pribadi dan persetujuan konsumen.
+------------------------------------------------------------
+
+[KLAUSA-02] SOP Dummy NusantaraPay — Bab III (Seharusnya NON-COMPLIANT)
+Klausa: Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaikan masalah nasabah dan memberikan kompensasi.
+
+Klausa SOP yang menyatakan bahwa "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaikan masalah nasabah dan memberikan kompensasi" tidak sepenuhnya sesuai dengan regulasi yang ditetapkan oleh Otoritas Jasa Keuangan (OJK). Menurut peraturan yang berlaku, penyelesaian pengaduan secara tertulis harus diselesaikan dalam waktu maksimal 10 hari kerja, dengan kemungkinan perpanjangan hingga 10 hari kerja tambahan dalam kondisi tertentu. Oleh karena itu, waktu penyelesaian 60 hari kerja yang disebutkan dalam klausa SOP melebihi batas waktu yang diizinkan oleh regulasi OJK, sehingga tidak mematuhi ketentuan yang ada.
+------------------------------------------------------------
+
+[KLAUSA-03] SOP Dummy NusantaraPay — Bab IV (Seharusnya NON-COMPLIANT)
+Klausa: Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo maksimal hingga Rp 10.000.000 (Sepuluh Juta Rupiah).
+
+The clause in the SOP/T&C stating that "Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo maksimal hingga Rp 10.000.000 (Sepuluh Juta Rupiah)" should be analyzed for compliance with regulations from Bank Indonesia (BI) and Otoritas Jasa Keuangan (OJK). 
+
+While the provided context does not directly address this specific clause, it is important to ensure that such a policy aligns with the broader regulatory framework governing financial institutions, particularly in terms of customer identification and anti-money laundering (AML) requirements. Generally, financial regulations require institutions to conduct due diligence and verify customer identities to prevent illegal activities such as money laundering and terrorism financing. 
+
+Therefore, the clause allowing unregistered customers to maintain a balance of up to Rp 10,000,000 should be evaluated against these regulatory requirements to ensure it does not contravene any rules regarding customer verification and due diligence. If the clause is consistent with these requirements and does not facilitate any regulatory breaches, it can be considered compliant. However, if it contradicts any specific mandates on customer identification or AML measures, adjustments may be necessary to ensure full compliance.
+------------------------------------------------------------
+
+[KLAUSA-04] SOP Dummy NusantaraPay — Bab IV (Seharusnya NON-COMPLIANT)
+Klausa: Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk mendorong pertumbuhan Gross Transaction Value (GTV) perusahaan.
+
+The clause from the SOP states that there is no limit on the monthly incoming transactions for all users to encourage the growth of the company's Gross Transaction Value (GTV). In evaluating this against the regulations from OJK, it is important to consider whether such a policy aligns with consumer protection and financial stability principles.
+
+The regulations outlined by OJK include various sanctions and measures to ensure compliance and protect consumers in the financial services sector. These measures include administrative fines, restrictions, and even revocation of licenses if necessary. While the specific clause about transaction limits is not directly addressed in the provided context, the absence of a limit could potentially raise concerns about risk management and consumer protection, which are key areas of focus for OJK.
+
+Therefore, while the clause aims to promote business growth, it should be carefully assessed to ensure it does not conflict with regulatory expectations regarding consumer protection and financial stability. It would be prudent for the company to ensure that adequate risk management practices are in place to mitigate any potential negative impacts of having no transaction limits.
+------------------------------------------------------------
+
