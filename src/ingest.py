@@ -161,8 +161,16 @@ def chunk_documents(documents: List[Document]) -> List:
 
 
 def build_separate_vector_stores(
-    documents_by_regulator: Dict[str, List[Document]]
+    documents_by_regulator: Dict[str, List[Document]],
+    force_rebuild: bool = False
 ) -> Dict[str, VectorStoreIndex]:
+    """
+    Build or load existing vector stores.
+    
+    Args:
+        documents_by_regulator: Documents grouped by regulator
+        force_rebuild: If True, rebuild all collections. If False, skip existing.
+    """
     print(f"\nMenyimpan vektor ke ChromaDB (separate collections)...")
 
     db = chromadb.PersistentClient(path=str(CHROMA_DB_DIR))
@@ -177,14 +185,33 @@ def build_separate_vector_stores(
 
         print(f"\n[{regulator}] -> Collection: {collection_name}")
 
+        # CHECK: Skip if collection already has data (HEMAT USAGE!)
+        try:
+            existing_collection = db.get_collection(collection_name)
+            existing_count = existing_collection.count()
+            
+            if existing_count > 0 and not force_rebuild:
+                print(f"   [SKIP] Collection sudah ada dengan {existing_count} vektor.")
+                print(f"   Gunakan --force untuk rebuild, atau lanjut ke tahap audit.")
+                
+                vector_store = ChromaVectorStore(chroma_collection=existing_collection)
+                index = VectorStoreIndex.from_vector_store(vector_store)
+                indices[regulator] = index
+                continue
+        except Exception:
+            pass  # Collection doesn't exist, proceed with ingestion
+
         nodes = chunk_documents(documents)
 
-        try:
-            db.delete_collection(collection_name)
-        except Exception:
-            pass
-        
         collection = db.get_or_create_collection(collection_name)
+        
+        # Delete old data if force_rebuild
+        if force_rebuild:
+            try:
+                db.delete_collection(collection_name)
+                collection = db.get_or_create_collection(collection_name)
+            except Exception:
+                pass
 
         vector_store = ChromaVectorStore(chroma_collection=collection)
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -227,9 +254,25 @@ def print_summary(indices: Dict[str, VectorStoreIndex]):
 
 
 def main():
+    import argparse
+    
+    parser = argparse.ArgumentParser(description="NLP Compliance Auditor - Data Ingestion")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Force rebuild all collections (menggunakan LlamaParse API)"
+    )
+    args = parser.parse_args()
+    
     print("=" * 60)
     print("NLP Compliance Auditor - Multi-Agent Data Ingestion")
     print("=" * 60)
+    
+    if args.force:
+        print("\n[MODE: FORCE REBUILD]")
+        print("Semua collection akan di-rebuild dari awal.")
+        print("Ini akan menggunakan quota LlamaParse API Anda!")
+        print("-" * 60)
 
     documents_by_regulator = parse_pdfs()
 
@@ -237,7 +280,10 @@ def main():
         print("\nTidak ada dokumen yang berhasil diproses!")
         sys.exit(1)
 
-    indices = build_separate_vector_stores(documents_by_regulator)
+    indices = build_separate_vector_stores(
+        documents_by_regulator, 
+        force_rebuild=args.force
+    )
 
     print_summary(indices)
 
