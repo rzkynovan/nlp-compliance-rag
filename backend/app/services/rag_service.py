@@ -379,12 +379,14 @@ RESPON DALAM FORMAT JSON:
         if any(word in response_lower for word in ["melanggar", "tidak memenuhi", "non-compliant", "violates"]):
             status = "NON_COMPLIANT"
             confidence = 0.7
+        elif any(word in response_lower for word in ["sebagian", "partial", "perlu perbaikan"]):
+            # Check PARTIALLY_COMPLIANT before COMPLIANT — "sebagian memenuhi" contains
+            # "memenuhi" but is more specifically a partial match.
+            status = "PARTIALLY_COMPLIANT"
+            confidence = 0.6
         elif any(word in response_lower for word in ["memenuhi", "sesuai", "compliant", "patuh"]):
             status = "COMPLIANT"
             confidence = 0.7
-        elif any(word in response_lower for word in ["sebagian", "partial", "perlu perbaikan"]):
-            status = "PARTIALLY_COMPLIANT"
-            confidence = 0.6
         else:
             status = "UNCLEAR"
             confidence = 0.5

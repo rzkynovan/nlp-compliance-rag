@@ -1,10 +1,11 @@
 "use client";
 
 import { useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Clock, FileText, CheckCircle2, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { id } from "date-fns/locale";
+import { getAuditHistory } from "@/lib/api";
 
 interface AuditHistory {
   request_id: string;
@@ -18,11 +19,7 @@ interface AuditHistory {
 export default function HistoryPage() {
   const { data: history, isLoading, error } = useQuery<AuditHistory[]>({
     queryKey: ["audit-history"],
-    queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}/audit/history`);
-      if (!res.ok) throw new Error("Failed to fetch history");
-      return res.json();
-    },
+    queryFn: () => getAuditHistory(0, 50) as Promise<AuditHistory[]>,
   });
 
   return (

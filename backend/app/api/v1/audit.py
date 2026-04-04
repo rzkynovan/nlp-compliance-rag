@@ -34,7 +34,7 @@ def _map_status(status: str) -> ComplianceStatus:
 def _map_risk_score(risk_score) -> float:
     if isinstance(risk_score, str):
         return RISK_SCORE_MAP.get(risk_score.upper(), 0.5)
-    return float(risk_score) if risk_score else 0.5
+    return float(risk_score) if risk_score is not None else 0.5
 
 
 def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:

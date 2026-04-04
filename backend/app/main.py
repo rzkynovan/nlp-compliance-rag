@@ -1,3 +1,4 @@
+from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -11,21 +12,36 @@ import logging
 
 log = structlog.get_logger()
 
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    log.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
+    log.info(f"MLflow Tracking URI: {settings.MLFLOW_TRACKING_URI}")
+    log.info(f"LLM Model: {settings.LLM_MODEL}")
+    log.info(f"Embedding Model: {settings.EMBEDDING_MODEL}")
+    log.info(f"Cost Optimization Mode: {settings.COST_OPTIMIZATION_MODE}")
+    log.info(f"Daily Budget Limit: ${settings.DAILY_BUDGET_LIMIT_USD}")
+    log.info(f"Cache Enabled: {settings.ENABLE_CACHE}")
+    log.info(f"Allowed Origins: {settings.ALLOWED_ORIGINS}")
+    yield
+    log.info(f"Shutting down {settings.PROJECT_NAME}")
+
+
 app = FastAPI(
     title=settings.PROJECT_NAME,
     version=settings.VERSION,
     description="""
     MLOps-ready RAG system for regulatory compliance auditing.
-    
+
     ## Features
-    
+
     * **Multi-Agent RAG**: Parallel BI and OJK specialist agents
     * **Conflict Resolution**: Hierarchical conflict resolution between regulators
     * **Evidence Trail**: Full citation of regulation articles
     * **Experiment Tracking**: MLflow integration for model tracking
-    
+
     ## Endpoints
-    
+
     * `/api/v1/audit/*` - SOP compliance audit
     * `/api/v1/regulations/*` - Regulation knowledge base
     * `/api/v1/experiments/*` - MLflow experiment tracking
@@ -34,13 +50,16 @@ app = FastAPI(
     openapi_url=f"{settings.API_V1_PREFIX}/openapi.json",
     docs_url=f"{settings.API_V1_PREFIX}/docs",
     redoc_url=f"{settings.API_V1_PREFIX}/redoc",
+    lifespan=lifespan,
 )
 
+# CORS: never use allow_origins=["*"] with allow_credentials=True — browser blocks it.
+# Use explicit origin list from ALLOWED_ORIGINS env var.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=settings.ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
 )
 
@@ -105,22 +124,6 @@ app.include_router(audit.router, prefix=settings.API_V1_PREFIX, tags=["audit"])
 app.include_router(regulations.router, prefix=settings.API_V1_PREFIX, tags=["regulations"])
 app.include_router(experiments.router, prefix=settings.API_V1_PREFIX, tags=["experiments"])
 app.include_router(usage.router, prefix=settings.API_V1_PREFIX, tags=["usage"])
-
-
-@app.on_event("startup")
-async def startup_event():
-    log.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
-    log.info(f"MLflow Tracking URI: {settings.MLFLOW_TRACKING_URI}")
-    log.info(f"LLM Model: {settings.LLM_MODEL}")
-    log.info(f"Embedding Model: {settings.EMBEDDING_MODEL}")
-    log.info(f"Cost Optimization Mode: {settings.COST_OPTIMIZATION_MODE}")
-    log.info(f"Daily Budget Limit: ${settings.DAILY_BUDGET_LIMIT_USD}")
-    log.info(f"Cache Enabled: {settings.ENABLE_CACHE}")
-
-
-@app.on_event("shutdown")
-async def shutdown_event():
-    log.info(f"Shutting down {settings.PROJECT_NAME}")
 
 
 if __name__ == "__main__":

@@ -464,8 +464,9 @@ data/processed/chroma_db/
 services:
   backend:
     volumes:
-      - ../data:/app/data          # ChromaDB data
-      - ../src:/app/src            # Core RAG logic
+      - ../data:/app/data          # ChromaDB data (environment-specific)
+      # src/ is BAKED into the image via COPY src/ /app/src/
+      # This makes the image self-contained — no repo clone needed to run
 ```
 
 ---
@@ -519,6 +520,27 @@ GET /api/v1/budget         # Remaining budget
 ---
 
 ## 🧪 Testing
+
+### Unit Tests (pytest)
+
+```bash
+cd backend
+pip install -r requirements.txt
+python -m pytest tests/ -v
+```
+
+**Test files:**
+
+| File | Coverage |
+|------|----------|
+| `tests/test_exceptions.py` | Custom exception hierarchy (11 classes) |
+| `tests/test_cache.py` | AuditCache get/set/TTL/clear/disk |
+| `tests/test_cost_tracker.py` | CostTracker pricing, budget, record |
+| `tests/test_models.py` | Pydantic model validation & boundaries |
+| `tests/test_audit_api.py` | FastAPI endpoints via TestClient |
+| `tests/test_rag_service.py` | RAGAuditService with mocked OpenAI |
+
+**Result:** 175 tests, 175 passed ✅
 
 ### Manual Testing
 
@@ -678,4 +700,4 @@ docker-compose logs -f backend
 
 ---
 
-*Last updated: 2025-04-05*
+*Last updated: 2026-04-05*

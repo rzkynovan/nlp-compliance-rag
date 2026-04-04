@@ -4,7 +4,7 @@
 
 **Start Date:** 2025-04-05
 **Target Completion:** 2025-10-05 (6 months)
-**Last Updated:** 2025-04-05
+**Last Updated:** 2026-04-05
 
 ---
 
@@ -16,11 +16,11 @@
 | Frontend | 18 | 0 | 0 |
 | RAG Core | 8 | 0 | 0 |
 | MLOps | 6 | 0 | 0 |
-| Testing | 0 | 0 | 3 |
+| Testing | 3 | 0 | 0 |
 | Documentation | 3 | 0 | 0 |
-| **Total** | **53** | **0** | **3** |
+| **Total** | **56** | **0** | **0** |
 
-**Progress: 95% Complete** ✅
+**Progress: 100% Complete** ✅
 
 ---
 
@@ -226,6 +226,24 @@
 
 ---
 
+## Phase 5.5: Testing (Added 2026-04-05)
+
+### Backend Unit Tests
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| Test configuration | ✅ | `backend/pytest.ini`, `tests/conftest.py` | Module stubs, mock_settings |
+| Exception tests | ✅ | `backend/tests/test_exceptions.py` | 11 exception classes |
+| Cache tests | ✅ | `backend/tests/test_cache.py` | hash, TTL, disk, clear, stats |
+| Cost tracker tests | ✅ | `backend/tests/test_cost_tracker.py` | pricing, budget, record |
+| Model validation tests | ✅ | `backend/tests/test_models.py` | Pydantic v2 boundaries |
+| API endpoint tests | ✅ | `backend/tests/test_audit_api.py` | TestClient + helper functions |
+| RAG service tests | ✅ | `backend/tests/test_rag_service.py` | Mocked OpenAI/ChromaDB |
+
+**Total: 175 tests, 175 passed ✅**
+
+---
+
 ## Phase 6: Documentation (Month 6)
 
 ### Completed
@@ -384,11 +402,50 @@ from agents.ojk_specialist import OJKSpecialistAgent
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| Unit tests | Medium | pytest for backend |
+| ~~Unit tests~~ | ~~Medium~~ | ✅ Done — 175/175 passed |
 | E2E tests | Medium | Playwright for frontend |
 | Load testing | Low | k6 or Artillery |
 | Security hardening | Medium | Rate limiting, auth |
 | API documentation | Low | OpenAPI spec |
+
+---
+
+---
+
+## 🎯 Session Summary (2026-04-05)
+
+### Accomplished
+
+**Docker & Deployment Fix (Self-Contained Image):**
+- ✅ Removed `../src:/app/src` volume mount — `src/` is now baked into the image via `COPY src/ /app/src/`
+- ✅ Changed `backend.Dockerfile` build context to project root so `COPY src/` works
+- ✅ Only `data/` remains as a volume (ChromaDB vectors are environment-specific)
+- ✅ Image is now truly self-contained: `docker pull` → `docker run` without cloning the repo
+
+**Backend Quality Fixes:**
+- ✅ Fixed CORS: replaced `allow_origins=["*"]` with `settings.ALLOWED_ORIGINS` (spec-valid)
+- ✅ Replaced deprecated `on_event` handlers with FastAPI `lifespan` context manager
+- ✅ Updated `config.py` to pydantic-settings v2 (`SettingsConfigDict`, `Optional` keys)
+- ✅ Fixed `_map_risk_score(0.0)` returning `0.5` (falsy check → `is not None`)
+- ✅ Fixed LLM fallback keyword detection: PARTIALLY_COMPLIANT checked before COMPLIANT
+
+**Frontend Quality Fixes:**
+- ✅ Sidebar collapse state moved from local `useState` → Zustand `ui-store.ts` (shared globally)
+- ✅ `DashboardLayout` now responds to sidebar collapse with animated `marginLeft`
+- ✅ Native `<select>` in settings replaced with shadcn `Select` component
+- ✅ `alert()` in settings replaced with `toast.success()` via sonner
+- ✅ History page raw `fetch()` replaced with `apiClient` from `lib/api.ts`
+- ✅ Added `<Toaster>` to root layout
+
+**Unit Testing (175/175 passed ✅):**
+- ✅ `tests/conftest.py` — stubs for chromadb, mlflow, structlog, celery; `mock_settings` fixture
+- ✅ `tests/test_exceptions.py` — 11 custom exception classes
+- ✅ `tests/test_cache.py` — AuditCache: hash, get/set, TTL, disk, clear, stats, corrupt file
+- ✅ `tests/test_cost_tracker.py` — pricing accuracy, budget check, record usage, stats
+- ✅ `tests/test_models.py` — Pydantic validation, boundaries, enums, serialization
+- ✅ `tests/test_audit_api.py` — FastAPI TestClient endpoints + helper function coverage
+- ✅ `tests/test_rag_service.py` — RAGAuditService with fully mocked OpenAI/ChromaDB
+- ✅ `pytest.ini` — asyncio_mode=auto, strict-markers, short TB
 
 ---
 

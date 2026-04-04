@@ -6,7 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { Settings, Database, Bell, Shield, Palette, Save } from "lucide-react";
+import { toast } from "sonner";
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState({
@@ -21,7 +29,7 @@ export default function SettingsPage() {
 
   const handleSave = () => {
     localStorage.setItem("auditSettings", JSON.stringify(settings));
-    alert("Pengaturan disimpan!");
+    toast.success("Pengaturan disimpan!");
   };
 
   return (
@@ -88,18 +96,21 @@ export default function SettingsPage() {
           <CardContent className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="defaultRegulator">Default Regulator</Label>
-              <select
-                id="defaultRegulator"
-                className="flex h-9 w-full rounded-md border border-gray-200 bg-transparent px-3 py-1 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-gray-950"
+              <Select
                 value={settings.defaultRegulator}
-                onChange={(e) =>
-                  setSettings({ ...settings, defaultRegulator: e.target.value })
+                onValueChange={(value) =>
+                  setSettings({ ...settings, defaultRegulator: value })
                 }
               >
-                <option value="all">Semua Regulator</option>
-                <option value="BI">Bank Indonesia</option>
-                <option value="OJK">OJK</option>
-              </select>
+                <SelectTrigger id="defaultRegulator">
+                  <SelectValue placeholder="Pilih regulator" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Semua Regulator</SelectItem>
+                  <SelectItem value="BI">Bank Indonesia</SelectItem>
+                  <SelectItem value="OJK">OJK</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">

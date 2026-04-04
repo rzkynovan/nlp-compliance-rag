@@ -1,22 +1,26 @@
 services:
   backend:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend.Dockerfile
+      # Build context = project root so Dockerfile can COPY both backend/ and src/
+      # This makes the image fully self-contained — no source-code volume mounts needed
+      context: ..
+      dockerfile: docker/backend.Dockerfile
     ports:
       - "8000:8000"
     env_file:
       - .env
     environment:
       - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - LLAMAPARSE_API_KEY=${LLAMAPARSE_API_KEY}
+      - LLAMAPARSE_API_KEY=${LLAMAPARSE_API_KEY:-}
       - DATABASE_URL=postgresql://compliance:compliance123@db:5432/compliance_db
       - REDIS_URL=redis://redis:6379/0
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - CHROMADB_PERSIST_DIR=/app/data/processed/chroma_db
+      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS:-http://localhost:3000}
     volumes:
+      # Only data volumes — ChromaDB vectors are large and environment-specific
+      # Source code is baked into the image at build time
       - ../data:/app/data
-      - ../src:/app/src
     depends_on:
       - db
       - redis
@@ -83,8 +87,8 @@ services:
 
   celery_worker:
     build:
-      context: ../backend
-      dockerfile: ../docker/backend.Dockerfile
+      context: ..
+      dockerfile: docker/backend.Dockerfile
     command: celery -A app.workers.tasks worker --loglevel=info
     env_file:
       - .env

@@ -7,11 +7,17 @@ RUN apt-get update && apt-get install -y \
     curl \
     && rm -rf /var/lib/apt/lists/*
 
-COPY requirements.txt .
+# Build context is the project root — copy requirements first for layer caching
+COPY backend/requirements.txt .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY . .
+# Copy backend application code
+COPY backend/ .
+
+# Copy core RAG agent logic into the image (NOT a volume mount)
+# This makes the image self-contained and deployable via docker pull alone
+COPY src/ /app/src/
 
 EXPOSE 8000
 
