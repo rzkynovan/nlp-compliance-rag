@@ -1,0 +1,375 @@
+{
+  "source_file": "/Users/rzkynovan/Tugas Akhir/SOP_Dummy_EWallet_Palsu.md",
+  "audit_timestamp": "20260404_222424",
+  "total_clauses": 2,
+  "results": [
+    {
+      "clause_id": "CLAUSE-1",
+      "clause_text": "# SOP Internal: PT Dompet Digital Nusantara (DUMMY)\n**Status Dokumen:** RAHASIA PERUSAHAAN (Simulasi untuk Tugas Akhir)\n**Tanggal Efektif:** 1 Januari 2026",
+      "timestamp": "2026-04-04T22:23:54.361930",
+      "execution_time_ms": 14653.378999999999,
+      "bi_verdict": {
+        "agent_id": "BI_SPECIALIST",
+        "regulator": "Bank Indonesia (BI)",
+        "verdict": "NON-COMPLIANT",
+        "confidence_score": 0.8,
+        "violated_articles": [
+          {
+            "article": "Pasal 177",
+            "regulation": "PBI No. XX/XX",
+            "violation_detail": "Tidak ada informasi mengenai pembatasan permintaan dan penggunaan data pengguna uang elektronik.",
+            "required_value": "Pembatasan permintaan dan penggunaan data pengguna uang elektronik.",
+            "actual_value": "Tidak disebutkan dalam SOP.",
+            "context": "Perlindungan konsumen dalam penggunaan uang elektronik."
+          },
+          {
+            "article": "Pasal 216",
+            "regulation": "PBI No. XX/XX",
+            "violation_detail": "Tidak ada informasi mengenai fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba.",
+            "required_value": "Informasi lengkap mengenai fitur produk, aktivitas, layanan, dan model bisnis.",
+            "actual_value": "Tidak disebutkan dalam SOP.",
+            "context": "Pengembangan dan uji coba inovasi teknologi sistem pembayaran."
+          }
+        ],
+        "retrieved_context": "# Pasal 100\n\nPersyaratan aspek kesiapan operasional untuk pengembangan aktivitas dan/atau pengembangan produk yang disertai dengan kerja sama dengan kategori risiko tinggi disertai dengan pemenuhan paling sedikit dokumen:\n\n- a. yang menunjukkan rekomendasi bagi PJP yang memiliki otoritas pengawas sesuai dengan ketentuan peraturan perundang-undangan;\n---\n# Pasal 177\n\nUntuk perlindungan konsumen, PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik wajib:\n\n1. membatasi permintaan dan penggunaan data dan/atau informasi pengguna uang elektronik, sebatas yang diperlukan dalam penyelenggaraan uang elektronik;\n2. menyediakan sarana dan/atau infrastruktur untuk pengisian ulang (top up) secara luas untuk keperluan pengguna uang elektronik; dan\n3. memiliki mekanisme penggantian kerugian finansial kepada pengguna uang elektronik sepanjang kerugian tersebut tidak disebabkan oleh kesalahan atau kelalaian pengguna uang elektronik.\n---\n# Pasal 216\n\n(1) Dokumen pendukung sebagaimana dimaksud dalam Pasal 215 ayat (2) meliputi:\n\n1. profil calon peserta mencakup informasi entitas;\n2. narahubung (contact person); dan\n3. data dan informasi.\n\n(2) Data dan informasi sebagaimana dimaksud pada ayat (1) huruf c, terdiri atas:\n\n1. fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n2. unsur inovasi dalam produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n3. manfaat bagi konsumen dan/atau perekonomian;\n4. aspek manajemen risiko, keamanan informasi, perlindungan konsumen, anti pencucian uang dan\n---\n# Pasal 193\n\nPJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana dengan menerbitkan kartu anjungan tunai mandiri dan/atau kartu debit wajib memberikan informasi secara tertulis kepada pengguna kartu anjungan tunai mandiri dan/atau kartu debit, paling sedikit meliputi:\n\n- a. prosedur dan tata cara penggunaan kartu anjungan tunai mandiri dan/atau kartu debit, fasilitas yang melekat pada kartu anjungan tunai mandiri dan/atau kartu debit, dan risiko yang mungkin timbul dari penggunaan kartu anjungan tunai mandiri dan/atau kartu debit;\n---\nb. PJP mengikuti uji coba pengembangan inovasi teknologi Sistem Pembayaran yang diselenggarakan Bank Indonesia dan dinyatakan berhasil;\n\nc. pengembangan aktivitas, pengembangan produk, dan/atau kerja sama telah memperoleh rekomendasi dari SRO yang dilakukan untuk memenuhi standar nasional yang ditetapkan oleh Bank Indonesia; dan/atau\n\nd. memenuhi aspek lain yang ditetapkan oleh Bank Indonesia.",
+        "reasoning_trace": "Klausa SOP tidak mencakup informasi penting yang diwajibkan oleh regulasi BI, seperti pembatasan data pengguna dan informasi mengenai fitur produk dan layanan. Hal ini dapat menimbulkan risiko tinggi terhadap kepatuhan regulasi dan perlindungan konsumen.",
+        "risk_level": "HIGH",
+        "recommendations": [
+          "Tambahkan informasi mengenai batas saldo dan batas transaksi sesuai dengan regulasi BI.",
+          "Sertakan prosedur KYC yang jelas untuk memastikan kepatuhan terhadap regulasi anti pencucian uang.",
+          "Jelaskan proses settlement yang sesuai dengan standar yang ditetapkan oleh BI.",
+          "Pastikan SOP mencakup pembatasan permintaan dan penggunaan data pengguna uang elektronik."
+        ]
+      },
+      "ojk_verdict": {
+        "agent_id": "OJK_SPECIALIST",
+        "regulator": "Otoritas Jasa Keuangan (OJK)",
+        "verdict": "NON-COMPLIANT",
+        "confidence_score": 0.85,
+        "violated_articles": [
+          {
+            "article": "Pasal 5 Ayat 4",
+            "regulation": "POJK No. XX/XX",
+            "violation_detail": "Klausa SOP tidak menyebutkan perlindungan data konsumen secara eksplisit.",
+            "required_value": "Perlindungan data konsumen harus dijelaskan secara rinci, termasuk bagaimana data akan dikelola dan dilindungi.",
+            "actual_value": "Klausa SOP hanya menyatakan status dokumen sebagai rahasia perusahaan tanpa rincian perlindungan data konsumen.",
+            "context": "Kurangnya penjelasan mengenai perlindungan data dapat menimbulkan risiko kebocoran data konsumen dan mengurangi kepercayaan konsumen terhadap perusahaan."
+          },
+          {
+            "article": "Pasal 5 Ayat 3",
+            "regulation": "POJK No. XX/XX",
+            "violation_detail": "Tidak ada penjelasan mengenai SLA pengaduan konsumen.",
+            "required_value": "Harus ada ketentuan yang jelas mengenai waktu tanggapan dan penyelesaian pengaduan konsumen.",
+            "actual_value": "Tidak ada informasi mengenai SLA pengaduan dalam klausa SOP.",
+            "context": "Ketiadaan SLA pengaduan dapat menyebabkan ketidakpuasan konsumen dan potensi peningkatan keluhan yang tidak tertangani dengan baik."
+          }
+        ],
+        "retrieved_context": "# Angka 5\n\nContoh data lain: alamat surat elektronik perusahaan, Nomor Pokok Wajib Pajak perusahaan, alamat Protokol Internet (IP address) perusahaan, aset dan data karyawan, dan pemilik manfaat (beneficiary owner).\n---\n# KETENTUAN UMUM\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.\n---\n# Ayat (3)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.",
+        "reasoning_trace": "Klausa SOP PT Dompet Digital Nusantara tidak mematuhi beberapa ketentuan dalam regulasi OJK terkait perlindungan konsumen dan pengelolaan data. Tidak adanya penjelasan rinci mengenai perlindungan data konsumen dan SLA pengaduan dapat menimbulkan risiko terhadap hak-hak konsumen, seperti kebocoran data dan ketidakpuasan layanan. Hal ini dapat berdampak negatif pada reputasi perusahaan dan kepercayaan konsumen.",
+        "risk_level": "MEDIUM",
+        "recommendations": [
+          "Menambahkan ketentuan rinci mengenai perlindungan data konsumen, termasuk bagaimana data akan dikelola dan dilindungi.",
+          "Memasukkan SLA pengaduan konsumen yang jelas, termasuk waktu tanggapan dan penyelesaian pengaduan.",
+          "Melakukan sosialisasi kepada konsumen mengenai hak-hak mereka terkait perlindungan data dan pengaduan."
+        ]
+      },
+      "final_verdict": {
+        "final_status": "NEEDS_HUMAN_REVIEW",
+        "overall_confidence": 0.82,
+        "regulatory_conflicts": [],
+        "evidence_matrix": {
+          "BI": {
+            "status": "NON-COMPLIANT",
+            "confidence": 0.8,
+            "violations": [
+              {
+                "article": "Pasal 177",
+                "detail": "Tidak ada informasi mengenai pembatasan permintaan dan penggunaan data pengguna uang elektronik."
+              },
+              {
+                "article": "Pasal 216",
+                "detail": "Tidak ada informasi mengenai fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba."
+              }
+            ],
+            "reasoning": "Klausa SOP tidak mencakup informasi penting yang diwajibkan oleh regulasi BI, seperti pembatasan data pengguna dan informasi mengenai fitur produk dan layanan. Hal ini dapat menimbulkan risiko tinggi terhadap kepatuhan regulasi dan perlindungan konsumen."
+          },
+          "OJK": {
+            "status": "NON-COMPLIANT",
+            "confidence": 0.85,
+            "violations": [
+              {
+                "article": "Pasal 5 Ayat 4",
+                "detail": "Klausa SOP tidak menyebutkan perlindungan data konsumen secara eksplisit."
+              },
+              {
+                "article": "Pasal 5 Ayat 3",
+                "detail": "Tidak ada penjelasan mengenai SLA pengaduan konsumen."
+              }
+            ],
+            "reasoning": "Klausa SOP PT Dompet Digital Nusantara tidak mematuhi beberapa ketentuan dalam regulasi OJK terkait perlindungan konsumen dan pengelolaan data. Tidak adanya penjelasan rinci mengenai perlindungan data konsumen dan SLA pengaduan dapat menimbulkan risiko terhadap hak-hak konsumen, seperti kebocoran data dan ketidakpuasan layanan. Hal ini dapat berdampak negatif pada reputasi perusahaan dan kepercayaan konsumen."
+          }
+        },
+        "risk_score": "CRITICAL",
+        "recommendations": [
+          "[BI] Pasal 177: Ubah 'Tidak disebutkan dalam SOP.' menjadi 'Pembatasan permintaan dan penggunaan data pengguna uang elektronik.'",
+          "[BI] Pasal 216: Ubah 'Tidak disebutkan dalam SOP.' menjadi 'Informasi lengkap mengenai fitur produk, aktivitas, layanan, dan model bisnis.'",
+          "[OJK] Pasal 5 Ayat 4: Ubah 'Klausa SOP hanya menyatakan status dokumen sebagai rahasia perusahaan tanpa rincian perlindungan data konsumen.' menjadi 'Perlindungan data konsumen harus dijelaskan secara rinci, termasuk bagaimana data akan dikelola dan dilindungi.'",
+          "[OJK] Pasal 5 Ayat 3: Ubah 'Tidak ada informasi mengenai SLA pengaduan dalam klausa SOP.' menjadi 'Harus ada ketentuan yang jelas mengenai waktu tanggapan dan penyelesaian pengaduan konsumen.'",
+          "[BI] Tambahkan informasi mengenai batas saldo dan batas transaksi sesuai dengan regulasi BI.",
+          "[BI] Sertakan prosedur KYC yang jelas untuk memastikan kepatuhan terhadap regulasi anti pencucian uang.",
+          "[BI] Jelaskan proses settlement yang sesuai dengan standar yang ditetapkan oleh BI.",
+          "[BI] Pastikan SOP mencakup pembatasan permintaan dan penggunaan data pengguna uang elektronik.",
+          "[OJK] Menambahkan ketentuan rinci mengenai perlindungan data konsumen, termasuk bagaimana data akan dikelola dan dilindungi.",
+          "[OJK] Memasukkan SLA pengaduan konsumen yang jelas, termasuk waktu tanggapan dan penyelesaian pengaduan.",
+          "[OJK] Melakukan sosialisasi kepada konsumen mengenai hak-hak mereka terkait perlindungan data dan pengaduan."
+        ],
+        "bi_verdict": {
+          "agent_id": "BI_SPECIALIST",
+          "regulator": "Bank Indonesia (BI)",
+          "verdict": "NON-COMPLIANT",
+          "confidence_score": 0.8,
+          "violated_articles": [
+            {
+              "article": "Pasal 177",
+              "regulation": "PBI No. XX/XX",
+              "violation_detail": "Tidak ada informasi mengenai pembatasan permintaan dan penggunaan data pengguna uang elektronik.",
+              "required_value": "Pembatasan permintaan dan penggunaan data pengguna uang elektronik.",
+              "actual_value": "Tidak disebutkan dalam SOP.",
+              "context": "Perlindungan konsumen dalam penggunaan uang elektronik."
+            },
+            {
+              "article": "Pasal 216",
+              "regulation": "PBI No. XX/XX",
+              "violation_detail": "Tidak ada informasi mengenai fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba.",
+              "required_value": "Informasi lengkap mengenai fitur produk, aktivitas, layanan, dan model bisnis.",
+              "actual_value": "Tidak disebutkan dalam SOP.",
+              "context": "Pengembangan dan uji coba inovasi teknologi sistem pembayaran."
+            }
+          ],
+          "retrieved_context": "# Pasal 100\n\nPersyaratan aspek kesiapan operasional untuk pengembangan aktivitas dan/atau pengembangan produk yang disertai dengan kerja sama dengan kategori risiko tinggi disertai dengan pemenuhan paling sedikit dokumen:\n\n- a. yang menunjukkan rekomendasi bagi PJP yang memiliki otoritas pengawas sesuai dengan ketentuan peraturan perundang-undangan;\n---\n# Pasal 177\n\nUntuk perlindungan konsumen, PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik wajib:\n\n1. membatasi permintaan dan penggunaan data dan/atau informasi pengguna uang elektronik, sebatas yang diperlukan dalam penyelenggaraan uang elektronik;\n2. menyediakan sarana dan/atau infrastruktur untuk pengisian ulang (top up) secara luas untuk keperluan pengguna uang elektronik; dan\n3. memiliki mekanisme penggantian kerugian finansial kepada pengguna uang elektronik sepanjang kerugian tersebut tidak disebabkan oleh kesalahan atau kelalaian pengguna uang elektronik.\n---\n# Pasal 216\n\n(1) Dokumen pendukung sebagaimana dimaksud dalam Pasal 215 ayat (2) meliputi:\n\n1. profil calon peserta mencakup informasi entitas;\n2. narahubung (contact person); dan\n3. data dan informasi.\n\n(2) Data dan informasi sebagaimana dimaksud pada ayat (1) huruf c, terdiri atas:\n\n1. fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n2. unsur inovasi dalam produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n3. manfaat bagi konsumen dan/atau perekonomian;\n4. aspek manajemen risiko, keamanan informasi, perlindungan konsumen, anti pencucian uang dan\n---\n# Pasal 193\n\nPJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana dengan menerbitkan kartu anjungan tunai mandiri dan/atau kartu debit wajib memberikan informasi secara tertulis kepada pengguna kartu anjungan tunai mandiri dan/atau kartu debit, paling sedikit meliputi:\n\n- a. prosedur dan tata cara penggunaan kartu anjungan tunai mandiri dan/atau kartu debit, fasilitas yang melekat pada kartu anjungan tunai mandiri dan/atau kartu debit, dan risiko yang mungkin timbul dari penggunaan kartu anjungan tunai mandiri dan/atau kartu debit;\n---\nb. PJP mengikuti uji coba pengembangan inovasi teknologi Sistem Pembayaran yang diselenggarakan Bank Indonesia dan dinyatakan berhasil;\n\nc. pengembangan aktivitas, pengembangan produk, dan/atau kerja sama telah memperoleh rekomendasi dari SRO yang dilakukan untuk memenuhi standar nasional yang ditetapkan oleh Bank Indonesia; dan/atau\n\nd. memenuhi aspek lain yang ditetapkan oleh Bank Indonesia.",
+          "reasoning_trace": "Klausa SOP tidak mencakup informasi penting yang diwajibkan oleh regulasi BI, seperti pembatasan data pengguna dan informasi mengenai fitur produk dan layanan. Hal ini dapat menimbulkan risiko tinggi terhadap kepatuhan regulasi dan perlindungan konsumen.",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Tambahkan informasi mengenai batas saldo dan batas transaksi sesuai dengan regulasi BI.",
+            "Sertakan prosedur KYC yang jelas untuk memastikan kepatuhan terhadap regulasi anti pencucian uang.",
+            "Jelaskan proses settlement yang sesuai dengan standar yang ditetapkan oleh BI.",
+            "Pastikan SOP mencakup pembatasan permintaan dan penggunaan data pengguna uang elektronik."
+          ]
+        },
+        "ojk_verdict": {
+          "agent_id": "OJK_SPECIALIST",
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "verdict": "NON-COMPLIANT",
+          "confidence_score": 0.85,
+          "violated_articles": [
+            {
+              "article": "Pasal 5 Ayat 4",
+              "regulation": "POJK No. XX/XX",
+              "violation_detail": "Klausa SOP tidak menyebutkan perlindungan data konsumen secara eksplisit.",
+              "required_value": "Perlindungan data konsumen harus dijelaskan secara rinci, termasuk bagaimana data akan dikelola dan dilindungi.",
+              "actual_value": "Klausa SOP hanya menyatakan status dokumen sebagai rahasia perusahaan tanpa rincian perlindungan data konsumen.",
+              "context": "Kurangnya penjelasan mengenai perlindungan data dapat menimbulkan risiko kebocoran data konsumen dan mengurangi kepercayaan konsumen terhadap perusahaan."
+            },
+            {
+              "article": "Pasal 5 Ayat 3",
+              "regulation": "POJK No. XX/XX",
+              "violation_detail": "Tidak ada penjelasan mengenai SLA pengaduan konsumen.",
+              "required_value": "Harus ada ketentuan yang jelas mengenai waktu tanggapan dan penyelesaian pengaduan konsumen.",
+              "actual_value": "Tidak ada informasi mengenai SLA pengaduan dalam klausa SOP.",
+              "context": "Ketiadaan SLA pengaduan dapat menyebabkan ketidakpuasan konsumen dan potensi peningkatan keluhan yang tidak tertangani dengan baik."
+            }
+          ],
+          "retrieved_context": "# Angka 5\n\nContoh data lain: alamat surat elektronik perusahaan, Nomor Pokok Wajib Pajak perusahaan, alamat Protokol Internet (IP address) perusahaan, aset dan data karyawan, dan pemilik manfaat (beneficiary owner).\n---\n# KETENTUAN UMUM\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.\n---\n# Ayat (3)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.",
+          "reasoning_trace": "Klausa SOP PT Dompet Digital Nusantara tidak mematuhi beberapa ketentuan dalam regulasi OJK terkait perlindungan konsumen dan pengelolaan data. Tidak adanya penjelasan rinci mengenai perlindungan data konsumen dan SLA pengaduan dapat menimbulkan risiko terhadap hak-hak konsumen, seperti kebocoran data dan ketidakpuasan layanan. Hal ini dapat berdampak negatif pada reputasi perusahaan dan kepercayaan konsumen.",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Menambahkan ketentuan rinci mengenai perlindungan data konsumen, termasuk bagaimana data akan dikelola dan dilindungi.",
+            "Memasukkan SLA pengaduan konsumen yang jelas, termasuk waktu tanggapan dan penyelesaian pengaduan.",
+            "Melakukan sosialisasi kepada konsumen mengenai hak-hak mereka terkait perlindungan data dan pengaduan."
+          ]
+        }
+      }
+    },
+    {
+      "clause_id": "CLAUSE-2",
+      "clause_text": "---\n**Dokumen ini adalah data sintetis (dummy) yang dirancang secara khusus untuk dievaluasi oleh Model Natural Language Processing (NLP) dalam mendeteksi _Compliance Gap_ secara otomatis.**",
+      "timestamp": "2026-04-04T22:24:09.015416",
+      "execution_time_ms": 15257.960000000001,
+      "bi_verdict": {
+        "agent_id": "BI_SPECIALIST",
+        "regulator": "Bank Indonesia (BI)",
+        "verdict": "NON-COMPLIANT",
+        "confidence_score": 0.85,
+        "violated_articles": [
+          {
+            "article": "Pasal 115",
+            "regulation": "PBI No. XX/XX",
+            "violation_detail": "Tidak ada penilaian risiko dan mitigasi yang memadai",
+            "required_value": "Dokumen penilaian risiko dan mitigasi",
+            "actual_value": "Tidak disebutkan dalam klausa SOP",
+            "context": "Pengembangan produk dengan risiko sedang"
+          },
+          {
+            "article": "Pasal 104",
+            "regulation": "PBI No. XX/XX",
+            "violation_detail": "Prosedur anti pencucian uang tidak dijelaskan",
+            "required_value": "Prosedur operasional anti pencucian uang",
+            "actual_value": "Tidak ada dalam klausa SOP",
+            "context": "Pengembangan produk dengan risiko tinggi"
+          }
+        ],
+        "retrieved_context": "Contoh dokumen lain antara lain penjelasan mengenai model bisnis dan/atau alur transaksi dari pengembangan produk, aktivitas, dan/atau kerja sama yang dilakukan.\n---\n# Pasal 115\n\nPersyaratan aspek penerapan manajemen risiko untuk pengembangan aktivitas atau produk yang disertai kerja sama dengan kategori risiko sedang dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n1. hasil penilaian terhadap eksposur risiko yang timbul serta mitigasi risiko;\n2. hasil penilaian terhadap prosedur pemantauan anti pencucian uang atau pencegahan pendanaan terorisme serta prosedur dan mekanisme pengelolaan fraud;\n3. hasil penyesuaian prosedur dan mekanisme berdasarkan hasil penilaian sebagaimana dimaksud dalam huruf b.\n---\n# Pasal 104\n\nPersyaratan aspek penerapan manajemen risiko untuk pengembangan aktivitas dan/atau pengembangan produk yang disertai kerja sama dengan kategori risiko tinggi dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n- a. kebijakan dan prosedur penerapan manajemen risiko;\n- b. prosedur operasional dalam rangka pemantauan anti pencucian uang atau pencegahan pendanaan terorisme;\n- c. prosedur dan mekanisme pengelolaan fraud; dan\n- d. hasil asesmen terhadap eksposur risiko yang timbul serta mitigasi risiko.\n---\n# Pasal 216\n\n(1) Dokumen pendukung sebagaimana dimaksud dalam Pasal 215 ayat (2) meliputi:\n\n1. profil calon peserta mencakup informasi entitas;\n2. narahubung (contact person); dan\n3. data dan informasi.\n\n(2) Data dan informasi sebagaimana dimaksud pada ayat (1) huruf c, terdiri atas:\n\n1. fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n2. unsur inovasi dalam produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n3. manfaat bagi konsumen dan/atau perekonomian;\n4. aspek manajemen risiko, keamanan informasi, perlindungan konsumen, anti pencucian uang dan\n---\n# Ayat (1)\n\nContoh data dan/atau informasi terkait Sistem Pembayaran yaitu laporan, dokumen, data, informasi, keterangan, dan/atau penjelasan terkait:\n\n- a. penyelenggaraan Sistem Pembayaran, seperti pengaduan konsumen, fraud, insiden, dan gangguan siber;\n- b. pemantauan kepatuhan peserta infrastruktur Sistem Pembayaran yang diselenggarakan Bank Indonesia seperti",
+        "reasoning_trace": "Klausa SOP tidak mencakup dokumen dan prosedur yang diwajibkan oleh Pasal 115 dan Pasal 104, terutama terkait penilaian risiko dan prosedur anti pencucian uang.",
+        "risk_level": "HIGH",
+        "recommendations": [
+          "Sertakan dokumen penilaian risiko dan mitigasi dalam SOP",
+          "Tambahkan prosedur operasional untuk pemantauan anti pencucian uang"
+        ]
+      },
+      "ojk_verdict": {
+        "agent_id": "OJK_SPECIALIST",
+        "regulator": "Otoritas Jasa Keuangan (OJK)",
+        "verdict": "NON-COMPLIANT",
+        "confidence_score": 0.85,
+        "violated_articles": [
+          {
+            "article": "Pasal 1 Ayat 1",
+            "regulation": "POJK No. XX/XX",
+            "violation_detail": "Klausa SOP tidak mencantumkan informasi mengenai perlindungan konsumen secara spesifik, seperti mekanisme penarikan agunan atau perjanjian baku.",
+            "required_value": "Klausa harus mencakup informasi tentang perlindungan konsumen dan mekanisme terkait.",
+            "actual_value": "Klausa hanya menyebutkan bahwa dokumen adalah data sintetis untuk evaluasi model NLP.",
+            "context": "Ketiadaan informasi perlindungan konsumen dapat menyebabkan konsumen tidak mendapatkan hak-hak mereka secara penuh dan dapat menimbulkan kebingungan atau ketidakpastian mengenai hak dan kewajiban mereka."
+          },
+          {
+            "article": "Pasal 1 Ayat 6",
+            "regulation": "POJK No. XX/XX",
+            "violation_detail": "Tidak ada evaluasi yang disebutkan untuk mengetahui tingkat pemahaman pegawai terkait perlindungan konsumen.",
+            "required_value": "Harus ada evaluasi untuk memastikan pegawai memahami materi pelatihan terkait perlindungan konsumen.",
+            "actual_value": "Klausa tidak menyebutkan adanya evaluasi pemahaman pegawai.",
+            "context": "Tanpa evaluasi, ada risiko bahwa pegawai tidak memahami sepenuhnya kebijakan perlindungan konsumen, yang dapat berdampak negatif pada pelayanan kepada konsumen."
+          }
+        ],
+        "retrieved_context": "# Huruf a\n\nContoh menelaah kesesuaian dokumen yang memuat informasi calon Konsumen dan/atau Konsumen dengan fakta yang sebenarnya antara lain mencocokkan kesesuaian tempat tinggal Konsumen dengan data pada identitas Konsumen, melakukan survei yang memadai, dan wawancara terhadap Konsumen untuk meneliti dan meyakini kebenaran informasi yang terdapat dalam dokumen yang disampaikan oleh Konsumen.\n---\n# Ayat (1)\n\nContoh tema dalam Pemeriksaan Tematik:\n\n- a. perjanjian baku;\n- b. kredit pemilikan rumah; dan\n- c. mekanisme penarikan agunan.\n---\n# Ayat (6)\n\nEvaluasi dilakukan antara lain untuk mengetahui tingkat pemahaman Pegawai dan kesesuaian materi pelatihan.\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.\n---\n# Ayat (5)\n\nDokumentasi dapat berupa rekaman suara, rekaman video, dan/atau konfirmasi secara tertulis.",
+        "reasoning_trace": "Klausa SOP yang disajikan tidak mematuhi beberapa aspek dari regulasi OJK terkait perlindungan konsumen. Tidak ada informasi yang jelas mengenai mekanisme perlindungan konsumen, seperti perjanjian baku atau mekanisme penarikan agunan, yang merupakan bagian penting dari perlindungan konsumen. Selain itu, tidak ada indikasi bahwa ada evaluasi pemahaman pegawai mengenai materi pelatihan, yang dapat menyebabkan kurangnya pemahaman dan penerapan kebijakan perlindungan konsumen.",
+        "risk_level": "MEDIUM",
+        "recommendations": [
+          "Tambahkan informasi spesifik mengenai perlindungan konsumen dalam klausa SOP, termasuk mekanisme penarikan agunan dan perjanjian baku.",
+          "Sertakan prosedur evaluasi untuk memastikan pegawai memahami kebijakan dan prosedur perlindungan konsumen.",
+          "Pastikan ada dokumentasi yang memadai untuk mendukung kepatuhan terhadap regulasi OJK, seperti rekaman suara atau video, dan konfirmasi tertulis."
+        ]
+      },
+      "final_verdict": {
+        "final_status": "NEEDS_HUMAN_REVIEW",
+        "overall_confidence": 0.85,
+        "regulatory_conflicts": [],
+        "evidence_matrix": {
+          "BI": {
+            "status": "NON-COMPLIANT",
+            "confidence": 0.85,
+            "violations": [
+              {
+                "article": "Pasal 115",
+                "detail": "Tidak ada penilaian risiko dan mitigasi yang memadai"
+              },
+              {
+                "article": "Pasal 104",
+                "detail": "Prosedur anti pencucian uang tidak dijelaskan"
+              }
+            ],
+            "reasoning": "Klausa SOP tidak mencakup dokumen dan prosedur yang diwajibkan oleh Pasal 115 dan Pasal 104, terutama terkait penilaian risiko dan prosedur anti pencucian uang."
+          },
+          "OJK": {
+            "status": "NON-COMPLIANT",
+            "confidence": 0.85,
+            "violations": [
+              {
+                "article": "Pasal 1 Ayat 1",
+                "detail": "Klausa SOP tidak mencantumkan informasi mengenai perlindungan konsumen secara spesifik, seperti mekanisme penarikan agunan atau perjanjian baku."
+              },
+              {
+                "article": "Pasal 1 Ayat 6",
+                "detail": "Tidak ada evaluasi yang disebutkan untuk mengetahui tingkat pemahaman pegawai terkait perlindungan konsumen."
+              }
+            ],
+            "reasoning": "Klausa SOP yang disajikan tidak mematuhi beberapa aspek dari regulasi OJK terkait perlindungan konsumen. Tidak ada informasi yang jelas mengenai mekanisme perlindungan konsumen, seperti perjanjian baku atau mekanisme penarikan agunan, yang merupakan bagian penting dari perlindungan konsumen. Selain itu, tidak ada indikasi bahwa ada evaluasi pemahaman pegawai mengenai materi pelatihan, yang dapat menyebabkan kurangnya pemahaman dan penerapan kebijakan perlindungan konsumen."
+          }
+        },
+        "risk_score": "CRITICAL",
+        "recommendations": [
+          "[BI] Pasal 115: Ubah 'Tidak disebutkan dalam klausa SOP' menjadi 'Dokumen penilaian risiko dan mitigasi'",
+          "[BI] Pasal 104: Ubah 'Tidak ada dalam klausa SOP' menjadi 'Prosedur operasional anti pencucian uang'",
+          "[OJK] Pasal 1 Ayat 1: Ubah 'Klausa hanya menyebutkan bahwa dokumen adalah data sintetis untuk evaluasi model NLP.' menjadi 'Klausa harus mencakup informasi tentang perlindungan konsumen dan mekanisme terkait.'",
+          "[OJK] Pasal 1 Ayat 6: Ubah 'Klausa tidak menyebutkan adanya evaluasi pemahaman pegawai.' menjadi 'Harus ada evaluasi untuk memastikan pegawai memahami materi pelatihan terkait perlindungan konsumen.'",
+          "[BI] Sertakan dokumen penilaian risiko dan mitigasi dalam SOP",
+          "[BI] Tambahkan prosedur operasional untuk pemantauan anti pencucian uang",
+          "[OJK] Tambahkan informasi spesifik mengenai perlindungan konsumen dalam klausa SOP, termasuk mekanisme penarikan agunan dan perjanjian baku.",
+          "[OJK] Sertakan prosedur evaluasi untuk memastikan pegawai memahami kebijakan dan prosedur perlindungan konsumen.",
+          "[OJK] Pastikan ada dokumentasi yang memadai untuk mendukung kepatuhan terhadap regulasi OJK, seperti rekaman suara atau video, dan konfirmasi tertulis."
+        ],
+        "bi_verdict": {
+          "agent_id": "BI_SPECIALIST",
+          "regulator": "Bank Indonesia (BI)",
+          "verdict": "NON-COMPLIANT",
+          "confidence_score": 0.85,
+          "violated_articles": [
+            {
+              "article": "Pasal 115",
+              "regulation": "PBI No. XX/XX",
+              "violation_detail": "Tidak ada penilaian risiko dan mitigasi yang memadai",
+              "required_value": "Dokumen penilaian risiko dan mitigasi",
+              "actual_value": "Tidak disebutkan dalam klausa SOP",
+              "context": "Pengembangan produk dengan risiko sedang"
+            },
+            {
+              "article": "Pasal 104",
+              "regulation": "PBI No. XX/XX",
+              "violation_detail": "Prosedur anti pencucian uang tidak dijelaskan",
+              "required_value": "Prosedur operasional anti pencucian uang",
+              "actual_value": "Tidak ada dalam klausa SOP",
+              "context": "Pengembangan produk dengan risiko tinggi"
+            }
+          ],
+          "retrieved_context": "Contoh dokumen lain antara lain penjelasan mengenai model bisnis dan/atau alur transaksi dari pengembangan produk, aktivitas, dan/atau kerja sama yang dilakukan.\n---\n# Pasal 115\n\nPersyaratan aspek penerapan manajemen risiko untuk pengembangan aktivitas atau produk yang disertai kerja sama dengan kategori risiko sedang dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n1. hasil penilaian terhadap eksposur risiko yang timbul serta mitigasi risiko;\n2. hasil penilaian terhadap prosedur pemantauan anti pencucian uang atau pencegahan pendanaan terorisme serta prosedur dan mekanisme pengelolaan fraud;\n3. hasil penyesuaian prosedur dan mekanisme berdasarkan hasil penilaian sebagaimana dimaksud dalam huruf b.\n---\n# Pasal 104\n\nPersyaratan aspek penerapan manajemen risiko untuk pengembangan aktivitas dan/atau pengembangan produk yang disertai kerja sama dengan kategori risiko tinggi dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n- a. kebijakan dan prosedur penerapan manajemen risiko;\n- b. prosedur operasional dalam rangka pemantauan anti pencucian uang atau pencegahan pendanaan terorisme;\n- c. prosedur dan mekanisme pengelolaan fraud; dan\n- d. hasil asesmen terhadap eksposur risiko yang timbul serta mitigasi risiko.\n---\n# Pasal 216\n\n(1) Dokumen pendukung sebagaimana dimaksud dalam Pasal 215 ayat (2) meliputi:\n\n1. profil calon peserta mencakup informasi entitas;\n2. narahubung (contact person); dan\n3. data dan informasi.\n\n(2) Data dan informasi sebagaimana dimaksud pada ayat (1) huruf c, terdiri atas:\n\n1. fitur produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n2. unsur inovasi dalam produk, aktivitas, layanan, dan model bisnis yang akan diuji coba;\n3. manfaat bagi konsumen dan/atau perekonomian;\n4. aspek manajemen risiko, keamanan informasi, perlindungan konsumen, anti pencucian uang dan\n---\n# Ayat (1)\n\nContoh data dan/atau informasi terkait Sistem Pembayaran yaitu laporan, dokumen, data, informasi, keterangan, dan/atau penjelasan terkait:\n\n- a. penyelenggaraan Sistem Pembayaran, seperti pengaduan konsumen, fraud, insiden, dan gangguan siber;\n- b. pemantauan kepatuhan peserta infrastruktur Sistem Pembayaran yang diselenggarakan Bank Indonesia seperti",
+          "reasoning_trace": "Klausa SOP tidak mencakup dokumen dan prosedur yang diwajibkan oleh Pasal 115 dan Pasal 104, terutama terkait penilaian risiko dan prosedur anti pencucian uang.",
+          "risk_level": "HIGH",
+          "recommendations": [
+            "Sertakan dokumen penilaian risiko dan mitigasi dalam SOP",
+            "Tambahkan prosedur operasional untuk pemantauan anti pencucian uang"
+          ]
+        },
+        "ojk_verdict": {
+          "agent_id": "OJK_SPECIALIST",
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "verdict": "NON-COMPLIANT",
+          "confidence_score": 0.85,
+          "violated_articles": [
+            {
+              "article": "Pasal 1 Ayat 1",
+              "regulation": "POJK No. XX/XX",
+              "violation_detail": "Klausa SOP tidak mencantumkan informasi mengenai perlindungan konsumen secara spesifik, seperti mekanisme penarikan agunan atau perjanjian baku.",
+              "required_value": "Klausa harus mencakup informasi tentang perlindungan konsumen dan mekanisme terkait.",
+              "actual_value": "Klausa hanya menyebutkan bahwa dokumen adalah data sintetis untuk evaluasi model NLP.",
+              "context": "Ketiadaan informasi perlindungan konsumen dapat menyebabkan konsumen tidak mendapatkan hak-hak mereka secara penuh dan dapat menimbulkan kebingungan atau ketidakpastian mengenai hak dan kewajiban mereka."
+            },
+            {
+              "article": "Pasal 1 Ayat 6",
+              "regulation": "POJK No. XX/XX",
+              "violation_detail": "Tidak ada evaluasi yang disebutkan untuk mengetahui tingkat pemahaman pegawai terkait perlindungan konsumen.",
+              "required_value": "Harus ada evaluasi untuk memastikan pegawai memahami materi pelatihan terkait perlindungan konsumen.",
+              "actual_value": "Klausa tidak menyebutkan adanya evaluasi pemahaman pegawai.",
+              "context": "Tanpa evaluasi, ada risiko bahwa pegawai tidak memahami sepenuhnya kebijakan perlindungan konsumen, yang dapat berdampak negatif pada pelayanan kepada konsumen."
+            }
+          ],
+          "retrieved_context": "# Huruf a\n\nContoh menelaah kesesuaian dokumen yang memuat informasi calon Konsumen dan/atau Konsumen dengan fakta yang sebenarnya antara lain mencocokkan kesesuaian tempat tinggal Konsumen dengan data pada identitas Konsumen, melakukan survei yang memadai, dan wawancara terhadap Konsumen untuk meneliti dan meyakini kebenaran informasi yang terdapat dalam dokumen yang disampaikan oleh Konsumen.\n---\n# Ayat (1)\n\nContoh tema dalam Pemeriksaan Tematik:\n\n- a. perjanjian baku;\n- b. kredit pemilikan rumah; dan\n- c. mekanisme penarikan agunan.\n---\n# Ayat (6)\n\nEvaluasi dilakukan antara lain untuk mengetahui tingkat pemahaman Pegawai dan kesesuaian materi pelatihan.\n---\n# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.\n---\n# Ayat (5)\n\nDokumentasi dapat berupa rekaman suara, rekaman video, dan/atau konfirmasi secara tertulis.",
+          "reasoning_trace": "Klausa SOP yang disajikan tidak mematuhi beberapa aspek dari regulasi OJK terkait perlindungan konsumen. Tidak ada informasi yang jelas mengenai mekanisme perlindungan konsumen, seperti perjanjian baku atau mekanisme penarikan agunan, yang merupakan bagian penting dari perlindungan konsumen. Selain itu, tidak ada indikasi bahwa ada evaluasi pemahaman pegawai mengenai materi pelatihan, yang dapat menyebabkan kurangnya pemahaman dan penerapan kebijakan perlindungan konsumen.",
+          "risk_level": "MEDIUM",
+          "recommendations": [
+            "Tambahkan informasi spesifik mengenai perlindungan konsumen dalam klausa SOP, termasuk mekanisme penarikan agunan dan perjanjian baku.",
+            "Sertakan prosedur evaluasi untuk memastikan pegawai memahami kebijakan dan prosedur perlindungan konsumen.",
+            "Pastikan ada dokumentasi yang memadai untuk mendukung kepatuhan terhadap regulasi OJK, seperti rekaman suara atau video, dan konfirmasi tertulis."
+          ]
+        }
+      }
+    }
+  ]
+}

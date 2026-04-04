@@ -1,0 +1,199 @@
+{
+  "timestamp": "2026-04-04T22:36:21.687237",
+  "metrics": {
+    "COMPLIANT": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 0,
+      "TN": 0,
+      "Precision": 0,
+      "Recall": 0,
+      "F1-Score": 0,
+      "Accuracy": 0
+    },
+    "NON_COMPLIANT": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 0,
+      "TN": 0,
+      "Precision": 0,
+      "Recall": 0,
+      "F1-Score": 0,
+      "Accuracy": 0
+    },
+    "NOT_ADDRESSED": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 0,
+      "TN": 0,
+      "Precision": 0,
+      "Recall": 0,
+      "F1-Score": 0,
+      "Accuracy": 0
+    },
+    "NEEDS_REVIEW": {
+      "TP": 0,
+      "FP": 0,
+      "FN": 0,
+      "TN": 0,
+      "Precision": 0,
+      "Recall": 0,
+      "F1-Score": 0,
+      "Accuracy": 0
+    },
+    "MACRO_AVG": {
+      "Precision": 0.0,
+      "Recall": 0.0,
+      "F1-Score": 0.0
+    },
+    "OVERALL": {
+      "Accuracy": 0.0,
+      "Total_Samples": 12,
+      "Correct_Predictions": 0
+    }
+  },
+  "confusion_matrix": {
+    "COMPLIANT": {
+      "COMPLIANT": 0,
+      "NON_COMPLIANT": 0,
+      "NOT_ADDRESSED": 0,
+      "NEEDS_REVIEW": 0
+    },
+    "NON_COMPLIANT": {
+      "COMPLIANT": 0,
+      "NON_COMPLIANT": 0,
+      "NOT_ADDRESSED": 0,
+      "NEEDS_REVIEW": 0
+    },
+    "NOT_ADDRESSED": {
+      "COMPLIANT": 0,
+      "NON_COMPLIANT": 0,
+      "NOT_ADDRESSED": 0,
+      "NEEDS_REVIEW": 0
+    },
+    "NEEDS_REVIEW": {
+      "COMPLIANT": 0,
+      "NON_COMPLIANT": 0,
+      "NOT_ADDRESSED": 0,
+      "NEEDS_REVIEW": 0
+    }
+  },
+  "agent_metrics": {
+    "BI_Agent": {
+      "verdict_distribution": {
+        "compliant": 0,
+        "non_compliant": 0,
+        "not_addressed": 0,
+        "needs_review": 0
+      },
+      "total_violations_found": 0
+    },
+    "OJK_Agent": {
+      "verdict_distribution": {
+        "compliant": 0,
+        "non_compliant": 0,
+        "not_addressed": 0,
+        "needs_review": 0
+      },
+      "total_violations_found": 0
+    }
+  },
+  "results": [
+    {
+      "clause_id": "KLAUSA-1",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NOT_ADDRESSED",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-2",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-3",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-4",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "COMPLIANT",
+      "ojk_verdict": "COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-5",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-6",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "COMPLIANT",
+      "ojk_verdict": "COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-7",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-8",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-9",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-10",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-11",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    },
+    {
+      "clause_id": "KLAUSA-12",
+      "predicted": null,
+      "expected": null,
+      "bi_verdict": "NON-COMPLIANT",
+      "ojk_verdict": "NON-COMPLIANT",
+      "confidence": null
+    }
+  ]
+}

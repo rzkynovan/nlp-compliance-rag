@@ -46,26 +46,73 @@ async def run_audit_on_file(
         with open(file_path, 'r', encoding='utf-8') as f:
             content = f.read()
         
-        # Split by sections (## headings)
+        # Parse SOP structure - extract clauses from each BAB section
         clauses = []
         current_section = None
+        clause_counter = 0
         
-        for line in content.split('\n\n'):
-            line = line.strip()
-            if len(line) < 30:
-                continue
+        lines = content.split('\n')
+        current_clause_text = []
+        
+        for line in lines:
+            line_stripped = line.strip()
             
-            # Check if it's a heading
-            if line.startswith('##'):
-                # Skip heading, next paragraphs are content
-                current_section = line.replace('#', '').strip()
-                continue
+            # Detect BAB sections
+            if line_stripped.startswith('## BAB'):
+                # Save previous clause if exists
+                if current_clause_text and current_section:
+                    clause_text = '\n'.join(current_clause_text).strip()
+                    if len(clause_text) >= 30:
+                        clause_counter += 1
+                        clauses.append({
+                            "id": f"KLAUSA-{clause_counter}",
+                            "text": clause_text,
+                            "section": current_section
+                        })
+                
+                current_section = line_stripped.replace('##', '').strip()
+                current_clause_text = []
             
-            clauses.append({
-                "id": f"CLAUSE-{len(clauses)+1}",
-                "text": line[:1000],  # Limit length
-                "section": current_section
-            })
+            # Detect numbered clauses (1., 2., etc.)
+            elif line_stripped and line_stripped[0].isdigit() and '. ' in line_stripped[:5]:
+                # Save previous clause if exists
+                if current_clause_text:
+                    clause_text = '\n'.join(current_clause_text).strip()
+                    if len(clause_text) >= 30:
+                        clause_counter += 1
+                        clauses.append({
+                            "id": f"KLAUSA-{clause_counter}",
+                            "text": clause_text,
+                            "section": current_section or "PENDAHULUAN"
+                        })
+                
+                current_clause_text = [line_stripped]
+            
+            # Continue adding to current clause
+            elif line_stripped and not line_stripped.startswith('---') and not line_stripped.startswith('**('):
+                current_clause_text.append(line_stripped)
+        
+        # Don't forget the last clause
+        if current_clause_text and current_section:
+            clause_text = '\n'.join(current_clause_text).strip()
+            if len(clause_text) >= 30:
+                clause_counter += 1
+                clauses.append({
+                    "id": f"KLAUSA-{clause_counter}",
+                    "text": clause_text,
+                    "section": current_section
+                })
+        
+        # If no clauses found, fall back to line-by-line
+        if not clauses:
+            for i, line in enumerate(content.split('\n\n')):
+                line = line.strip()
+                if len(line) >= 30:
+                    clauses.append({
+                        "id": f"CLAUSE-{i+1}",
+                        "text": line[:1000],
+                        "section": None
+                    })
     
     elif file_path.suffix == ".pdf":
         print("PDF files require LlamaParse API usage.")
