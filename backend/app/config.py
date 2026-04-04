@@ -1,6 +1,6 @@
 from pydantic_settings import BaseSettings, SettingsConfigDict
-from pydantic import Field
-from typing import Optional, Literal, List
+from pydantic import Field, field_validator
+from typing import Optional, Literal, List, Union
 from functools import lru_cache
 
 
@@ -42,11 +42,17 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 10
     RATE_LIMIT_TOKENS_PER_MINUTE: int = 100000
 
-    # CORS: list allowed origins explicitly — never use "*" with credentials=True
-    ALLOWED_ORIGINS: List[str] = Field(
-        default=["http://localhost:3000"],
-        env="ALLOWED_ORIGINS"
-    )
+    # CORS: list allowed origins — stored as raw string, parsed via validator
+    # Accepts: JSON array '["http://a","http://b"]' OR comma-separated "http://a,http://b"
+    ALLOWED_ORIGINS: str = Field(default="http://localhost:3000")
+
+    @property
+    def allowed_origins_list(self) -> List[str]:
+        v = self.ALLOWED_ORIGINS.strip()
+        if v.startswith("["):
+            import json
+            return json.loads(v)
+        return [o.strip() for o in v.split(",") if o.strip()]
 
 
 MODEL_COSTS = {

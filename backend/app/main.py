@@ -22,7 +22,7 @@ async def lifespan(app: FastAPI):
     log.info(f"Cost Optimization Mode: {settings.COST_OPTIMIZATION_MODE}")
     log.info(f"Daily Budget Limit: ${settings.DAILY_BUDGET_LIMIT_USD}")
     log.info(f"Cache Enabled: {settings.ENABLE_CACHE}")
-    log.info(f"Allowed Origins: {settings.ALLOWED_ORIGINS}")
+    log.info(f"Allowed Origins: {settings.allowed_origins_list}")
     yield
     log.info(f"Shutting down {settings.PROJECT_NAME}")
 
@@ -57,7 +57,7 @@ app = FastAPI(
 # Use explicit origin list from ALLOWED_ORIGINS env var.
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.ALLOWED_ORIGINS,
+    allow_origins=settings.allowed_origins_list,
     allow_credentials=True,
     allow_methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["*"],
@@ -119,11 +119,12 @@ async def add_process_time_header(request: Request, call_next):
     return response
 
 
+# Order matters: specific paths before catch-all path params (/{run_id}, /{document_id})
 app.include_router(health.router, prefix=settings.API_V1_PREFIX, tags=["health"])
 app.include_router(audit.router, prefix=settings.API_V1_PREFIX, tags=["audit"])
+app.include_router(usage.router, prefix=settings.API_V1_PREFIX, tags=["usage"])
 app.include_router(regulations.router, prefix=settings.API_V1_PREFIX, tags=["regulations"])
 app.include_router(experiments.router, prefix=settings.API_V1_PREFIX, tags=["experiments"])
-app.include_router(usage.router, prefix=settings.API_V1_PREFIX, tags=["usage"])
 
 
 if __name__ == "__main__":
