@@ -1,0 +1,141 @@
+# Golden Dataset untuk Evaluasi Multi-Agent Compliance Auditor
+# Berisi klausa dengan expected label yang sudah ditentukan
+# Format: clause_id, text, expected_status, expected_bi_violations, expected_ojk_violations
+
+goldendataset:
+  metadata:
+    name: "SOP Dummy E-Wallet Golden Dataset"
+    version: "1.0"
+    description: "Dataset sintetis untuk evaluasi sistem audit kepatuhan"
+    created: "2026-04-04"
+  
+  samples:
+    # KLAUSA COMPLIANT - Seharusnya deteksi PATUH
+    - id: "COMPLIANT-01"
+      text: "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi."
+      expected_status: "COMPLIANT"
+      expected_bi_status: "COMPLIANT"
+      expected_ojk_status: "COMPLIANT"
+      category: "PRIVACY"
+      notes: "Klausa ini sudah sesuai dengan POJK 22/2023 Pasal 23 ayat 2 tentang persetujuan konsumen"
+    
+    - id: "COMPLIANT-02"
+      text: "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupun at-rest."
+      expected_status: "COMPLIANT"
+      expected_bi_status: "COMPLIANT"
+      expected_ojk_status: "COMPLIANT"
+      category: "SECURITY"
+      notes: "Enkripsi sudah menjadi standar keamanan yang diwajibkan"
+    
+    - id: "COMPLIANT-03"
+      text: "Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas Data Pribadi mereka kapan saja melalui aplikasi."
+      expected_status: "COMPLIANT"
+      expected_bi_status: "COMPLIANT"
+      expected_ojk_status: "COMPLIANT"
+      category: "PRIVACY"
+      notes: "Hak penghapusan data sesuai dengan POJK 22/2023"
+    
+    # KLAUSA NON-COMPLIANT - Seharusnya deteksi PELANGGARAN
+    - id: "NONCOMPLIANT-01"
+      text: "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaikan masalah nasabah."
+      expected_status: "NON_COMPLIANT"
+      expected_bi_status: "NOT_ADDRESSED"
+      expected_ojk_status: "NON_COMPLIANT"
+      expected_violations:
+        - regulator: "OJK"
+          article: "Pasal 75"
+          issue: "SLA penyelesaian pengaduan harus maksimal 20 hari kerja"
+          required: "20 hari kerja"
+          actual: "60 hari kerja"
+      category: "COMPLAINT"
+      notes: "Pelanggaran berat POJK - melebihi batas SLA 3x lipat"
+    
+    - id: "NONCOMPLIANT-02"
+      text: "Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo maksimal hingga Rp 10.000.000 (Sepuluh Juta Rupiah)."
+      expected_status: "NON_COMPLIANT"
+      expected_bi_status: "NON_COMPLIANT"
+      expected_ojk_status: "NOT_ADDRESSED"
+      expected_violations:
+        - regulator: "BI"
+          article: "Pasal 160"
+          issue: "Batas saldo maksimal akun unregistered melebihi ketentuan"
+          required: "Rp 2.000.000"
+          actual: "Rp 10.000.000"
+      category: "LIMITS"
+      notes: "Pelanggaran PBI - batas saldo unregistered 5x lipat dari ketentuan"
+    
+    - id: "NONCOMPLIANT-03"
+      text: "Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk mendorong pertumbuhan GTV perusahaan."
+      expected_status: "NON_COMPLIANT"
+      expected_bi_status: "NON_COMPLIANT"
+      expected_ojk_status: "NON_COMPLIANT"
+      expected_violations:
+        - regulator: "BI"
+          article: "Pasal 160"
+          issue: "Tidak ada batas transaksi masuk bulanan"
+          required: "Rp 20.000.000"
+          actual: "Tidak dibatasi"
+        - regulator: "OJK"
+          article: "Pasal 28"
+          issue: "Perlu batasan untuk perlindungan konsumen"
+          required: "Terdapat batasan"
+          actual: "Tidak ada batasan"
+      category: "LIMITS"
+      notes: "Pelanggaran ganda - BI dan OJK"
+    
+    - id: "NONCOMPLIANT-04"
+      text: "Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin hingga Jumat (09:00 - 15:00 WIB). Keluhan yang masuk di luar jam tersebut akan diabaikan."
+      expected_status: "NON_COMPLIANT"
+      expected_bi_status: "NOT_ADDRESSED"
+      expected_ojk_status: "NON_COMPLIANT"
+      expected_violations:
+        - regulator: "OJK"
+          article: "Pasal 73"
+          issue: "Layanan pengaduan harus tersedia dengan SLA yang jelas"
+          required: "Layanan pengaduan responsif"
+          actual: "Dibatasi jam operasional dan diabaikan di luar jam"
+      category: "COMPLAINT"
+      notes: "Pelanggaran POJK - pembatasan pengaduan konsumen"
+    
+    - id: "NONCOMPLIANT-05"
+      text: "Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan akunnya selama 7 hari tanpa pemberitahuan sebelumnya."
+      expected_status: "NON_COMPLIANT"
+      expected_bi_status: "NOT_ADDRESSED"
+      expected_ojk_status: "NON_COMPLIANT"
+      expected_violations:
+        - regulator: "OJK"
+          article: "Pasal 44"
+          issue: "Klausula baku yang merugikan konsumen"
+          required: "Tidak boleh ada klausula yang merugikan konsumen secara sepihak"
+          actual: "Pembekuan akun tanpa pemberitahuan"
+      category: "CONSUMER_RIGHTS"
+      notes: "Klausula baku yang dilarang - merugikan konsumen"
+    
+    # KLAUSA AMBIGU / NEEDS_REVIEW
+    - id: "AMBIGUOUS-01"
+      text: "Perusahaan berhak mengubah syarat dan ketentuan sewaktu-waktu tanpa pemberitahuan terlebih dahulu."
+      expected_status: "NEEDS_REVIEW"
+      expected_bi_status: "NOT_ADDRESSED"
+      expected_ojk_status: "NON_COMPLIANT"
+      category: "TERMS"
+      notes: "Perlu review lebih lanjut - potensi klausula baku"
+
+confusion_matrix_expected:
+  description: "Expected confusion matrix for golden dataset"
+  classes: ["COMPLIANT", "NON_COMPLIANT", "NOT_ADDRESSED", "NEEDS_REVIEW"]
+  
+evaluation_criteria:
+  primary_metrics:
+    - "Precision for NON_COMPLIANT class"
+    - "Recall for NON_COMPLIANT class"
+    - "F1-Score for NON_COMPLIANT class"
+  
+  importance_weights:
+    NON_COMPLIANT: 2.0
+    COMPLIANT: 1.0
+    NEEDS_REVIEW: 1.0
+    NOT_ADDRESSED: 1.0
+  
+  critical_findings:
+    - "False Negative (NON_COMPLIANT predicted as COMPLIANT) = HIGH RISK"
+    - "False Positive (COMPLIANT predicted as NON_COMPLIANT) = LOW RISK"
