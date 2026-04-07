@@ -1,3 +1,5 @@
+import { cn } from "@/lib/utils";
+
 export function LoadingSpinner({ className }: { className?: string }) {
   return (
     <div className={cn("flex items-center justify-center p-8", className)}>
@@ -58,6 +60,3 @@ export function SkeletonText({ lines = 3 }: { lines?: number }) {
   );
 }
 
-function cn(...classes: (string | boolean | undefined)[]) {
-  return classes.filter(Boolean).join(" ");
-}

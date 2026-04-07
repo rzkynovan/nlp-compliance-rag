@@ -1,269 +1,251 @@
 "use client";
 
 import { useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { useMutation } from "@tanstack/react-query";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { analyzeSop } from "@/lib/api";
-import { AlertCircle, CheckCircle2, Clock, Loader2 } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { toast } from "sonner";
+import { FileText, Keyboard, RotateCcw, Info } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { analyzeSop, type AuditResponse } from "@/lib/api";
+import { AuditForm } from "@/components/audit/AuditForm";
+import { ResultCard } from "@/components/audit/ResultCard";
+import { FileUploadZone } from "@/components/audit/FileUploadZone";
 
-const auditSchema = z.object({
-  clause: z.string().min(10, "Klausa minimal 10 karakter"),
-  regulator: z.enum(["all", "BI", "OJK"]),
-  top_k: z.number().min(1).max(20),
-  clause_id: z.string().optional(),
-  context: z.string().optional(),
-});
+const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
 
-type AuditFormValues = z.infer<typeof auditSchema>;
+type InputMode = "text" | "upload";
 
 export default function AuditPage() {
-  const [result, setResult] = useState<Awaited<ReturnType<typeof analyzeSop>> | null>(null);
-
-  const {
-    register,
-    handleSubmit,
-    setValue,
-    watch,
-    formState: { errors },
-  } = useForm<AuditFormValues>({
-    resolver: zodResolver(auditSchema),
-    defaultValues: {
-      clause: "",
-      regulator: "all",
-      top_k: 5,
-    },
-  });
+  const [mode, setMode] = useState<InputMode>("text");
+  const [result, setResult] = useState<AuditResponse | null>(null);
+  const [prefilledClause, setPrefilledClause] = useState<string>("");
 
   const mutation = useMutation({
     mutationFn: analyzeSop,
     onSuccess: (data) => {
       setResult(data);
+      toast.success("Audit selesai", {
+        description: `Status: ${data.final_status} · ${data.latency_ms.toFixed(0)}ms`,
+      });
+    },
+    onError: (err) => {
+      toast.error("Audit gagal", {
+        description: err instanceof Error ? err.message : "Terjadi kesalahan.",
+      });
     },
   });
 
-  const onSubmit = (data: AuditFormValues) => {
-    mutation.mutate(data);
+  const handleClauseSelect = (clause: string) => {
+    setPrefilledClause(clause);
+    setMode("text");
+    toast.info("Klausa dipilih", {
+      description: "Periksa dan edit klausa di form, lalu klik Jalankan Audit.",
+    });
   };
 
-  const regulator = watch("regulator");
+  const handleReset = () => {
+    setResult(null);
+    setPrefilledClause("");
+    mutation.reset();
+  };
 
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Audit Kepatuhan</h1>
-        <p className="text-gray-600 mt-1">
-          Analisis klausa SOP untuk kepatuhan regulasi BI dan OJK
-        </p>
+      {/* Page header */}
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-gray-900">Audit Kepatuhan</h1>
+          <p className="text-gray-500 mt-1 text-sm">
+            Analisis klausa SOP terhadap regulasi Bank Indonesia dan OJK menggunakan Multi-Agent RAG
+          </p>
+        </div>
+        {result && (
+          <button
+            onClick={handleReset}
+            className="flex items-center gap-1.5 text-sm text-slate-500 hover:text-slate-700 transition-colors"
+          >
+            <RotateCcw className="h-3.5 w-3.5" />
+            Reset
+          </button>
+        )}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-        <Card>
-          <CardHeader>
-            <CardTitle>Form Audit</CardTitle>
-            <CardDescription>
-              Masukkan klausa SOP yang ingin diaudit
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="clause">Klausa SOP</Label>
-                <Textarea
-                  id="clause"
-                  placeholder="Contoh: Saldo maksimal untuk akun unverified adalah Rp 10.000.000"
-                  rows={4}
-                  {...register("clause")}
-                />
-                {errors.clause && (
-                  <p className="text-sm text-red-500">{errors.clause.message}</p>
-                )}
-              </div>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        {/* ── Left: Input panel ── */}
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+          {/* Input mode tabs */}
+          <div className="flex border-b border-slate-100">
+            <TabButton
+              active={mode === "text"}
+              onClick={() => setMode("text")}
+              icon={<Keyboard className="h-3.5 w-3.5" />}
+              label="Input Teks"
+            />
+            <TabButton
+              active={mode === "upload"}
+              onClick={() => setMode("upload")}
+              icon={<FileText className="h-3.5 w-3.5" />}
+              label="Upload Dokumen"
+            />
+          </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="regulator">Regulator</Label>
-                  <Select
-                    value={regulator}
-                    onValueChange={(value) => setValue("regulator", value as "all" | "BI" | "OJK")}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih regulator" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="all">Semua Regulator</SelectItem>
-                      <SelectItem value="BI">Bank Indonesia</SelectItem>
-                      <SelectItem value="OJK">OJK</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="top_k">Jumlah Pasal (Top-K)</Label>
-                  <Input
-                    id="top_k"
-                    type="number"
-                    min={1}
-                    max={20}
-                    {...register("top_k", { valueAsNumber: true })}
+          <div className="p-6">
+            <AnimatePresence mode="wait">
+              {mode === "text" ? (
+                <motion.div
+                  key="text"
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: 8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <p className="text-xs text-slate-400 mb-4">
+                    Ketik atau tempel klausa SOP yang ingin diaudit.
+                  </p>
+                  <AuditForm
+                    key={prefilledClause}
+                    onSubmit={(data) => mutation.mutate(data)}
+                    isPending={mutation.isPending}
+                    defaultValues={
+                      prefilledClause ? { clause: prefilledClause } : undefined
+                    }
                   />
-                </div>
-              </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key="upload"
+                  initial={{ opacity: 0, x: 8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -8 }}
+                  transition={{ duration: 0.18 }}
+                >
+                  <div className="flex items-start gap-2 rounded-lg bg-blue-50 border border-blue-100 p-3 mb-4">
+                    <Info className="h-3.5 w-3.5 text-blue-500 mt-0.5 shrink-0" />
+                    <p className="text-xs text-blue-700">
+                      Upload file PDF, TXT, atau MD. Sistem akan mengekstrak teks dan menampilkan
+                      daftar klausa yang dapat dipilih untuk diaudit.
+                    </p>
+                  </div>
+                  <FileUploadZone
+                    onClauseSelect={handleClauseSelect}
+                    apiUrl={API_URL}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="clause_id">ID Klausa (Opsional)</Label>
-                <Input
-                  id="clause_id"
-                  placeholder="SOP-001"
-                  {...register("clause_id")}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="context">Konteks Tambahan (Opsional)</Label>
-                <Textarea
-                  id="context"
-                  placeholder="Informasi tambahan untuk membantu analisis"
-                  rows={2}
-                  {...register("context")}
-                />
-              </div>
-
-              <Button
-                type="submit"
-                className="w-full"
-                disabled={mutation.isPending}
+        {/* ── Right: Results panel ── */}
+        <div>
+          <AnimatePresence mode="wait">
+            {mutation.isPending && (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="rounded-xl border border-slate-200 bg-white shadow-sm p-10 flex flex-col items-center justify-center gap-3 text-center"
               >
-                {mutation.isPending ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Memproses...
-                  </>
-                ) : (
-                  "Jalankan Audit"
-                )}
-              </Button>
+                <div className="relative h-12 w-12">
+                  <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
+                  <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-700">Menganalisis klausa...</p>
+                  <p className="text-xs text-slate-400 mt-0.5">Multi-agent RAG sedang bekerja</p>
+                </div>
+              </motion.div>
+            )}
 
-              {mutation.isError && (
-                <div className="flex items-center gap-2 text-red-500 text-sm">
-                  <AlertCircle className="h-4 w-4" />
-                  <span>
+            {mutation.isError && !mutation.isPending && (
+              <motion.div
+                key="error"
+                initial={{ opacity: 0, scale: 0.97 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0 }}
+                className="rounded-xl border border-red-200 bg-red-50 p-8 flex flex-col items-center gap-3 text-center"
+              >
+                <div className="h-10 w-10 rounded-full bg-red-100 flex items-center justify-center">
+                  <span className="text-red-500 text-xl">!</span>
+                </div>
+                <div>
+                  <p className="font-medium text-red-800">Audit gagal</p>
+                  <p className="text-sm text-red-600 mt-1">
                     {mutation.error instanceof Error
                       ? mutation.error.message
-                      : "Terjadi kesalahan saat memproses audit"}
-                  </span>
+                      : "Terjadi kesalahan saat memproses audit."}
+                  </p>
                 </div>
-              )}
-            </form>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle>Hasil Audit</CardTitle>
-            <CardDescription>
-              Status kepatuhan berdasarkan analisis multi-agent
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            {mutation.isPending ? (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                <Loader2 className="h-8 w-8 animate-spin mb-3" />
-                <p>Memproses audit...</p>
-              </div>
-            ) : result ? (
-              <div className="space-y-6">
-                <div className="flex items-center gap-3">
-                  {result.final_status === "COMPLIANT" ? (
-                    <CheckCircle2 className="h-6 w-6 text-green-500" />
-                  ) : result.final_status === "NON_COMPLIANT" ? (
-                    <AlertCircle className="h-6 w-6 text-red-500" />
-                  ) : (
-                    <Clock className="h-6 w-6 text-yellow-500" />
-                  )}
-                  <div>
-                    <div className="font-semibold text-lg">
-                      {result.final_status}
-                    </div>
-                    <div className="text-sm text-gray-500">
-                      Confidence: {(result.overall_confidence * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <h3 className="font-medium mb-2">BI Verdict</h3>
-                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                      <div className="flex justify-between mb-1">
-                        <span>Status:</span>
-                        <span className="font-medium">{result.bi_verdict?.status || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Confidence:</span>
-                        <span className="font-medium">
-                          {result.bi_verdict ? (result.bi_verdict.confidence * 100).toFixed(0) + "%" : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-medium mb-2">OJK Verdict</h3>
-                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                      <div className="flex justify-between mb-1">
-                        <span>Status:</span>
-                        <span className="font-medium">{result.ojk_verdict?.status || "N/A"}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span>Confidence:</span>
-                        <span className="font-medium">
-                          {result.ojk_verdict ? (result.ojk_verdict.confidence * 100).toFixed(0) + "%" : "N/A"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {result.recommendations && result.recommendations.length > 0 && (
-                    <div>
-                      <h3 className="font-medium mb-2">Rekomendasi</h3>
-                      <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
-                        {result.recommendations.map((rec, i) => (
-                          <li key={i}>{rec}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-
-                  <div className="text-xs text-gray-400 pt-4 border-t">
-                    <div>Model: {result.model_used || "gpt-4o-mini"}</div>
-                    <div>Latency: {result.latency_ms || 0}ms</div>
-                    <div>Request ID: {result.request_id?.slice(0, 8)}...</div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-                <AlertCircle className="h-10 w-10 mb-3" />
-                <p>Hasil audit akan muncul di sini</p>
-              </div>
+                <button
+                  onClick={() => mutation.reset()}
+                  className="text-sm text-red-600 underline underline-offset-2"
+                >
+                  Coba lagi
+                </button>
+              </motion.div>
             )}
-          </CardContent>
-        </Card>
+
+            {result && !mutation.isPending && (
+              <motion.div
+                key="result"
+                initial={{ opacity: 0, y: 12 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <ResultCard data={result} />
+              </motion.div>
+            )}
+
+            {!result && !mutation.isPending && !mutation.isError && (
+              <motion.div
+                key="empty"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12 flex flex-col items-center justify-center gap-3 text-center"
+              >
+                <div className="h-14 w-14 rounded-full bg-white border border-slate-200 flex items-center justify-center shadow-sm">
+                  <FileText className="h-6 w-6 text-slate-300" />
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-slate-500">Hasil audit akan muncul di sini</p>
+                  <p className="text-xs text-slate-400 mt-1">
+                    Isi form atau upload dokumen, lalu klik Jalankan Audit
+                  </p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
       </div>
     </div>
+  );
+}
+
+function TabButton({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className={cn(
+        "flex flex-1 items-center justify-center gap-2 px-4 py-3 text-sm font-medium transition-all border-b-2",
+        active
+          ? "border-blue-600 text-blue-700 bg-blue-50/60"
+          : "border-transparent text-slate-500 hover:text-slate-700 hover:bg-slate-50",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }

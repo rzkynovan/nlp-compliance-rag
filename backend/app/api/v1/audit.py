@@ -5,6 +5,8 @@ import uuid
 import time
 import sys
 import os
+import io
+import re
 
 from app.models.audit import (
     AuditRequest, AuditResponse, BatchAuditRequest, BatchAuditResponse,
@@ -198,3 +200,78 @@ async def get_audit_detail(request_id: str):
                 tokens_used=0
             )
     raise HTTPException(status_code=404, detail="Audit request not found")
+
+
+# ── Document Upload ────────────────────────────────────────────────────────────
+
+ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".txt", ".md"}
+MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
+
+
+def _extract_pdf_text(content: bytes) -> str:
+    try:
+        from pypdf import PdfReader
+        reader = PdfReader(io.BytesIO(content))
+        pages = [page.extract_text() or "" for page in reader.pages]
+        return "\n\n".join(p.strip() for p in pages if p.strip())
+    except ImportError:
+        raise HTTPException(status_code=501, detail="Parsing PDF membutuhkan library pypdf. Hubungi administrator.")
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Gagal membaca PDF: {str(e)}")
+
+
+def _split_into_clauses(text: str, min_length: int = 30) -> List[str]:
+    """Split text into clauses by blank-line paragraph breaks."""
+    # Normalize newlines
+    text = re.sub(r"\r\n", "\n", text)
+    # Split on 2+ consecutive newlines
+    paragraphs = re.split(r"\n{2,}", text.strip())
+    clauses = []
+    for p in paragraphs:
+        p = re.sub(r"\s+", " ", p).strip()
+        if len(p) >= min_length:
+            clauses.append(p)
+    return clauses[:100]  # cap at 100 clauses
+
+
+@router.post("/upload")
+async def upload_document(file: UploadFile = File(...)):
+    """
+    Extract text from an uploaded PDF, TXT, or MD document.
+    Returns the full text and a list of paragraph-level clauses
+    ready to be passed to POST /audit/analyze.
+    """
+    if not file.filename:
+        raise HTTPException(status_code=400, detail="Nama file tidak boleh kosong.")
+
+    ext = os.path.splitext(file.filename)[-1].lower()
+    if ext not in ALLOWED_UPLOAD_EXTENSIONS:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Format file tidak didukung ({ext}). Gunakan: {', '.join(sorted(ALLOWED_UPLOAD_EXTENSIONS))}",
+        )
+
+    content = await file.read()
+    if len(content) > MAX_FILE_SIZE_BYTES:
+        raise HTTPException(status_code=413, detail="Ukuran file maksimal 10 MB.")
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="File tidak boleh kosong.")
+
+    if ext == ".pdf":
+        text = _extract_pdf_text(content)
+    else:
+        text = content.decode("utf-8", errors="replace")
+
+    if not text.strip():
+        raise HTTPException(status_code=422, detail="Dokumen tidak mengandung teks yang dapat dibaca.")
+
+    clauses = _split_into_clauses(text)
+
+    return {
+        "filename": file.filename,
+        "file_size_kb": round(len(content) / 1024, 1),
+        "page_count": None if ext != ".pdf" else None,  # could fill with len(reader.pages) if needed
+        "text": text,
+        "clauses": clauses,
+        "clause_count": len(clauses),
+    }

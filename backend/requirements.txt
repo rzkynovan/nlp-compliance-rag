@@ -38,3 +38,6 @@ httpx>=0.26.0
 python-dotenv>=1.0.0
 tenacity>=8.2.3
 structlog>=24.1.0
+
+# Document Parsing
+pypdf>=4.0.0

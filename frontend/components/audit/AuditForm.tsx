@@ -85,7 +85,7 @@ export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditF
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="all">SemuaRegulator</SelectItem>
+                    <SelectItem value="all">Semua Regulator</SelectItem>
                     <SelectItem value="BI">Bank Indonesia</SelectItem>
                     <SelectItem value="OJK">OJK</SelectItem>
                   </SelectContent>
