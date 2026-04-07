@@ -1,15 +1,16 @@
 "use client";
 
 import { useCallback, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import {
   Upload,
   FileText,
   X,
-  ChevronRight,
   AlertCircle,
   CheckCircle2,
   Loader2,
+  ListChecks,
+  Square,
+  CheckSquare,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -23,22 +24,22 @@ interface UploadResult {
 }
 
 interface FileUploadZoneProps {
-  onClauseSelect: (clause: string) => void;
+  onClausesSelect: (clauses: string[]) => void;
   apiUrl: string;
 }
 
-export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) {
+export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps) {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
 
   const handleUpload = useCallback(async (selectedFile: File) => {
     setError(null);
     setUploadResult(null);
-    setSelectedIndex(null);
+    setSelectedIndices(new Set());
     setFile(selectedFile);
     setIsUploading(true);
 
@@ -88,18 +89,32 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
   const reset = () => {
     setFile(null);
     setUploadResult(null);
-    setSelectedIndex(null);
+    setSelectedIndices(new Set());
     setError(null);
   };
 
-  const handleSelect = (idx: number) => {
-    setSelectedIndex(idx);
+  const toggleIndex = (idx: number) => {
+    setSelectedIndices((prev) => {
+      const next = new Set(prev);
+      if (next.has(idx)) next.delete(idx);
+      else next.add(idx);
+      return next;
+    });
+  };
+
+  const toggleAll = () => {
+    if (!uploadResult) return;
+    if (selectedIndices.size === uploadResult.clauses.length) {
+      setSelectedIndices(new Set());
+    } else {
+      setSelectedIndices(new Set(uploadResult.clauses.map((_, i) => i)));
+    }
   };
 
   const handleAudit = () => {
-    if (selectedIndex !== null && uploadResult) {
-      onClauseSelect(uploadResult.clauses[selectedIndex]);
-    }
+    if (selectedIndices.size === 0 || !uploadResult) return;
+    const clauses = Array.from(selectedIndices).sort((a, b) => a - b).map((i) => uploadResult.clauses[i]);
+    onClausesSelect(clauses);
   };
 
   // ── Empty / drag-drop state ────────────────────────────────────────
@@ -168,8 +183,11 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
   }
 
   // ── Result: clause list ────────────────────────────────────────────
+  const allSelected = uploadResult!.clauses.length > 0 &&
+    selectedIndices.size === uploadResult!.clauses.length;
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-3">
       {/* File info bar */}
       <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
         <div className="flex items-center gap-2.5">
@@ -192,65 +210,90 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
         </button>
       </div>
 
-      {/* Instruction */}
-      <p className="text-xs text-slate-500 px-1">
-        Pilih klausa yang ingin diaudit, lalu klik <strong>Audit Klausa</strong>.
-      </p>
-
-      {/* Clause list - Scrollable container */}
-      <div className="relative">
-        <div 
-          className="h-[320px] overflow-y-auto overflow-x-hidden rounded-lg border border-slate-200 bg-white pr-1"
-          style={{
-            WebkitOverflowScrolling: 'touch',
-          }}
+      {/* Selection controls */}
+      <div className="flex items-center justify-between px-1">
+        <p className="text-xs text-slate-500">
+          {selectedIndices.size === 0
+            ? "Pilih satu atau lebih klausa untuk diaudit"
+            : `${selectedIndices.size} klausa dipilih`}
+        </p>
+        <button
+          type="button"
+          onClick={toggleAll}
+          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
         >
-          <div className="p-2 space-y-1.5">
-            {uploadResult!.clauses.map((clause, idx) => (
+          {allSelected ? (
+            <><CheckSquare className="h-3.5 w-3.5" /> Hapus Semua</>
+          ) : (
+            <><Square className="h-3.5 w-3.5" /> Pilih Semua</>
+          )}
+        </button>
+      </div>
+
+      {/* Clause list */}
+      <div
+        className="h-[280px] overflow-y-auto overflow-x-hidden rounded-lg border border-slate-200 bg-white"
+        style={{ WebkitOverflowScrolling: "touch" }}
+      >
+        <div className="p-2 space-y-1">
+          {uploadResult!.clauses.map((clause, idx) => {
+            const isSelected = selectedIndices.has(idx);
+            return (
               <div
                 key={idx}
-                role="button"
+                role="checkbox"
+                aria-checked={isSelected}
                 tabIndex={0}
-                onClick={() => handleSelect(idx)}
+                onClick={() => toggleIndex(idx)}
                 onKeyDown={(e) => {
-                  if (e.key === 'Enter' || e.key === ' ') {
-                    handleSelect(idx);
-                  }
+                  if (e.key === "Enter" || e.key === " ") toggleIndex(idx);
                 }}
                 className={cn(
-                  "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border select-none",
-                  selectedIndex === idx
+                  "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border select-none cursor-pointer",
+                  isSelected
                     ? "bg-blue-50 border-blue-300 text-blue-900"
-                    : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer",
+                    : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
                 )}
               >
-                <div className="flex items-start gap-2">
+                <div className="flex items-start gap-2.5">
+                  {/* Checkbox */}
+                  <div className={cn(
+                    "mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-colors",
+                    isSelected
+                      ? "bg-blue-600 border-blue-600"
+                      : "border-slate-300 bg-white",
+                  )}>
+                    {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
+                  </div>
+                  {/* Number */}
                   <span className={cn(
-                    "mt-0.5 shrink-0 text-xs font-mono",
-                    selectedIndex === idx ? "text-blue-400" : "text-slate-300",
+                    "shrink-0 text-xs font-mono mt-0.5",
+                    isSelected ? "text-blue-500" : "text-slate-300",
                   )}>
                     {String(idx + 1).padStart(2, "0")}
                   </span>
+                  {/* Text */}
                   <span className="line-clamp-3 leading-relaxed flex-1">{clause}</span>
-                  {selectedIndex === idx && (
-                    <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
-                  )}
                 </div>
               </div>
-            ))}
-          </div>
+            );
+          })}
         </div>
       </div>
 
-      {/* Action */}
+      {/* Action button */}
       <Button
         type="button"
         onClick={handleAudit}
-        disabled={selectedIndex === null}
+        disabled={selectedIndices.size === 0}
         className="w-full"
       >
-        <ChevronRight className="h-4 w-4 mr-1" />
-        Audit Klausa {selectedIndex !== null ? `#${selectedIndex + 1}` : ""}
+        <ListChecks className="h-4 w-4 mr-1.5" />
+        {selectedIndices.size === 0
+          ? "Pilih Klausa untuk Diaudit"
+          : selectedIndices.size === 1
+            ? `Audit 1 Klausa`
+            : `Audit ${selectedIndices.size} Klausa Sekaligus`}
       </Button>
     </div>
   );
