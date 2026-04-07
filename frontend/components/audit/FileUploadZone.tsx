@@ -197,8 +197,15 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
         Pilih klausa yang ingin diaudit, lalu klik <strong>Audit Klausa</strong>.
       </p>
 
-      {/* Clause list */}
-      <div className="max-h-72 overflow-y-auto overscroll-contain rounded-lg border border-slate-200 bg-white">
+      {/* Clause list - Fixed scroll container */}
+      <div 
+        className="h-[320px] overflow-y-auto rounded-lg border border-slate-200 bg-white relative touch-scroll"
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          overscrollBehavior: 'contain',
+          touchAction: 'pan-y',
+        }}
+      >
         <div className="p-2 space-y-1.5">
           {uploadResult!.clauses.map((clause, idx) => (
             <button
@@ -206,13 +213,13 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
               type="button"
               onClick={() => handleSelect(idx)}
               className={cn(
-                "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border",
+                "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border cursor-pointer",
                 selectedIndex === idx
                   ? "bg-blue-50 border-blue-300 text-blue-900"
                   : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
               )}
             >
-              <div className="flex items-start gap-2">
+              <div className="flex items-start gap-2 pointer-events-none">
                 <span className={cn(
                   "mt-0.5 shrink-0 text-xs font-mono",
                   selectedIndex === idx ? "text-blue-400" : "text-slate-300",

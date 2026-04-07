@@ -6,7 +6,7 @@ export interface TextareaProps extends React.TextareaHTMLAttributes<HTMLTextArea
 }
 
 const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
-  ({ className, error, ...props }, ref) => {
+  ({ className, error, style, ...props }, ref) => {
     return (
       <textarea
         className={cn(
@@ -14,9 +14,14 @@ const Textarea = React.forwardRef<HTMLTextAreaElement, TextareaProps>(
           "ring-offset-background placeholder:text-muted-foreground",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2",
           "disabled:cursor-not-allowed disabled:opacity-50",
+          "scrollbar-thin scrollbar-thumb-slate-300 scrollbar-track-transparent",
           error && "border-destructive focus-visible:ring-destructive",
           className
         )}
+        style={{
+          WebkitOverflowScrolling: 'touch',
+          ...style,
+        }}
         ref={ref}
         {...props}
       />
