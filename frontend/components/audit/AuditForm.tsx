@@ -62,7 +62,7 @@ export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditF
               <FormControl>
                 <Textarea
                   placeholder="Masukkan klausa SOP yang ingin diaudit..."
-                  className="min-h-[120px] resize-y"
+                  className="min-h-[120px] max-h-[300px] resize-y overflow-y-auto"
                   {...field}
                 />
               </FormControl>
@@ -139,7 +139,7 @@ export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditF
               <FormControl>
                 <Textarea
                   placeholder="Informasi tambahan yang membantu analisis..."
-                  className="min-h-[60px]"
+                  className="min-h-[60px] max-h-[200px] resize-y overflow-y-auto"
                   {...field}
                 />
               </FormControl>

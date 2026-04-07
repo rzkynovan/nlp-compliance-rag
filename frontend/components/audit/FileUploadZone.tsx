@@ -169,83 +169,76 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
 
   // ── Result: clause list ────────────────────────────────────────────
   return (
-    <AnimatePresence mode="wait">
-      <motion.div
-        key="result"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="space-y-4"
-      >
-        {/* File info bar */}
-        <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
-          <div className="flex items-center gap-2.5">
-            <FileText className="h-4 w-4 text-blue-500 shrink-0" />
-            <div>
-              <p className="text-sm font-medium text-slate-800 leading-none">
-                {uploadResult!.filename}
-              </p>
-              <p className="text-xs text-slate-400 mt-0.5">
-                {uploadResult!.file_size_kb} KB · {uploadResult!.clause_count} klausa ditemukan
-              </p>
-            </div>
-          </div>
-          <button
-            onClick={reset}
-            className="rounded-md p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-            title="Upload ulang"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
-
-        {/* Instruction */}
-        <p className="text-xs text-slate-500 px-1">
-          Pilih klausa yang ingin diaudit, lalu klik <strong>Audit Klausa</strong>.
-        </p>
-
-        {/* Clause list */}
-        <div className="h-72 overflow-y-auto rounded-lg border border-slate-200">
-          <div className="p-2 space-y-1.5">
-            {uploadResult!.clauses.map((clause, idx) => (
-              <button
-                key={idx}
-                type="button"
-                onClick={() => handleSelect(idx)}
-                className={cn(
-                  "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border",
-                  selectedIndex === idx
-                    ? "bg-blue-50 border-blue-300 text-blue-900"
-                    : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
-                )}
-              >
-                <div className="flex items-start gap-2">
-                  <span className={cn(
-                    "mt-0.5 shrink-0 text-xs font-mono",
-                    selectedIndex === idx ? "text-blue-400" : "text-slate-300",
-                  )}>
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  <span className="line-clamp-3 leading-relaxed">{clause}</span>
-                  {selectedIndex === idx && (
-                    <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5 ml-auto" />
-                  )}
-                </div>
-              </button>
-            ))}
+    <div className="space-y-4">
+      {/* File info bar */}
+      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
+        <div className="flex items-center gap-2.5">
+          <FileText className="h-4 w-4 text-blue-500 shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-slate-800 leading-none">
+              {uploadResult!.filename}
+            </p>
+            <p className="text-xs text-slate-400 mt-0.5">
+              {uploadResult!.file_size_kb} KB · {uploadResult!.clause_count} klausa ditemukan
+            </p>
           </div>
         </div>
-
-        {/* Action */}
-        <Button
-          type="button"
-          onClick={handleAudit}
-          disabled={selectedIndex === null}
-          className="w-full"
+        <button
+          onClick={reset}
+          className="rounded-md p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
+          title="Upload ulang"
         >
-          <ChevronRight className="h-4 w-4 mr-1" />
-          Audit Klausa {selectedIndex !== null ? `#${selectedIndex + 1}` : ""}
-        </Button>
-      </motion.div>
-    </AnimatePresence>
+          <X className="h-4 w-4" />
+        </button>
+      </div>
+
+      {/* Instruction */}
+      <p className="text-xs text-slate-500 px-1">
+        Pilih klausa yang ingin diaudit, lalu klik <strong>Audit Klausa</strong>.
+      </p>
+
+      {/* Clause list */}
+      <div className="max-h-72 overflow-y-auto overscroll-contain rounded-lg border border-slate-200 bg-white">
+        <div className="p-2 space-y-1.5">
+          {uploadResult!.clauses.map((clause, idx) => (
+            <button
+              key={idx}
+              type="button"
+              onClick={() => handleSelect(idx)}
+              className={cn(
+                "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border",
+                selectedIndex === idx
+                  ? "bg-blue-50 border-blue-300 text-blue-900"
+                  : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
+              )}
+            >
+              <div className="flex items-start gap-2">
+                <span className={cn(
+                  "mt-0.5 shrink-0 text-xs font-mono",
+                  selectedIndex === idx ? "text-blue-400" : "text-slate-300",
+                )}>
+                  {String(idx + 1).padStart(2, "0")}
+                </span>
+                <span className="line-clamp-3 leading-relaxed flex-1">{clause}</span>
+                {selectedIndex === idx && (
+                  <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                )}
+              </div>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Action */}
+      <Button
+        type="button"
+        onClick={handleAudit}
+        disabled={selectedIndex === null}
+        className="w-full"
+      >
+        <ChevronRight className="h-4 w-4 mr-1" />
+        Audit Klausa {selectedIndex !== null ? `#${selectedIndex + 1}` : ""}
+      </Button>
+    </div>
   );
 }
