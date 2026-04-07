@@ -197,42 +197,48 @@ export function FileUploadZone({ onClauseSelect, apiUrl }: FileUploadZoneProps) 
         Pilih klausa yang ingin diaudit, lalu klik <strong>Audit Klausa</strong>.
       </p>
 
-      {/* Clause list - Fixed scroll container */}
-      <div 
-        className="h-[320px] overflow-y-auto rounded-lg border border-slate-200 bg-white relative touch-scroll"
-        style={{
-          WebkitOverflowScrolling: 'touch',
-          overscrollBehavior: 'contain',
-          touchAction: 'pan-y',
-        }}
-      >
-        <div className="p-2 space-y-1.5">
-          {uploadResult!.clauses.map((clause, idx) => (
-            <button
-              key={idx}
-              type="button"
-              onClick={() => handleSelect(idx)}
-              className={cn(
-                "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border cursor-pointer",
-                selectedIndex === idx
-                  ? "bg-blue-50 border-blue-300 text-blue-900"
-                  : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
-              )}
-            >
-              <div className="flex items-start gap-2 pointer-events-none">
-                <span className={cn(
-                  "mt-0.5 shrink-0 text-xs font-mono",
-                  selectedIndex === idx ? "text-blue-400" : "text-slate-300",
-                )}>
-                  {String(idx + 1).padStart(2, "0")}
-                </span>
-                <span className="line-clamp-3 leading-relaxed flex-1">{clause}</span>
-                {selectedIndex === idx && (
-                  <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+      {/* Clause list - Scrollable container */}
+      <div className="relative">
+        <div 
+          className="h-[320px] overflow-y-auto overflow-x-hidden rounded-lg border border-slate-200 bg-white pr-1"
+          style={{
+            WebkitOverflowScrolling: 'touch',
+          }}
+        >
+          <div className="p-2 space-y-1.5">
+            {uploadResult!.clauses.map((clause, idx) => (
+              <div
+                key={idx}
+                role="button"
+                tabIndex={0}
+                onClick={() => handleSelect(idx)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    handleSelect(idx);
+                  }
+                }}
+                className={cn(
+                  "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border select-none",
+                  selectedIndex === idx
+                    ? "bg-blue-50 border-blue-300 text-blue-900"
+                    : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700 cursor-pointer",
                 )}
+              >
+                <div className="flex items-start gap-2">
+                  <span className={cn(
+                    "mt-0.5 shrink-0 text-xs font-mono",
+                    selectedIndex === idx ? "text-blue-400" : "text-slate-300",
+                  )}>
+                    {String(idx + 1).padStart(2, "0")}
+                  </span>
+                  <span className="line-clamp-3 leading-relaxed flex-1">{clause}</span>
+                  {selectedIndex === idx && (
+                    <CheckCircle2 className="h-4 w-4 text-blue-500 shrink-0 mt-0.5" />
+                  )}
+                </div>
               </div>
-            </button>
-          ))}
+            ))}
+          </div>
         </div>
       </div>
 
