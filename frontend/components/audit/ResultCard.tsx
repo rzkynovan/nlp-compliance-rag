@@ -14,7 +14,13 @@ interface ResultCardProps {
   data: AuditResponse;
 }
 
-const statusConfig = {
+const statusConfig: Record<string, {
+  icon: React.ElementType;
+  label: string;
+  color: string;
+  bg: string;
+  border: string;
+}> = {
   COMPLIANT: {
     icon: CheckCircle2,
     label: "Patuh",
@@ -28,6 +34,13 @@ const statusConfig = {
     color: "text-red-600",
     bg: "bg-red-50",
     border: "border-red-200",
+  },
+  PARTIALLY_COMPLIANT: {
+    icon: AlertTriangle,
+    label: "Sebagian Patuh",
+    color: "text-amber-600",
+    bg: "bg-amber-50",
+    border: "border-amber-200",
   },
   NEEDS_REVIEW: {
     icon: AlertTriangle,
@@ -43,10 +56,17 @@ const statusConfig = {
     bg: "bg-slate-50",
     border: "border-slate-200",
   },
+  UNCLEAR: {
+    icon: HelpCircle,
+    label: "Tidak Jelas",
+    color: "text-slate-500",
+    bg: "bg-slate-50",
+    border: "border-slate-200",
+  },
 };
 
 export function ResultCard({ data }: ResultCardProps) {
-  const statusInfo = statusConfig[data.final_status as keyof typeof statusConfig] || statusConfig.NOT_ADDRESSED;
+  const statusInfo = statusConfig[data.final_status] ?? statusConfig.UNCLEAR;
   const StatusIcon = statusInfo.icon;
 
   return (
@@ -163,7 +183,7 @@ function AgentVerdictCard({
   title: string;
   verdict: NonNullable<AuditResponse["bi_verdict"]>;
 }) {
-  const statusInfo = statusConfig[verdict.status as keyof typeof statusConfig];
+  const statusInfo = statusConfig[verdict.status] ?? statusConfig.UNCLEAR;
   const StatusIcon = statusInfo.icon;
 
   return (

@@ -7,9 +7,9 @@ const buttonVariants = cva(
     variants: {
       variant: {
         primary: [
-          "bg-[hsl(var(--interactive-default))] text-white",
-          "hover:bg-[hsl(var(--interactive-hover))]",
-          "active:bg-[hsl(var(--interactive-active))] active:scale-[0.98]",
+          "bg-[hsl(var(--primary))] text-white",
+          "hover:opacity-90",
+          "active:opacity-80 active:scale-[0.98]",
           "shadow-sm",
         ],
         secondary: [
