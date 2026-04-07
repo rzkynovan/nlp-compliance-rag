@@ -72,7 +72,7 @@ export default function AuditPage() {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
         {/* ── Left: Input panel ── */}
-        <div className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden">
+        <div className="rounded-xl border border-slate-200 bg-white shadow-sm">
           {/* Input mode tabs */}
           <div className="flex border-b border-slate-100">
             <TabButton
