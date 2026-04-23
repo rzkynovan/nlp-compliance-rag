@@ -51,7 +51,7 @@ def mock_settings(monkeypatch):
     """
     settings_mock = MagicMock()
     settings_mock.OPENAI_API_KEY = "sk-test-key"
-    settings_mock.LLAMAPARSE_API_KEY = None
+    settings_mock.LLAMA_CLOUD_API_KEY = None
     settings_mock.LLM_MODEL = "gpt-4o-mini"
     settings_mock.EMBEDDING_MODEL = "text-embedding-3-small"
     settings_mock.CHROMADB_PERSIST_DIR = "/tmp/test_chroma"

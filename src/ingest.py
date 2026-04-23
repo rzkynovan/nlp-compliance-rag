@@ -56,9 +56,14 @@ import chromadb
 # Import caching module
 from llama_cache import get_cache, LlamaParseCache
 
-BASE_DIR = Path(__file__).resolve().parent.parent
-RAW_DATA_DIR = BASE_DIR / "data" / "raw"
+# Import hybrid retrieval modul
+from retrieval.metadata_extractor import extract_regulation_metadata
+from retrieval.bm25_retriever import BM25Retriever
+
+BASE_DIR      = Path(__file__).resolve().parent.parent
+RAW_DATA_DIR  = BASE_DIR / "data" / "raw"
 CHROMA_DB_DIR = BASE_DIR / "data" / "processed" / "chroma_db"
+BM25_INDEX_DIR = BASE_DIR / "data" / "processed" / "bm25_index"
 
 REGULATOR_MAPPING = {
     "PBI": "Bank Indonesia (BI)",
@@ -78,7 +83,7 @@ COLLECTION_NAMES = {
 print("Mengkonfigurasi LlamaIndex Settings...")
 
 Settings.embed_model = OpenAIEmbedding(
-    model="text-embedding-3-small",  # Changed from large for cost optimization
+    model="text-embedding-3-large",  # Harus konsisten dengan ChromaDB collections (3072 dim)
     api_key=OPENAI_API_KEY,
 )
 
@@ -91,8 +96,8 @@ Settings.llm = OpenAI(
 Settings.chunk_size = 1024
 Settings.chunk_overlap = 128
 
-print("Embedding: text-embedding-3-small (optimized)")
-print("LLM: GPT-4o-mini (optimized)")
+print("Embedding: text-embedding-3-large (konsisten dengan ChromaDB collections)")
+print("LLM: GPT-4o-mini (cost optimized)")
 
 
 def detect_regulator(filename: str) -> str:
@@ -219,14 +224,21 @@ def chunk_documents(documents: List[Document]) -> List:
     node_parser = MarkdownNodeParser()
     nodes = node_parser.get_nodes_from_documents(documents)
 
-    print(f"   [OK] Dihasilkan {len(nodes)} chunks")
+    # Perkaya metadata setiap node dengan identifier regulasi
+    for node in nodes:
+        filename = node.metadata.get("source_file", "")
+        extra = extract_regulation_metadata(node.get_content(), filename)
+        node.metadata.update(extra)
+
+    print(f"   [OK] Dihasilkan {len(nodes)} chunks (metadata diperkaya)")
 
     if nodes:
         print("\nPratinjau 3 chunks pertama:")
         for i, node in enumerate(nodes[:3]):
-            preview = node.get_content()[:150].replace("\n", " ")
+            preview  = node.get_content()[:150].replace("\n", " ")
             regulator = node.metadata.get("regulator", "N/A")
-            print(f"   [{i+1}] ({regulator}) {preview}...")
+            pasal     = node.metadata.get("pasal_number", "-")
+            print(f"   [{i+1}] ({regulator} Pasal {pasal}) {preview}...")
 
     return nodes
 
@@ -298,8 +310,23 @@ def build_separate_vector_stores(
         doc_count = collection.count()
         print(f"   [OK] {doc_count} vektor tersimpan di {collection_name}")
 
+        # Build BM25 index untuk collection ini
+        _build_bm25_for_collection(nodes, collection_name)
+
     print(f"\nDatabase tersimpan di: {CHROMA_DB_DIR}")
     return indices
+
+
+def _build_bm25_for_collection(nodes: List, collection_name: str) -> None:
+    """Bangun dan simpan BM25 index dari node yang sudah di-chunk."""
+    chunks = [
+        {"text": n.get_content(), "metadata": dict(n.metadata)}
+        for n in nodes
+    ]
+    bm25_path = str(BM25_INDEX_DIR / collection_name)
+    bm25 = BM25Retriever(index_path=bm25_path)
+    bm25.build_index(chunks)
+    print(f"   [BM25] Index tersimpan di {bm25_path}")
 
 
 def print_summary(indices: Dict[str, VectorStoreIndex]):

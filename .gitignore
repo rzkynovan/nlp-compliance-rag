@@ -91,6 +91,8 @@ data/processed/chroma_db/
 *.chroma
 *.chromadb
 
+# BM25 index - binary files derived from data, rebuilt via: python src/ingest.py --force
+data/processed/bm25_index/
 # Source PDFs - optional, uncomment if needed
 # data/raw/*.pdf
 

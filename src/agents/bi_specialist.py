@@ -7,6 +7,7 @@ Agent spesialis untuk menganalisis kepatuhan terhadap regulasi BI
 
 import os
 import json
+import sys
 from typing import Dict, List, Optional
 from pathlib import Path
 
@@ -17,6 +18,15 @@ from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
 
 from .base_agent import BaseAgent, AgentVerdict, ViolatedArticle
+
+# Tambahkan src ke path agar retrieval dapat diimport
+_SRC_DIR = Path(__file__).resolve().parent.parent
+if str(_SRC_DIR) not in sys.path:
+    sys.path.insert(0, str(_SRC_DIR))
+
+from retrieval.bm25_retriever import BM25Retriever
+from retrieval.hybrid_retriever import HybridRetriever
+from retrieval.query_analyzer import QueryAnalyzer
 
 
 class BISpecialistAgent(BaseAgent):
@@ -99,22 +109,53 @@ class BISpecialistAgent(BaseAgent):
         except Exception as e:
             print(f"[{self.name}] Warning: Could not load vector store: {e}")
             self.index = None
-    
+
+        # Inisialisasi hybrid retriever (BM25 + dense)
+        bm25_path = str(
+            Path(chroma_path).parent / "bm25_index" / self.collection_name
+        )
+        bm25 = BM25Retriever(index_path=bm25_path)
+        if bm25.load_index() and self.index is not None:
+            self.hybrid_retriever = HybridRetriever(self.index, bm25)
+            print(f"[{self.name}] Hybrid retriever aktif (dense + BM25)")
+        else:
+            self.hybrid_retriever = None
+            print(f"[{self.name}] Hybrid retriever tidak tersedia, menggunakan dense only")
+
+        self.query_analyzer = QueryAnalyzer()
+
     def retrieve_relevant_articles(self, query: str, top_k: int = 5) -> List[Dict]:
         """
-        Retrieve top-k articles from BI regulation vector store.
+        Retrieve top-k articles. Gunakan hybrid (dense + BM25) jika query
+        mengandung identifier spesifik (nomor pasal, kode regulasi).
         """
         if self.index is None:
             return []
-        
+
+        # Analisis intent query
+        if self.query_analyzer and self.hybrid_retriever:
+            intent = self.query_analyzer.analyze(query)
+            if intent.is_specific:
+                results = self.hybrid_retriever.retrieve(query, intent, top_k)
+                return [
+                    {
+                        "content":  r["content"],
+                        "metadata": r["metadata"],
+                        "score":    r["score"],
+                        "retrieval_source": r.get("source", "hybrid"),
+                    }
+                    for r in results
+                ]
+
+        # Fallback: dense only
         retriever = self.index.as_retriever(similarity_top_k=top_k)
         nodes = retriever.retrieve(query)
-        
         return [
             {
-                "content": node.get_content(),
+                "content":  node.get_content(),
                 "metadata": node.metadata,
-                "score": node.score if hasattr(node, 'score') else 1.0
+                "score":    node.score if hasattr(node, 'score') else 1.0,
+                "retrieval_source": "dense",
             }
             for node in nodes
         ]

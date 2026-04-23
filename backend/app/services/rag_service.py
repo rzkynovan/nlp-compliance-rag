@@ -200,6 +200,17 @@ class RAGAuditService:
         result["latency_ms"] = int((time.time() - start_time) * 1000)
         result["model_used"] = self.llm_model
         result["from_cache"] = False
+
+        # Deteksi mode retrieval dari artikel yang dikembalikan agent
+        _sources = set()
+        for key in ("bi_verdict", "ojk_verdict"):
+            v = result.get(key)
+            if isinstance(v, dict):
+                src = v.get("retrieval_source", "dense")
+                _sources.add(src)
+            elif hasattr(v, "retrieved_context"):
+                _sources.add("dense")
+        result["retrieval_mode"] = "hybrid" if "hybrid" in _sources or "bm25" in _sources else "dense"
         
         # Cache the result
         if use_cache and settings.ENABLE_CACHE:

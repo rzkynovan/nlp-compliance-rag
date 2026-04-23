@@ -8,3 +8,4 @@ python-dotenv
 pandas
 jupyter
 pydantic
+rank-bm25>=0.2.2

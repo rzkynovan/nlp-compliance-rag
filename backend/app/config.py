@@ -12,8 +12,9 @@ class Settings(BaseSettings):
     API_V1_PREFIX: str = "/api/v1"
 
     OPENAI_API_KEY: str = Field(..., env="OPENAI_API_KEY")
-    # LlamaParse is only required during data ingestion (src/ingest.py), not at runtime
-    LLAMAPARSE_API_KEY: Optional[str] = Field(None, env="LLAMAPARSE_API_KEY")
+    # LlamaParse — hanya diperlukan saat ingestion (src/ingest.py), bukan runtime
+    # SDK LlamaParse membaca LLAMA_CLOUD_API_KEY secara default
+    LLAMA_CLOUD_API_KEY: Optional[str] = Field(None, env="LLAMA_CLOUD_API_KEY")
 
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
     REDIS_URL: str = Field("redis://localhost:6379/0", env="REDIS_URL")
@@ -26,7 +27,7 @@ class Settings(BaseSettings):
     CHROMADB_COLLECTION_BI: str = "bi_regulations"
     CHROMADB_COLLECTION_OJK: str = "ojk_regulations"
 
-    EMBEDDING_MODEL: str = "text-embedding-3-small"
+    EMBEDDING_MODEL: str = "text-embedding-3-large"
     LLM_MODEL: str = "gpt-4o-mini"
     LLM_TEMPERATURE: float = 0.1
     RETRIEVAL_TOP_K: int = 5

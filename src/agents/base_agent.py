@@ -59,6 +59,9 @@ class BaseAgent(ABC):
         self.llm = None
         self.embed_model = None
         self.index = None
+        # Hybrid retrieval — diinisialisasi di subclass jika BM25 index tersedia
+        self.hybrid_retriever = None
+        self.query_analyzer   = None
     
     @abstractmethod
     def initialize(self, api_key: str, chroma_path: str):
@@ -72,6 +75,7 @@ class BaseAgent(ABC):
     def retrieve_relevant_articles(self, query: str, top_k: int = 5) -> List[Dict]:
         """
         Retrieve top-k most relevant articles from vector database.
+        Jika hybrid_retriever tersedia, gunakan RRF fusion (dense + BM25).
         Mengembalikan list of dicts dengan: content, metadata, score.
         """
         pass
