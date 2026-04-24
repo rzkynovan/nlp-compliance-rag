@@ -13,6 +13,11 @@
 **/.pytest_cache
 **/.mypy_cache
 
+# Env lokal — jangan masuk image, supaya Docker ARG bisa override
+**/.env.local
+**/.env.development.local
+**/.env.production.local
+
 # Git & IDE
 .git
 .gitignore

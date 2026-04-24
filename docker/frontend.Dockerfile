@@ -22,14 +22,14 @@ WORKDIR /app
 # Copy node_modules dari stage deps (Alpine-compatible, bukan dari host)
 COPY --from=deps /app/node_modules ./node_modules
 
-# Copy semua source frontend (node_modules sudah di .dockerignore, tidak ikut tercopy)
+# Copy semua source frontend (.env.local sudah di .dockerignore, tidak masuk image)
 COPY frontend/ .
 
-# Debug: verifikasi struktur file yang kritis
-RUN echo "=== /app root ===" && ls -la && \
-    echo "=== /app/lib ===" && ls -la lib/ && \
-    echo "=== /app/lib/stores ===" && ls -la lib/stores/ && \
-    echo "=== tsconfig paths ===" && cat tsconfig.json | grep -A5 '"paths"'
+# Inject NEXT_PUBLIC_API_URL saat build — nilai dari docker-compose build.args
+# HARUS pakai ARG+ENV karena NEXT_PUBLIC_* di-bake ke bundle saat pnpm build,
+# bukan saat runtime. .env.local sengaja di-exclude via .dockerignore.
+ARG NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
