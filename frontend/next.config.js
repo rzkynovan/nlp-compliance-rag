@@ -6,14 +6,8 @@ const nextConfig = {
   env: {
     NEXT_PUBLIC_API_URL: process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1",
   },
-  // Fix path aliases in Docker build
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...config.resolve.alias,
-      '@': require('path').resolve(__dirname),
-    };
-    return config;
-  },
+  // Catatan: path alias @/* sudah di-handle otomatis oleh Next.js 14
+  // via tsconfig.json "paths": {"@/*": ["./*"]} — tidak perlu webpack alias manual
 };
 
 module.exports = nextConfig;

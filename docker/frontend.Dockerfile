@@ -19,11 +19,17 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 WORKDIR /app
 
-# Copy node_modules dari stage deps (Alpine-compatible)
+# Copy node_modules dari stage deps (Alpine-compatible, bukan dari host)
 COPY --from=deps /app/node_modules ./node_modules
 
 # Copy semua source frontend (node_modules sudah di .dockerignore, tidak ikut tercopy)
 COPY frontend/ .
+
+# Debug: verifikasi struktur file yang kritis
+RUN echo "=== /app root ===" && ls -la && \
+    echo "=== /app/lib ===" && ls -la lib/ && \
+    echo "=== /app/lib/stores ===" && ls -la lib/stores/ && \
+    echo "=== tsconfig paths ===" && cat tsconfig.json | grep -A5 '"paths"'
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
