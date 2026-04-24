@@ -67,13 +67,44 @@ print_status "Step 1: Mempersiapkan data archive..."
 ARCHIVE_NAME="nlp-compliance-data-$(date +%Y%m%d-%H%M%S).tar.gz"
 ARCHIVE_PATH="/tmp/$ARCHIVE_NAME"
 
-# Create archive dengan data yang perlu ditransfer
-tar -czf "$ARCHIVE_PATH" \
-    -C "$LOCAL_DATA_DIR" \
-    processed/chroma_db \
-    processed/bm25_index \
-    cache \
-    raw/*.pdf 2>/dev/null || true
+# Build tar command dynamically based on what exists
+TAR_ARGS=""
+
+# ChromaDB (wajib ada)
+if [ -d "$LOCAL_DATA_DIR/processed/chroma_db" ]; then
+    TAR_ARGS="$TAR_ARGS processed/chroma_db"
+    print_status "✓ ChromaDB ditemukan"
+else
+    print_error "ChromaDB tidak ditemukan!"
+    exit 1
+fi
+
+# BM25 index (opsional - mungkin belum dibuat)
+if [ -d "$LOCAL_DATA_DIR/processed/bm25_index" ]; then
+    TAR_ARGS="$TAR_ARGS processed/bm25_index"
+    print_status "✓ BM25 index ditemukan"
+else
+    print_warning "BM25 index tidak ditemukan (opsional, akan dibuat otomatis jika hybrid retrieval diaktifkan)"
+fi
+
+# Cache (opsional tapi recommended)
+if [ -d "$LOCAL_DATA_DIR/cache" ]; then
+    TAR_ARGS="$TAR_ARGS cache"
+    CACHE_COUNT=$(find "$LOCAL_DATA_DIR/cache" -type f | wc -l)
+    print_status "✓ Cache ditemukan ($CACHE_COUNT files)"
+fi
+
+# Raw PDFs (opsional)
+if [ -d "$LOCAL_DATA_DIR/raw" ] && [ "$(ls -A $LOCAL_DATA_DIR/raw/*.pdf 2>/dev/null)" ]; then
+    TAR_ARGS="$TAR_ARGS raw/*.pdf"
+    print_status "✓ PDFs ditemukan"
+fi
+
+# Create archive
+echo ""
+print_status "Membuat archive..."
+cd "$LOCAL_DATA_DIR"
+tar -czf "$ARCHIVE_PATH" $TAR_ARGS
 
 ARCHIVE_SIZE=$(du -h "$ARCHIVE_PATH" | cut -f1)
 print_status "Archive dibuat: $ARCHIVE_NAME ($ARCHIVE_SIZE)"
