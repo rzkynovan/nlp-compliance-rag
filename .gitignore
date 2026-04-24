@@ -44,8 +44,11 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+# lib/ dan lib64/ = Python venv artifacts (hanya di root, bukan frontend/)
+/lib/
+/lib64/
+# Exception: frontend/lib/ HARUS masuk git (source code Next.js)
+!frontend/lib/
 parts/
 sdist/
 var/
