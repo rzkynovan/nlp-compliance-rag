@@ -5,14 +5,12 @@ WORKDIR /app
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml ./
+# Copy semua file konfigurasi dan source code sekaligus
+# Ini memastikan tsconfig.json, lib/, components/, app/, etc. semua ter-copy
+COPY . .
 
 # Install dependencies
 RUN pnpm install --frozen-lockfile
-
-# Copy source code
-COPY . .
 
 # Build the application
 RUN pnpm build
