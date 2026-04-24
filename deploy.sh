@@ -1,15 +1,20 @@
 #!/bin/bash
 #
 # deploy.sh - Deployment script untuk server 2CPU 2GB RAM
-# Usage: ./deploy.sh <server-user@ip> [github-repo-url]
+# Usage: ./deploy.sh [server-user@ip]
+#
+# Server Anda:
+#   IP: 144.126.136.57
+#   User: root
+#   Path: /root/nlp-compliance-rag
 #
 
 set -e
 
-# Configuration
-SERVER=${1:-"user@your-server-ip"}
-GITHUB_REPO=${2:-"https://github.com/rzkynovan/nlp-compliance-rag.git"}
-REMOTE_DIR="/opt/nlp-compliance-rag"
+# Configuration - UPDATE SESUAI SERVER ANDA
+SERVER=${1:-"root@144.126.136.57"}
+GITHUB_REPO="https://github.com/rzkynovan/nlp-compliance-rag.git"
+REMOTE_DIR="/root/nlp-compliance-rag"
 LOCAL_DATA_DIR="$(cd "$(dirname "$0")" && pwd)/data"
 
 echo "🚀 NLP Compliance RAG - Deployment Script"
@@ -76,26 +81,29 @@ print_status "Archive dibuat: $ARCHIVE_NAME ($ARCHIVE_SIZE)"
 # Step 2: Setup server
 echo ""
 print_status "Step 2: Setup server dan clone repository..."
+print_status "Server: $SERVER (Docker sudah terinstall)"
 
 ssh -o StrictHostKeyChecking=no "$SERVER" << EOF
     set -e
     
-    # Install Docker & Docker Compose jika belum ada
+    # Check Docker sudah terinstall
     if ! command -v docker &> /dev/null; then
-        echo "Installing Docker..."
-        curl -fsSL https://get.docker.com | sh
-        sudo usermod -aG docker \$USER
+        echo "ERROR: Docker tidak ditemukan!"
+        echo "Install Docker terlebih dahulu."
+        exit 1
     fi
     
     if ! command -v docker-compose &> /dev/null; then
-        echo "Installing Docker Compose..."
-        sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-\$(uname -s)-\$(uname -m)" -o /usr/local/bin/docker-compose
-        sudo chmod +x /usr/local/bin/docker-compose
+        echo "ERROR: Docker Compose tidak ditemukan!"
+        echo "Install Docker Compose terlebih dahulu."
+        exit 1
     fi
     
-    # Create directory
-    sudo mkdir -p $REMOTE_DIR
-    sudo chown \$USER:\$USER $REMOTE_DIR
+    echo "✓ Docker terdeteksi"
+    echo "✓ Docker Compose terdeteksi"
+    
+    # Create directory (root already has permission)
+    mkdir -p $REMOTE_DIR
     
     # Clone repository (atau pull jika sudah ada)
     if [ -d "$REMOTE_DIR/.git" ]; then
@@ -103,7 +111,7 @@ ssh -o StrictHostKeyChecking=no "$SERVER" << EOF
         cd $REMOTE_DIR
         git pull origin main
     else
-        echo "Cloning repository..."
+        echo "Cloning repository ke $REMOTE_DIR..."
         git clone "$GITHUB_REPO" $REMOTE_DIR
     fi
     
@@ -209,7 +217,7 @@ ssh "$SERVER" << EOF
     
     echo ""
     echo "Verifikasi ChromaDB:"
-    docker exec docker-backend-1 python -c "
+    docker exec compliance-backend python -c "
 import chromadb
 client = chromadb.PersistentClient(path='/app/data/processed/chroma_db')
 collections = client.list_collections()
@@ -232,28 +240,31 @@ echo "=========================================="
 echo "🎉 DEPLOYMENT SELESAI!"
 echo "=========================================="
 echo ""
+echo "Server: 144.126.136.57"
+echo "Path: /root/nlp-compliance-rag"
+echo ""
 echo "Akses aplikasi:"
-echo "  Frontend:  http://$SERVER:3000"
-echo "  Backend:   http://$SERVER:8000"
-echo "  API Docs:  http://$SERVER:8000/api/v1/docs"
+echo "  Frontend:  http://144.126.136.57:3000"
+echo "  Backend:   http://144.126.136.57:8000"
+echo "  API Docs:  http://144.126.136.57:8000/api/v1/docs"
 echo ""
 echo "Command berguna:"
-echo "  ssh $SERVER"
-echo "  cd $REMOTE_DIR/docker"
+echo "  ssh root@144.126.136.57"
+echo "  cd /root/nlp-compliance-rag/docker"
 echo "  docker-compose -f docker-compose.prod.yml logs -f backend"
 echo "  docker-compose -f docker-compose.prod.yml ps"
-echo ""
-echo "💡 Tips hemat biaya:"
-echo "  - Data sudah ditransfer, tidak perlu re-ingest!"
-echo "  - ChromaDB: $(ssh $SERVER "ls $REMOTE_DIR/data/processed/chroma_db" 2>/dev/null | wc -l) collections"
-echo "  - BM25 index: $(ssh $SERVER "ls $REMOTE_DIR/data/processed/bm25_index" 2>/dev/null | wc -l) collections"
 echo ""
 
 # Check if .env needs editing
 ssh "$SERVER" "grep -q 'OPENAI_API_KEY=sk-' $REMOTE_DIR/docker/.env" 2>/dev/null || {
     print_warning "Jangan lupa edit .env dan isi API keys!"
-    echo "   ssh $SERVER"
-    echo "   nano $REMOTE_DIR/docker/.env"
+    echo ""
+    echo "   ssh root@144.126.136.57"
+    echo "   nano /root/nlp-compliance-rag/docker/.env"
+    echo ""
+    echo "Isi dengan:"
+    echo "   OPENAI_API_KEY=sk-xxxxxxxxxx"
+    echo "   LLAMAPARSE_API_KEY=llx-xxxxxxxxxx"
 }
 
 print_status "Deployment complete!"
