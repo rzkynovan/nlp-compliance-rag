@@ -1,8 +1,13 @@
+# docker-compose.local.yml
+# Development lokal — localhost URLs, semua service aktif termasuk monitoring
+#
+# Usage:
+#   cd docker
+#   docker-compose -f docker-compose.local.yml up -d
+
 services:
   backend:
     build:
-      # Build context = project root so Dockerfile can COPY both backend/ and src/
-      # This makes the image fully self-contained — no source-code volume mounts needed
       context: ..
       dockerfile: docker/backend.Dockerfile
     ports:
@@ -16,10 +21,8 @@ services:
       - REDIS_URL=redis://redis:6379/0
       - MLFLOW_TRACKING_URI=http://mlflow:5000
       - CHROMADB_PERSIST_DIR=/app/data/processed/chroma_db
-      - ALLOWED_ORIGINS=${ALLOWED_ORIGINS}
+      - ALLOWED_ORIGINS=http://localhost:3000
     volumes:
-      # Only data volumes — ChromaDB vectors are large and environment-specific
-      # Source code is baked into the image at build time
       - ../data:/app/data
     depends_on:
       - db
@@ -35,7 +38,7 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
     depends_on:
       - backend
     networks:

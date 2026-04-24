@@ -10,6 +10,7 @@
 *.env
 !.env.example
 !.env.example.*
+!docker/.env.example
 
 # Docker environment
 docker/.env
