@@ -1,0 +1,35 @@
+# Node.js — jangan copy node_modules host ke dalam image
+**/node_modules
+**/.next
+**/.pnpm-store
+
+# Python
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/venv
+**/.venv
+**/*.egg-info
+**/.pytest_cache
+**/.mypy_cache
+
+# Git & IDE
+.git
+.gitignore
+**/.DS_Store
+**/*.swp
+
+# Logs
+**/*.log
+**/logs
+
+# Data besar — di-transfer terpisah via SCP, bukan di-COPY ke image
+data/processed/chroma_db
+data/processed/bm25_index
+data/cache
+data/raw/*.pdf
+backups
+
+# Test artifacts
+**/coverage
+**/.coverage

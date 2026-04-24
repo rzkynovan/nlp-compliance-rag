@@ -58,8 +58,8 @@ services:
 
   frontend:
     build:
-      context: ../frontend
-      dockerfile: ../docker/frontend.Dockerfile
+      context: ..
+      dockerfile: docker/frontend.Dockerfile
     container_name: compliance-frontend
     ports:
       - "3000:3000"
