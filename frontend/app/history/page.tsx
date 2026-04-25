@@ -8,7 +8,7 @@ import { id } from "date-fns/locale";
 import {
   Clock, FileText, CheckCircle2, XCircle, AlertTriangle,
   HelpCircle, ChevronDown, ChevronUp, Search, Filter,
-  MessageSquare, Ban, BarChart3, Zap,
+  MessageSquare, Ban, BarChart3, Zap, ShieldCheck, ShieldAlert,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAuditHistory } from "@/lib/api";
@@ -44,6 +44,58 @@ function getEffectiveStatus(item: AuditHistory): string {
   if (item.analysis_mode === "greeting") return "greeting";
   if (item.analysis_mode === "out_of_scope") return "out_of_scope";
   return item.final_status;
+}
+
+// ── Agent Pill — ringkasan verdict agent di card ──────────────────────
+function AgentPill({
+  label,
+  status,
+  confidence,
+  violations,
+}: {
+  label: "BI" | "OJK";
+  status: string;
+  confidence: number;
+  violations: number;
+}) {
+  const isBI = label === "BI";
+  const isCompliant   = status === "COMPLIANT";
+  const isNonCompliant= status === "NON_COMPLIANT";
+  const isPartial     = ["PARTIALLY_COMPLIANT", "NEEDS_REVIEW"].includes(status);
+
+  return (
+    <span className={cn(
+      "inline-flex items-center gap-1.5 text-xs font-medium px-2 py-1 rounded-full border",
+      isBI
+        ? "bg-blue-50 border-blue-200 text-blue-700"
+        : "bg-violet-50 border-violet-200 text-violet-700"
+    )}>
+      <span className={cn(
+        "font-bold",
+        isBI ? "text-blue-800" : "text-violet-800"
+      )}>{label}</span>
+      <span className="opacity-60">·</span>
+      {isCompliant    && <ShieldCheck className="h-3 w-3 text-emerald-500" />}
+      {isNonCompliant && <ShieldAlert className="h-3 w-3 text-red-500" />}
+      {isPartial      && <AlertTriangle className="h-3 w-3 text-amber-500" />}
+      {!isCompliant && !isNonCompliant && !isPartial && <HelpCircle className="h-3 w-3 opacity-40" />}
+      <span className={cn(
+        isCompliant    ? "text-emerald-700" :
+        isNonCompliant ? "text-red-700" :
+        isPartial      ? "text-amber-700" : "text-slate-500"
+      )}>
+        {isCompliant ? "Patuh" : isNonCompliant ? "Tidak Patuh" : isPartial ? "Sebagian" : "—"}
+      </span>
+      <span className="opacity-40">·</span>
+      <span className="opacity-70">{(confidence * 100).toFixed(0)}%</span>
+      {violations > 0 && (
+        <>
+          <span className="opacity-40">·</span>
+          <span className="text-red-600 font-semibold">{violations}⚠</span>
+        </>
+      )}
+    </span>
+  );
 }
 
 // ── Summary stat cards ────────────────────────────────────────────────
@@ -177,17 +229,29 @@ function HistoryCard({
                   {totalViolations} pelanggaran
                 </span>
               )}
-              {item.analysis_mode && item.analysis_mode !== "greeting" && item.analysis_mode !== "out_of_scope" && (
-                <span className="text-xs text-slate-400">
-                  {item.retrieval_mode === "hybrid" ? "Hybrid search" :
-                   item.retrieval_mode === "exact"  ? "Exact match"  :
-                   item.retrieval_mode === "none"   ? "" : "Semantic search"}
-                </span>
-              )}
-              <span className="text-xs text-slate-300 font-mono ml-auto">
-                {item.request_id?.slice(0, 8)}...
-              </span>
             </div>
+
+            {/* Agent verdict summary pills */}
+            {(item.bi_verdict || item.ojk_verdict) && (
+              <div className="flex items-center gap-2 mt-2 flex-wrap">
+                {item.bi_verdict && (
+                  <AgentPill
+                    label="BI"
+                    status={item.bi_verdict.status}
+                    confidence={item.bi_verdict.confidence}
+                    violations={(item.bi_verdict.violations ?? []).length}
+                  />
+                )}
+                {item.ojk_verdict && (
+                  <AgentPill
+                    label="OJK"
+                    status={item.ojk_verdict.status}
+                    confidence={item.ojk_verdict.confidence}
+                    violations={(item.ojk_verdict.violations ?? []).length}
+                  />
+                )}
+              </div>
+            )}
           </div>
 
           {/* Expand chevron */}
