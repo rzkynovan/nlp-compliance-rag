@@ -235,7 +235,7 @@ export function ResultCard({ data }: ResultCardProps) {
       )}
 
       {/* ── Violations ── */}
-      {data.violations.length > 0 && (
+      {(data.violations ?? []).length > 0 && (
         <div>
           <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
             <XCircle className="h-4 w-4 text-red-500" />
@@ -253,7 +253,7 @@ export function ResultCard({ data }: ResultCardProps) {
       )}
 
       {/* ── Recommendations ── */}
-      {data.recommendations.length > 0 && (
+      {(data.recommendations ?? []).length > 0 && (
         <div>
           <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
             <CheckCircle2 className="h-4 w-4 text-emerald-500" />
@@ -271,7 +271,7 @@ export function ResultCard({ data }: ResultCardProps) {
       )}
 
       {/* ── Evidence Trail ── */}
-      {(data.bi_verdict?.evidence?.length || data.ojk_verdict?.evidence?.length) ? (
+      {((data.bi_verdict?.evidence ?? []).length > 0 || (data.ojk_verdict?.evidence ?? []).length > 0) ? (
         <div className="pt-3 border-t border-slate-200">
           <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
             <FileText className="h-4 w-4 text-slate-500" />
@@ -310,7 +310,7 @@ function AgentVerdictCard({ title, verdict }: { title: string; verdict: AgentVer
           {(verdict.confidence * 100).toFixed(0)}%
         </span>
       </div>
-      {verdict.violations.length > 0 && (
+      {(verdict.violations ?? []).length > 0 && (
         <div className="text-xs text-red-600 font-medium">
           {verdict.violations.length} pelanggaran
         </div>

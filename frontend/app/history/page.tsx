@@ -98,8 +98,8 @@ function HistoryCard({
   const cfg = statusConfig[effectiveStatus] ?? statusConfig.UNCLEAR;
   const StatusIcon = cfg.icon;
 
-  const biViolations  = item.bi_verdict?.violations?.length ?? 0;
-  const ojkViolations = item.ojk_verdict?.violations?.length ?? 0;
+  const biViolations    = (item.bi_verdict?.violations  ?? []).length;
+  const ojkViolations   = (item.ojk_verdict?.violations ?? []).length;
   const totalViolations = biViolations + ojkViolations;
 
   return (
