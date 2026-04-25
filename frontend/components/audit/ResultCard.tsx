@@ -74,14 +74,15 @@ function AgentDetailModal({
         className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
       />
 
-      {/* Panel */}
+      {/* Panel — natural height, centered, max-height capped */}
       <motion.div
         key="panel"
-        initial={{ opacity: 0, y: 24, scale: 0.97 }}
+        initial={{ opacity: 0, y: 20, scale: 0.97 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 16, scale: 0.98 }}
+        exit={{ opacity: 0, y: 12, scale: 0.98 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-x-4 top-[5vh] bottom-[5vh] z-50 mx-auto max-w-2xl overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col"
+        className="fixed inset-x-4 z-50 mx-auto max-w-xl top-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col"
+        style={{ maxHeight: "min(680px, 88vh)" }}
       >
         {/* Header */}
         <div className={cn(
@@ -139,12 +140,23 @@ function AgentDetailModal({
                 Pelanggaran ({verdict.violations.length})
               </h3>
               <ul className="space-y-2">
-                {verdict.violations.map((v, i) => (
-                  <li key={i} className="flex items-start gap-2 text-sm text-red-700 bg-red-50 rounded-lg p-3 border border-red-100">
-                    <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                    {v}
-                  </li>
-                ))}
+                {verdict.violations.map((v, i) => {
+                  // Parse format: "Regulasi — Pasal X: detail"
+                  const colonIdx = v.indexOf(":");
+                  const header   = colonIdx > -1 ? v.slice(0, colonIdx).trim() : v;
+                  const detail   = colonIdx > -1 ? v.slice(colonIdx + 1).trim() : "";
+                  return (
+                    <li key={i} className="rounded-lg border border-red-100 bg-red-50 overflow-hidden">
+                      <div className="flex items-center gap-2 px-3 py-2 border-b border-red-100 bg-red-100/60">
+                        <XCircle className="h-3.5 w-3.5 text-red-600 shrink-0" />
+                        <span className="text-xs font-semibold text-red-800">{header}</span>
+                      </div>
+                      {detail && (
+                        <p className="px-3 py-2 text-xs text-red-700 leading-relaxed">{detail}</p>
+                      )}
+                    </li>
+                  );
+                })}
               </ul>
             </section>
           )}

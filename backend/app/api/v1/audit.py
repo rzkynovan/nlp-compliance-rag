@@ -59,9 +59,28 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
     violations = []
     for v in raw_violations:
         if isinstance(v, dict):
-            violations.append(f"{v.get('article', '')}: {v.get('description', '')}")
-        else:
-            violations.append(str(v))
+            regulation = v.get("regulation", v.get("reg", ""))
+            article    = v.get("article", v.get("pasal", ""))
+            detail     = v.get("violation", v.get("violation_detail", v.get("description", "")))
+            required   = v.get("required", v.get("required_value", ""))
+            actual     = v.get("actual", v.get("actual_value", ""))
+
+            parts = []
+            if regulation:
+                parts.append(regulation)
+            if article:
+                parts.append(article)
+            prefix = " — ".join(parts) if parts else "Pelanggaran"
+
+            body = detail or ""
+            if required and actual:
+                body += f" (seharusnya: {required}, aktual: {actual})"
+            elif required:
+                body += f" (nilai wajib: {required})"
+
+            violations.append(f"{prefix}: {body}" if body else prefix)
+        elif isinstance(v, str) and v.strip():
+            violations.append(v.strip())
     
     # Extract evidence
     evidence = []
