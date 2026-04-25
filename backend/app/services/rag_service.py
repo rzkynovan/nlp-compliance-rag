@@ -120,6 +120,65 @@ class RAGAuditService:
                 raise
         return self._coordinator
     
+    def _check_query_scope(self, clause: str) -> Optional[Dict]:
+        """
+        Pre-check query sebelum masuk ke agent.
+        Menangani GREETING dan OUT_OF_SCOPE tanpa memanggil LLM/ChromaDB.
+
+        Returns:
+            Dict respons jika query adalah greeting/out-of-scope, None jika valid.
+        """
+        try:
+            from retrieval.query_analyzer import QueryAnalyzer, QueryType
+            qa = QueryAnalyzer()
+            intent = qa.analyze(clause)
+
+            if intent.query_type == QueryType.GREETING:
+                return {
+                    "final_status": "NOT_ADDRESSED",
+                    "overall_confidence": 1.0,
+                    "risk_score": 0.0,
+                    "bi_verdict": None,
+                    "ojk_verdict": None,
+                    "violations": [],
+                    "recommendations": [],
+                    "evidence_references": [],
+                    "analysis_mode": "greeting",
+                    "retrieval_mode": "none",
+                    "summary": (
+                        "Halo! Saya adalah sistem audit kepatuhan regulasi BI & OJK. "
+                        "Silakan masukkan klausa SOP atau pertanyaan tentang regulasi "
+                        "keuangan untuk saya analisis."
+                    ),
+                    "query_type": intent.query_type.value,
+                }
+
+            if intent.query_type == QueryType.OUT_OF_SCOPE:
+                return {
+                    "final_status": "NOT_ADDRESSED",
+                    "overall_confidence": 1.0,
+                    "risk_score": 0.0,
+                    "bi_verdict": None,
+                    "ojk_verdict": None,
+                    "violations": [],
+                    "recommendations": [],
+                    "evidence_references": [],
+                    "analysis_mode": "out_of_scope",
+                    "retrieval_mode": "none",
+                    "summary": (
+                        "Pertanyaan ini berada di luar cakupan sistem. "
+                        "Sistem hanya dapat menganalisis klausa SOP terhadap "
+                        "regulasi Bank Indonesia (PBI) dan OJK (POJK). "
+                        "Silakan ajukan pertanyaan terkait kepatuhan regulasi keuangan."
+                    ),
+                    "query_type": intent.query_type.value,
+                }
+
+        except Exception as e:
+            logger.debug(f"Query scope check skipped: {e}")
+
+        return None
+
     async def analyze_with_rag(
         self,
         clause: str,
@@ -130,21 +189,33 @@ class RAGAuditService:
     ) -> Dict:
         """
         Analyze clause using RAG with multi-agent system.
-        
+
         Args:
             clause: SOP clause text to analyze
             regulator: "all", "BI", or "OJK"
             top_k: Number of articles to retrieve
             clause_id: Optional clause identifier
             use_cache: Whether to use cached results
-            
+
         Returns:
             Audit result dict
         """
         import time
         start_time = time.time()
         request_id = clause_id or f"audit-{int(time.time()*1000)}"
-        
+
+        # ── Pre-check: greeting / out-of-scope ───────────────────
+        scope_result = self._check_query_scope(clause)
+        if scope_result is not None:
+            scope_result["request_id"] = request_id
+            scope_result["clause_id"]  = clause_id
+            scope_result["clause"]     = clause
+            scope_result["regulator"]  = regulator
+            scope_result["latency_ms"] = 0
+            scope_result["model_used"] = self.llm_model
+            scope_result["from_cache"] = False
+            return scope_result
+
         # Check cache
         if use_cache and settings.ENABLE_CACHE:
             cached = self.cache.get(clause, regulator)

@@ -1,13 +1,22 @@
 """
 hybrid_retriever.py — Orkestrasi dense + sparse retrieval via RRF Fusion.
-Menggabungkan ChromaDB (dense) dan BM25 (sparse) menggunakan
-Reciprocal Rank Fusion agar robust terhadap perbedaan skala score.
+
+Tiga mode retrieval sesuai QueryType:
+
+  "exact"      → BM25 saja (alpha=1.0) — untuk EXACT_REGULATION
+                 "Apa isi PBI 23/6/2021?" — tidak perlu semantic search
+
+  "hybrid"     → BM25 + Dense via RRF (alpha=0.7) — untuk HYBRID_REGULATION
+                 "Apakah pinjol diatur di POJK 22/2023?" — perlu keduanya
+
+  "dense_only" → Dense saja (ChromaDB cosine) — untuk SEMANTIC_COMPLIANCE
+                 "Apa batas saldo e-wallet?" — tidak ada identifier spesifik
 """
 
 from typing import Dict, List, Optional, TYPE_CHECKING
 
 from .bm25_retriever import BM25Retriever, RetrievedNode
-from .query_analyzer import QueryIntent
+from .query_analyzer import QueryIntent, QueryType
 
 if TYPE_CHECKING:
     from llama_index.core import VectorStoreIndex
@@ -48,27 +57,52 @@ class HybridRetriever:
         top_k: int = 5,
     ) -> List[Dict]:
         """
-        Retrieve top-k hasil gabungan dense + sparse.
+        Retrieve top-k hasil sesuai retrieval_mode di QueryIntent.
+
+        Mode:
+          "exact"      → BM25 saja (EXACT_REGULATION, sparse_boost=1.0)
+          "hybrid"     → BM25 + Dense via RRF (HYBRID_REGULATION, sparse_boost=0.7)
+          "dense_only" → Dense saja (SEMANTIC_COMPLIANCE, sparse_boost=0.3)
+          "none"       → [] tanpa retrieval (GREETING / OUT_OF_SCOPE)
 
         Returns list[dict] dengan keys:
             content, metadata, score, rank, source ("dense"|"bm25"|"hybrid")
         """
-        fetch_k = top_k * 3  # ambil lebih banyak sebelum fusion
+        mode    = intent.retrieval_mode
+        fetch_k = top_k * 3
 
-        # Dense retrieval (ChromaDB)
-        dense_results = self._dense_retrieve(query, fetch_k)
+        if mode == "none":
+            return []
 
-        # Sparse retrieval (BM25)
+        if mode == "exact":
+            # Type 1: BM25 saja — cari peraturan berdasarkan identifier
+            sparse_results = self.bm25.retrieve(query, top_k=top_k)
+            return [self._node_to_dict(n) for n in sparse_results]
+
+        if mode == "dense_only":
+            # Type 3: Dense saja — query semantik tanpa identifier
+            return self._dense_retrieve(query, top_k)
+
+        # mode == "hybrid" (Type 2): RRF Fusion BM25 + Dense
+        dense_results  = self._dense_retrieve(query, fetch_k)
         sparse_results = self.bm25.retrieve(query, top_k=fetch_k)
-
-        # RRF Fusion
         fused = self._rrf_fusion(
             dense_results,
             sparse_results,
             alpha=intent.sparse_boost,
         )
-
         return fused[:top_k]
+
+    # ------------------------------------------------------------------
+    def _node_to_dict(self, node: RetrievedNode) -> Dict:
+        """Konversi RetrievedNode BM25 ke format dict standar."""
+        return {
+            'content':  node.content,
+            'metadata': node.metadata,
+            'score':    node.score,
+            'rank':     node.rank,
+            'source':   'bm25',
+        }
 
     # ------------------------------------------------------------------
     def _dense_retrieve(self, query: str, top_k: int) -> List[Dict]:
