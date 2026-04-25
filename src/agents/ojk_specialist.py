@@ -220,7 +220,7 @@ class OJKSpecialistAgent(BaseAgent):
         
         return f"""Kamu adalah Auditor Kepatuhan Regulasi Otoritas Jasa Keuangan (OJK Specialist).
 
-ATURAN OJK YANG RELEVAN:
+PASAL-PASAL REGULASI OJK YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PERSIS dari dokumen ini):
 {articles_text}
 
 KLAUSA SOP/T&C YANG DIUJI:
@@ -232,26 +232,29 @@ TUGAS:
 3. Evaluasi dampak terhadap hak-hak konsumen
 4. Jika tidak patuh, identifikasi pasal yang dilanggar
 
-OUTPUT (format JSON wajib):
+PENTING untuk field "violations":
+- "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 5 Ayat 2 huruf a")
+- "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "POJK No. 22/POJK.07/2023")
+- JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX"
+
+OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
     "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
     "violations": [
         {{
-            "article": "Pasal X Ayat Y",
-            "regulation": "POJK No. XX/XX",
-            "violation": "deskripsi pelanggaran",
-            "required": "nilai yang diwajibkan regulasi",
-            "actual": "nilai aktual di klausa SOP",
-            "context": "konteks pelanggaran dan dampak ke konsumen"
+            "article": "[nomor pasal dari dokumen regulasi di atas]",
+            "regulation": "[nama regulasi dari dokumen di atas]",
+            "violation": "penjelasan detail mengapa klausa SOP melanggar pasal ini dan dampaknya ke konsumen",
+            "required": "ketentuan yang diwajibkan oleh pasal tersebut",
+            "actual": "kondisi aktual yang tertulis di klausa SOP"
         }}
     ],
     "reasoning": "langkah penalaran detail termasuk analisis dampak ke konsumen",
-    "recommendations": ["rekomendasi perbaikan dari sudut pandang perlindungan konsumen"]
-}}
-
-Jelaskan dalam Bahasa Indonesia."""
+    "recommendations": ["rekomendasi perbaikan konkret dari sudut pandang perlindungan konsumen"]
+}}\
+"""
     
     def _assess_consumer_impact(self, clause: str, parsed: Dict) -> str:
         """

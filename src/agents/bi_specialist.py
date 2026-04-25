@@ -221,7 +221,7 @@ class BISpecialistAgent(BaseAgent):
         
         return f"""Kamu adalah Auditor Kepatuhan Regulasi Bank Indonesia (BI Specialist).
 
-ATURAN BI YANG RELEVAN:
+PASAL-PASAL REGULASI BI YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PERSIS dari dokumen ini):
 {articles_text}
 
 KLAUSA SOP/T&C YANG DIUJI:
@@ -230,25 +230,28 @@ KLAUSA SOP/T&C YANG DIUJI:
 TUGAS:
 1. Analisis apakah klausa SOP mematuhi regulasi BI di atas
 2. Perhatikan khususnya aspek: batas saldo, batas transaksi, KYC, settlement
-3. Jika tidak patuh, identifikasi pasal yang dilanggar dan berikan detail
+3. Jika tidak patuh, identifikasi pasal yang dilanggar dengan nomor PERSIS dari dokumen di atas
 
-OUTPUT (format JSON wajib):
+PENTING untuk field "violations":
+- "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")
+- "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "PBI No. 23/6/PBI/2021")
+- JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX"
+
+OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
     "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
     "violations": [
         {{
-            "article": "Pasal X Ayat Y",
-            "regulation": "PBI No. XX/XX",
-            "violation": "deskripsi pelanggaran",
-            "required": "nilai yang diwajibkan regulasi",
-            "actual": "nilai aktual di klausa SOP",
-            "context": "konteks pelanggaran"
+            "article": "[nomor pasal dari dokumen regulasi di atas]",
+            "regulation": "[nama regulasi dari dokumen di atas]",
+            "violation": "penjelasan detail mengapa klausa SOP melanggar pasal ini",
+            "required": "nilai atau ketentuan yang diwajibkan oleh pasal tersebut",
+            "actual": "nilai atau ketentuan aktual yang tertulis di klausa SOP"
         }}
     ],
-    "reasoning": "langkah penalaran detail",
-    "recommendations": ["rekomendasi perbaikan 1", "rekomendasi perbaikan 2"]
-}}
-
- jelaskan dalam Bahasa Indonesia."""
+    "reasoning": "langkah penalaran detail step-by-step",
+    "recommendations": ["rekomendasi perbaikan konkret 1", "rekomendasi perbaikan konkret 2"]
+}}\
+"""

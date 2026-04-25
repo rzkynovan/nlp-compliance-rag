@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
 import type { AuditResponse, AgentVerdict } from "@/lib/api/client";
@@ -62,28 +63,35 @@ function AgentDetailModal({
   const StatusIcon = cfg.icon;
   const isBI = title.includes("BI");
 
-  return (
+  // Close on Escape key
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
+    document.addEventListener("keydown", handler);
+    return () => document.removeEventListener("keydown", handler);
+  }, [onClose]);
+
+  const modal = (
     <AnimatePresence>
-      {/* Backdrop */}
+      {/* Backdrop — flex container centers the panel */}
       <motion.div
         key="backdrop"
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
         exit={{ opacity: 0 }}
         onClick={onClose}
-        className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm"
-      />
-
-      {/* Panel — natural height, centered, max-height capped */}
-      <motion.div
-        key="panel"
-        initial={{ opacity: 0, y: 20, scale: 0.97 }}
-        animate={{ opacity: 1, y: 0, scale: 1 }}
-        exit={{ opacity: 0, y: 12, scale: 0.98 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-        className="fixed inset-x-4 z-50 mx-auto max-w-xl top-1/2 -translate-y-1/2 overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col"
-        style={{ maxHeight: "min(680px, 88vh)" }}
+        className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
       >
+        {/* Panel — stop propagation so clicking inside doesn't close */}
+        <motion.div
+          key="panel"
+          initial={{ opacity: 0, y: 16, scale: 0.96 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          exit={{ opacity: 0, y: 8, scale: 0.98 }}
+          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+          onClick={(e) => e.stopPropagation()}
+          className="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col z-[9999]"
+          style={{ maxHeight: "min(680px, 85vh)" }}
+        >
         {/* Header */}
         <div className={cn(
           "flex items-center justify-between px-6 py-4 border-b",
@@ -201,18 +209,21 @@ function AgentDetailModal({
           )}
         </div>
 
-        {/* Footer */}
-        <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
-          >
-            Tutup
-          </button>
-        </div>
+          {/* Footer */}
+          <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
+            <button
+              onClick={onClose}
+              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
+            >
+              Tutup
+            </button>
+          </div>
+        </motion.div>
       </motion.div>
     </AnimatePresence>
   );
+
+  return createPortal(modal, document.body);
 }
 
 // ── AgentVerdictCard (clickable) ───────────────────────────────────────
