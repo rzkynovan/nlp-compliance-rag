@@ -94,16 +94,24 @@ class ConflictResolverAgent:
             FinalVerdict dengan status final dan rekomendasi
         """
         
-        all_statuses = [bi_verdict.get("verdict"), ojk_verdict.get("verdict")]
-        
+        def _norm(s):
+            return str(s).upper().replace("-", "_").strip() if s else "UNCLEAR"
+
+        all_statuses = [
+            _norm(bi_verdict.get("verdict")),
+            _norm(ojk_verdict.get("verdict")),
+        ]
+
         if all(s == "COMPLIANT" for s in all_statuses):
             final_status = "COMPLIANT"
         elif "NON_COMPLIANT" in all_statuses:
             final_status = "NON_COMPLIANT"
-        elif "NOT_ADDRESSED" in all_statuses and "NON_COMPLIANT" not in all_statuses:
+        elif all(s in ("NOT_ADDRESSED", "UNCLEAR") for s in all_statuses):
             final_status = "NOT_ADDRESSED"
+        elif "PARTIALLY_COMPLIANT" in all_statuses:
+            final_status = "PARTIALLY_COMPLIANT"
         else:
-            final_status = "NEEDS_HUMAN_REVIEW"
+            final_status = "NEEDS_REVIEW"
         
         conflicts = self._detect_conflicts(bi_verdict, ojk_verdict)
         

@@ -234,7 +234,7 @@ TUGAS:
 
 OUTPUT (format JSON wajib):
 {{
-    "status": "COMPLIANT/NON-COMPLIANT/NOT_ADDRESSED",
+    "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
     "violations": [

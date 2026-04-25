@@ -22,6 +22,8 @@ RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75}
 
 
 def _map_status(status: str) -> ComplianceStatus:
+    # Normalize: replace hyphen variant (NON-COMPLIANT) → underscore (NON_COMPLIANT)
+    normalized = str(status).upper().replace("-", "_").strip()
     status_mapping = {
         "COMPLIANT": ComplianceStatus.COMPLIANT,
         "NON_COMPLIANT": ComplianceStatus.NON_COMPLIANT,
@@ -29,8 +31,9 @@ def _map_status(status: str) -> ComplianceStatus:
         "NEEDS_REVIEW": ComplianceStatus.NEEDS_REVIEW,
         "NOT_ADDRESSED": ComplianceStatus.NOT_ADDRESSED,
         "UNCLEAR": ComplianceStatus.UNCLEAR,
+        "NEEDS_HUMAN_REVIEW": ComplianceStatus.NEEDS_REVIEW,
     }
-    return status_mapping.get(status, ComplianceStatus.UNCLEAR)
+    return status_mapping.get(normalized, ComplianceStatus.UNCLEAR)
 
 
 def _map_risk_score(risk_score) -> float:
