@@ -21,38 +21,47 @@ export interface AuditRequest {
   regulator?: "all" | "BI" | "OJK";
 }
 
+export type ComplianceStatus =
+  | "COMPLIANT"
+  | "NON_COMPLIANT"
+  | "PARTIALLY_COMPLIANT"
+  | "NEEDS_REVIEW"
+  | "NOT_ADDRESSED"
+  | "UNCLEAR";
+
+export type QueryType =
+  | "exact_regulation"
+  | "hybrid_regulation"
+  | "semantic_compliance"
+  | "greeting"
+  | "out_of_scope";
+
+export type AnalysisMode = "multi_agent_rag" | "llm_only" | "greeting" | "out_of_scope";
+export type RetrievalMode = "exact" | "hybrid" | "dense" | "dense_only" | "none";
+
+export interface AgentVerdict {
+  agent_name: string;
+  status: string;
+  confidence: number;
+  violations: string[];
+  evidence: {
+    regulation: string;
+    article: string;
+    article_text: string;
+    relevance_score: number;
+  }[];
+  reasoning: string;
+}
+
 export interface AuditResponse {
   request_id: string;
   timestamp: string;
   clause: string;
   clause_id?: string;
-  bi_verdict: {
-    agent_name: string;
-    status: string;
-    confidence: number;
-    violations: string[];
-    evidence: {
-      regulation: string;
-      article: string;
-      article_text: string;
-      relevance_score: number;
-    }[];
-    reasoning: string;
-  } | null;
-  ojk_verdict: {
-    agent_name: string;
-    status: string;
-    confidence: number;
-    violations: string[];
-    evidence: {
-      regulation: string;
-      article: string;
-      article_text: string;
-      relevance_score: number;
-    }[];
-    reasoning: string;
-  } | null;
-  final_status: string;
+  regulator?: string;
+  bi_verdict: AgentVerdict | null;
+  ojk_verdict: AgentVerdict | null;
+  final_status: ComplianceStatus;
   overall_confidence: number;
   risk_score: number;
   violations: string[];
@@ -60,6 +69,12 @@ export interface AuditResponse {
   latency_ms: number;
   model_used?: string;
   tokens_used?: number;
+  // Phase 7+: retrieval & query classification
+  analysis_mode?: AnalysisMode;
+  retrieval_mode?: RetrievalMode;
+  query_type?: QueryType;
+  summary?: string; // diisi untuk GREETING dan OUT_OF_SCOPE
+  from_cache?: boolean;
 }
 
 const createApiClient = (options?: Options): KyInstance => {
