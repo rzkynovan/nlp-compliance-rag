@@ -37,6 +37,7 @@ const statusConfig: Record<string, {
   UNCLEAR:            { label: "Tidak Jelas",    icon: HelpCircle,    color: "text-slate-500",   badgeClass: "bg-slate-100 text-slate-600 border-slate-200" },
   greeting:           { label: "Sapaan",         icon: MessageSquare, color: "text-teal-600",    badgeClass: "bg-teal-100 text-teal-700 border-teal-200" },
   out_of_scope:       { label: "Di Luar Scope",  icon: Ban,           color: "text-rose-600",    badgeClass: "bg-rose-100 text-rose-700 border-rose-200" },
+  noise_filtered:     { label: "Header/Noise",   icon: FileText,      color: "text-slate-400",   badgeClass: "bg-slate-100 text-slate-500 border-slate-200" },
 };
 
 const ALL_FILTERS = ["Semua", "COMPLIANT", "NON_COMPLIANT", "PARTIALLY_COMPLIANT", "NEEDS_REVIEW", "NOT_ADDRESSED", "UNCLEAR"];
@@ -44,6 +45,7 @@ const ALL_FILTERS = ["Semua", "COMPLIANT", "NON_COMPLIANT", "PARTIALLY_COMPLIANT
 function getEffectiveStatus(item: AuditHistory): string {
   if (item.analysis_mode === "greeting") return "greeting";
   if (item.analysis_mode === "out_of_scope") return "out_of_scope";
+  if (item.analysis_mode === "noise_filtered") return "noise_filtered";
   return item.final_status;
 }
 

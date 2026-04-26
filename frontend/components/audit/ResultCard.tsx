@@ -39,6 +39,7 @@ const queryTypeConfig: Record<string, { label: string; icon: React.ElementType; 
   semantic_compliance:{ label: "Semantic",       icon: Layers,       color: "text-sky-700 bg-sky-100" },
   greeting:           { label: "Sapaan",         icon: MessageSquare,color: "text-teal-700 bg-teal-100" },
   out_of_scope:       { label: "Di Luar Scope",  icon: Ban,          color: "text-rose-700 bg-rose-100" },
+  noise:              { label: "Header/Noise",   icon: FileText,     color: "text-slate-500 bg-slate-100" },
 };
 
 const retrievalModeLabel: Record<string, string> = {
@@ -324,9 +325,10 @@ function EvidenceItem({
 
 // ── ResultCard ─────────────────────────────────────────────────────────
 export function ResultCard({ data }: ResultCardProps) {
-  const isGreeting   = data.analysis_mode === "greeting";
-  const isOutOfScope = data.analysis_mode === "out_of_scope";
-  const isSpecial    = isGreeting || isOutOfScope;
+  const isGreeting     = data.analysis_mode === "greeting";
+  const isOutOfScope   = data.analysis_mode === "out_of_scope";
+  const isNoiseFiltered= data.analysis_mode === "noise_filtered";
+  const isSpecial      = isGreeting || isOutOfScope || isNoiseFiltered;
 
   const statusInfo = statusConfig[data.final_status] ?? statusConfig.UNCLEAR;
   const StatusIcon = statusInfo.icon;
@@ -337,20 +339,22 @@ export function ResultCard({ data }: ResultCardProps) {
     return (
       <div className={cn(
         "rounded-xl border p-6",
-        isGreeting ? "bg-teal-50 border-teal-200" : "bg-rose-50 border-rose-200"
+        isGreeting ? "bg-teal-50 border-teal-200" : isNoiseFiltered ? "bg-slate-50 border-slate-200" : "bg-rose-50 border-rose-200"
       )}>
         <div className="flex items-center gap-3 mb-3">
           {isGreeting
             ? <MessageSquare className="h-7 w-7 text-teal-500" />
+            : isNoiseFiltered
+            ? <FileText className="h-7 w-7 text-slate-400" />
             : <Ban className="h-7 w-7 text-rose-500" />}
           <div>
             <h3 className={cn("font-semibold text-base",
-              isGreeting ? "text-teal-800" : "text-rose-800"
+              isGreeting ? "text-teal-800" : isNoiseFiltered ? "text-slate-600" : "text-rose-800"
             )}>
-              {isGreeting ? "Sapaan Diterima" : "Pertanyaan Di Luar Cakupan"}
+              {isGreeting ? "Sapaan Diterima" : isNoiseFiltered ? "Header/Noise — Dilewati" : "Pertanyaan Di Luar Cakupan"}
             </h3>
             <p className={cn("text-xs mt-0.5",
-              isGreeting ? "text-teal-600" : "text-rose-600"
+              isGreeting ? "text-teal-600" : isNoiseFiltered ? "text-slate-500" : "text-rose-600"
             )}>
               {isGreeting
                 ? "Sistem menerima sapaan — tidak ada retrieval yang dijalankan"

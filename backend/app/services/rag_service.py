@@ -129,9 +129,29 @@ class RAGAuditService:
             Dict respons jika query adalah greeting/out-of-scope, None jika valid.
         """
         try:
-            from retrieval.query_analyzer import QueryAnalyzer, QueryType
+            from retrieval.query_analyzer import QueryAnalyzer, QueryType, is_noise_clause
             qa = QueryAnalyzer()
             intent = qa.analyze(clause)
+
+            # Klausul header/disclaimer/cover page — skip audit
+            if is_noise_clause(clause):
+                return {
+                    "final_status": "NOT_ADDRESSED",
+                    "overall_confidence": 1.0,
+                    "risk_score": 0.0,
+                    "bi_verdict": None,
+                    "ojk_verdict": None,
+                    "violations": [],
+                    "recommendations": [],
+                    "evidence_references": [],
+                    "analysis_mode": "noise_filtered",
+                    "retrieval_mode": "none",
+                    "summary": (
+                        "Teks ini dikenali sebagai header dokumen, disclaimer, atau halaman sampul "
+                        "— bukan klausa SOP substantif. Audit dilewati secara otomatis."
+                    ),
+                    "query_type": "noise",
+                }
 
             if intent.query_type == QueryType.GREETING:
                 return {

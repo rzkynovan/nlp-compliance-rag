@@ -228,14 +228,22 @@ KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
 TUGAS:
-1. Analisis apakah klausa SOP mematuhi regulasi BI di atas
+1. Analisis apakah klausa SOP SECARA EKSPLISIT mengatur topik yang dibahas pasal regulasi di atas
 2. Perhatikan khususnya aspek: batas saldo, batas transaksi, KYC, settlement
 3. Jika tidak patuh, identifikasi pasal yang dilanggar dengan nomor PERSIS dari dokumen di atas
+
+ATURAN PENTING — BACA SEBELUM MENJAWAB:
+a) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI (misal: klausa tentang data privasi tidak perlu dievaluasi terhadap pasal limit saldo).
+b) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan Rp 2jt).
+c) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama dan nilainya SESUAI regulasi.
+d) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian lain melanggar — HANYA jika ada nilai konkret yang bisa dibandingkan.
+e) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
+f) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")
 - "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "PBI No. 23/6/PBI/2021")
-- JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX"
+- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai/aturan bertentangan), bukan karena tidak disebutkan
 
 OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
@@ -251,7 +259,7 @@ OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
             "actual": "nilai atau ketentuan aktual yang tertulis di klausa SOP"
         }}
     ],
-    "reasoning": "langkah penalaran detail step-by-step",
+    "reasoning": "langkah penalaran detail step-by-step, termasuk apakah klausa relevan dengan topik pasal",
     "recommendations": ["rekomendasi perbaikan konkret 1", "rekomendasi perbaikan konkret 2"]
 }}\
 """

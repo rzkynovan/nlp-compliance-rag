@@ -116,6 +116,47 @@ _META_SYSTEM_RE = re.compile(
 )
 
 
+# ─── Pola noise: header, disclaimer, cover page ─────────────────
+_NOISE_PATTERNS = [
+    # Markdown heading (# judul dokumen)
+    re.compile(r'^\s*#{1,3}\s+\S', re.MULTILINE),
+    # Status dokumen / metadata cover page
+    re.compile(r'\*{0,2}Status\s+Dokumen\s*[:：]', re.IGNORECASE),
+    re.compile(r'\*{0,2}Tanggal\s+Efektif\s*[:：]', re.IGNORECASE),
+    re.compile(r'RAHASIA\s+PERUSAHAAN', re.IGNORECASE),
+    # Disclaimer sintetis/dummy
+    re.compile(
+        r'(?:data\s+sintetis|dummy|dirancang\s+secara\s+khusus\s+untuk\s+dievaluasi)',
+        re.IGNORECASE
+    ),
+    # Hanya berisi metadata dokumen
+    re.compile(r'^\s*(?:Nomor|Versi|Revisi|Diterbitkan|Berlaku)\s*[:：]', re.MULTILINE),
+]
+
+# Jumlah kata minimum agar klausa dianggap substantif
+_MIN_SUBSTANTIVE_WORDS = 20
+
+
+def is_noise_clause(text: str) -> bool:
+    """
+    True jika teks adalah header/disclaimer/cover page, bukan klausa SOP substantif.
+    Klausa yang noise tidak perlu diaudit oleh agent.
+    """
+    stripped = text.strip()
+    # Terlalu pendek untuk jadi klausa regulasi
+    if len(stripped.split()) < _MIN_SUBSTANTIVE_WORDS:
+        for pat in _NOISE_PATTERNS:
+            if pat.search(stripped):
+                return True
+
+    # Selalu noise jika mengandung pola disclaimer sintetis
+    for pat in _NOISE_PATTERNS[3:5]:
+        if pat.search(stripped):
+            return True
+
+    return False
+
+
 class QueryAnalyzer:
     """
     Menganalisis query dan mengklasifikasikan ke dalam 5 QueryType.

@@ -109,7 +109,15 @@ class ConflictResolverAgent:
         elif all(s in ("NOT_ADDRESSED", "UNCLEAR") for s in all_statuses):
             final_status = "NOT_ADDRESSED"
         elif "PARTIALLY_COMPLIANT" in all_statuses:
-            final_status = "PARTIALLY_COMPLIANT"
+            # Jika satu agen PARTIALLY_COMPLIANT dan agen lain NOT_ADDRESSED,
+            # final tetap PARTIALLY_COMPLIANT hanya jika ada violations konkret.
+            # Jika violations kosong, turunkan ke COMPLIANT (agen salah flag).
+            partial_agent = (
+                bi_verdict if _norm(bi_verdict.get("verdict")) == "PARTIALLY_COMPLIANT"
+                else ojk_verdict
+            )
+            has_real_violations = len(partial_agent.get("violated_articles", [])) > 0
+            final_status = "PARTIALLY_COMPLIANT" if has_real_violations else "COMPLIANT"
         else:
             final_status = "NEEDS_REVIEW"
         

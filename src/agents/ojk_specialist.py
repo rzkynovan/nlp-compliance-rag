@@ -227,15 +227,23 @@ KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
 TUGAS:
-1. Analisis apakah klausa SOP mematuhi regulasi OJK di atas
+1. Analisis apakah klausa SOP SECARA EKSPLISIT mengatur topik yang dibahas pasal regulasi di atas
 2. Perhatikan khususnya: perlindungan konsumen, SLA pengaduan, klausula baku
-3. Evaluasi dampak terhadap hak-hak konsumen
+3. Evaluasi dampak terhadap hak-hak konsumen HANYA jika klausa relevan dengan topik tersebut
 4. Jika tidak patuh, identifikasi pasal yang dilanggar
 
+ATURAN PENTING — BACA SEBELUM MENJAWAB:
+a) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK (misal: klausa tentang limit saldo tidak perlu dievaluasi terhadap pasal SLA pengaduan).
+b) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 20 hari).
+c) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan nilainya SESUAI regulasi.
+d) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian melanggar — HANYA jika ada ketentuan konkret yang bisa dibandingkan.
+e) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
+f) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
+
 PENTING untuk field "violations":
-- "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 5 Ayat 2 huruf a")
+- "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")
 - "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "POJK No. 22/POJK.07/2023")
-- JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX"
+- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai/aturan bertentangan), bukan karena tidak disebutkan
 
 OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
@@ -251,7 +259,7 @@ OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
             "actual": "kondisi aktual yang tertulis di klausa SOP"
         }}
     ],
-    "reasoning": "langkah penalaran detail termasuk analisis dampak ke konsumen",
+    "reasoning": "langkah penalaran detail termasuk apakah klausa relevan dengan topik pasal, dan analisis dampak ke konsumen",
     "recommendations": ["rekomendasi perbaikan konkret dari sudut pandang perlindungan konsumen"]
 }}\
 """
