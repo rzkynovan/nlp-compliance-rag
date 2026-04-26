@@ -9,6 +9,7 @@ import {
   Clock, FileText, CheckCircle2, XCircle, AlertTriangle,
   HelpCircle, ChevronDown, ChevronUp, Search, Filter,
   MessageSquare, Ban, BarChart3, Zap, ShieldCheck, ShieldAlert,
+  Download,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getAuditHistory } from "@/lib/api";
@@ -283,6 +284,122 @@ function HistoryCard({
   );
 }
 
+// ── Export helpers ────────────────────────────────────────────────────
+function exportJSON(items: AuditHistory[]) {
+  const payload = {
+    exported_at: new Date().toISOString(),
+    total: items.length,
+    results: items.map(h => ({
+      request_id:         h.request_id,
+      timestamp:          h.timestamp,
+      clause:             h.clause,
+      final_status:       h.final_status,
+      overall_confidence: h.overall_confidence,
+      risk_score:         h.risk_score,
+      latency_ms:         h.latency_ms,
+      analysis_mode:      h.analysis_mode,
+      query_type:         h.query_type,
+      retrieval_mode:     h.retrieval_mode,
+      from_cache:         h.from_cache,
+      summary:            h.summary,
+      bi_verdict:         h.bi_verdict,
+      ojk_verdict:        h.ojk_verdict,
+      violations:         h.violations,
+      recommendations:    h.recommendations,
+    })),
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `audit_results_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+function exportCSV(items: AuditHistory[]) {
+  const headers = [
+    "request_id", "timestamp", "final_status", "overall_confidence",
+    "risk_score", "latency_ms", "query_type", "retrieval_mode", "from_cache",
+    "bi_status", "bi_confidence", "bi_violations_count",
+    "ojk_status", "ojk_confidence", "ojk_violations_count",
+    "total_violations", "clause_preview",
+  ];
+
+  const rows = items.map(h => {
+    const biV = (h.bi_verdict?.violations ?? []).length;
+    const ojkV = (h.ojk_verdict?.violations ?? []).length;
+    const clause = (h.clause ?? "").replace(/"/g, '""').slice(0, 200);
+    return [
+      h.request_id,
+      h.timestamp,
+      h.final_status,
+      h.overall_confidence?.toFixed(3) ?? "",
+      h.risk_score?.toFixed(3) ?? "",
+      h.latency_ms?.toFixed(0) ?? "",
+      h.query_type ?? "",
+      h.retrieval_mode ?? "",
+      h.from_cache ? "true" : "false",
+      h.bi_verdict?.status ?? "",
+      h.bi_verdict?.confidence?.toFixed(3) ?? "",
+      biV,
+      h.ojk_verdict?.status ?? "",
+      h.ojk_verdict?.confidence?.toFixed(3) ?? "",
+      ojkV,
+      biV + ojkV,
+      `"${clause}"`,
+    ].join(",");
+  });
+
+  const csv = [headers.join(","), ...rows].join("\n");
+  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `audit_results_${new Date().toISOString().slice(0, 10)}.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// ── Export button ─────────────────────────────────────────────────────
+function ExportMenu({ items, label }: { items: AuditHistory[]; label: string }) {
+  const [open, setOpen] = useState(false);
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className={cn(
+          "flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all",
+          "bg-white border-slate-200 text-slate-600 hover:bg-slate-50 hover:border-slate-300"
+        )}
+      >
+        <Download className="h-3.5 w-3.5" />
+        Export {label}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
+          <div className="absolute right-0 top-full mt-1 z-20 bg-white border border-slate-200 rounded-lg shadow-lg py-1 min-w-[140px]">
+            <button
+              onClick={() => { exportJSON(items); setOpen(false); }}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-slate-50 text-slate-700"
+            >
+              JSON (lengkap)
+            </button>
+            <button
+              onClick={() => { exportCSV(items); setOpen(false); }}
+              className="w-full text-left text-xs px-3 py-2 hover:bg-slate-50 text-slate-700"
+            >
+              CSV (ringkasan)
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 // ── Main page ─────────────────────────────────────────────────────────
 export default function HistoryPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
@@ -337,9 +454,15 @@ export default function HistoryPage() {
           </p>
         </div>
         {history && history.length > 0 && (
-          <div className="flex items-center gap-1.5 text-xs text-slate-400">
-            <BarChart3 className="h-3.5 w-3.5" />
-            {history.length} total
+          <div className="flex items-center gap-2">
+            <div className="flex items-center gap-1.5 text-xs text-slate-400">
+              <BarChart3 className="h-3.5 w-3.5" />
+              {history.length} total
+            </div>
+            {filtered.length < history.length && filtered.length > 0 && (
+              <ExportMenu items={filtered} label={`(${filtered.length} filtered)`} />
+            )}
+            <ExportMenu items={history} label="semua" />
           </div>
         )}
       </div>
