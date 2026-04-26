@@ -36,7 +36,7 @@ export type QueryType =
   | "greeting"
   | "out_of_scope";
 
-export type AnalysisMode = "multi_agent_rag" | "llm_only" | "greeting" | "out_of_scope";
+export type AnalysisMode = "multi_agent_rag" | "llm_only" | "greeting" | "out_of_scope" | "noise_filtered";
 export type RetrievalMode = "exact" | "hybrid" | "dense" | "dense_only" | "none";
 
 export interface AgentVerdict {
