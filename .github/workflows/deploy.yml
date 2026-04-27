@@ -1,0 +1,65 @@
+name: Deploy to Production
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    name: SSH Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: root
+          password: ${{ secrets.SSH_PASSWORD }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+
+            # ── Pull latest code ──────────────────────────────────────────────
+            cd ~/nlp-compliance-rag
+            git pull origin main
+
+            # ── Write .env from secret (base64-encoded to preserve newlines) ──
+            echo "${{ secrets.ENV_FILE_B64 }}" | base64 -d > docker/.env
+
+            # ── Set image tag to short commit SHA ─────────────────────────────
+            export IMAGE_TAG=$(git rev-parse --short HEAD)
+            echo "Building images with tag: $IMAGE_TAG"
+
+            # ── Stop running services cleanly ─────────────────────────────────
+            cd docker
+            docker-compose down
+
+            # ── Build custom images (backend + frontend) with versioned tag ───
+            IMAGE_TAG=$IMAGE_TAG docker-compose build --pull
+
+            # ── Tag images also as 'latest' for convenience ───────────────────
+            docker tag nlp-compliance-backend:$IMAGE_TAG nlp-compliance-backend:latest
+            docker tag nlp-compliance-frontend:$IMAGE_TAG nlp-compliance-frontend:latest
+
+            # ── Start all services ────────────────────────────────────────────
+            IMAGE_TAG=$IMAGE_TAG docker-compose up -d
+
+            # ── Remove old versioned images (keep last 3 + latest) ────────────
+            docker images nlp-compliance-backend --format "{{.Tag}}" \
+              | grep -v latest \
+              | sort -r \
+              | tail -n +4 \
+              | xargs -r -I{} docker rmi nlp-compliance-backend:{} || true
+
+            docker images nlp-compliance-frontend --format "{{.Tag}}" \
+              | grep -v latest \
+              | sort -r \
+              | tail -n +4 \
+              | xargs -r -I{} docker rmi nlp-compliance-frontend:{} || true
+
+            echo "✅ Deployment complete — image tag: $IMAGE_TAG — $(date)"

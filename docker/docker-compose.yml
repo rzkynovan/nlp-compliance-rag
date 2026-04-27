@@ -1,5 +1,6 @@
 services:
   backend:
+    image: nlp-compliance-backend:${IMAGE_TAG:-latest}
     build:
       # Build context = project root so Dockerfile can COPY both backend/ and src/
       # This makes the image fully self-contained — no source-code volume mounts needed
@@ -29,6 +30,7 @@ services:
       - compliance-network
 
   frontend:
+    image: nlp-compliance-frontend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: docker/frontend.Dockerfile
@@ -87,6 +89,7 @@ services:
       - compliance-network
 
   celery_worker:
+    image: nlp-compliance-backend:${IMAGE_TAG:-latest}
     build:
       context: ..
       dockerfile: docker/backend.Dockerfile
