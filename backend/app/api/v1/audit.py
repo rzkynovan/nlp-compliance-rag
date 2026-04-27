@@ -209,18 +209,74 @@ def _extract_pdf_text(content: bytes) -> str:
         raise HTTPException(status_code=422, detail=f"Gagal membaca PDF: {str(e)}")
 
 
-def _split_into_clauses(text: str, min_length: int = 30) -> List[str]:
-    """Split text into clauses by blank-line paragraph breaks."""
-    # Normalize newlines
+_CLAUSE_SENTINEL = "§§CLAUSE_SPLIT§§"
+
+
+def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
+    """
+    Split T&C / SOP document into clause-level segments.
+
+    Strategy (applied in order):
+    1. Inject a sentinel before each structural marker:
+       - Numbered section headings  e.g. "12. Judul Bagian"
+       - Lettered sub-clauses       e.g. "a. Anda dapat..."
+       - Roman-numeral list items   e.g. "i. ", "ii. ", "iii. "
+    2. Split on the sentinel; sub-split any block still > 800 chars on
+       blank lines.
+    3. Normalise whitespace; merge fragments shorter than min_length into
+       the preceding clause.
+    """
     text = re.sub(r"\r\n", "\n", text)
-    # Split on 2+ consecutive newlines
-    paragraphs = re.split(r"\n{2,}", text.strip())
-    clauses = []
-    for p in paragraphs:
-        p = re.sub(r"\s+", " ", p).strip()
-        if len(p) >= min_length:
-            clauses.append(p)
-    return clauses[:100]  # cap at 100 clauses
+
+    # ── Step 1: mark structural boundaries ──────────────────────────────────
+    def _mark(m: re.Match) -> str:  # type: ignore[type-arg]
+        return m.group(1) + _CLAUSE_SENTINEL + "".join(m.groups()[1:])
+
+    # Numbered section heading: "12. Judul" at line start (capital first letter)
+    text = re.sub(
+        r"(?<!\d)(\n|^)(\d{1,2}\.\s+)([A-Z][^\n]{0,80}\n)",
+        _mark,
+        text,
+        flags=re.MULTILINE,
+    )
+    # Lettered sub-clause: "a. " or "a) " at line start
+    text = re.sub(
+        r"(\n)([a-z][.)]\s)",
+        _mark,
+        text,
+        flags=re.MULTILINE,
+    )
+    # Roman numeral list items: "i. ", "ii. ", "iii. ", "iv. " etc.
+    text = re.sub(
+        r"(\n)((?:i{1,3}|iv|vi{0,3}|ix|x)[.)]\s)",
+        _mark,
+        text,
+        flags=re.MULTILINE,
+    )
+
+    # ── Step 2: split on sentinel; sub-split large blocks on blank lines ────
+    raw_blocks: List[str] = []
+    for block in text.split(_CLAUSE_SENTINEL):
+        block = block.strip()
+        if not block:
+            continue
+        if len(block) > 800:
+            sub = re.split(r"\n{2,}", block)
+            raw_blocks.extend(s.strip() for s in sub if s.strip())
+        else:
+            raw_blocks.append(block)
+
+    # ── Step 3: normalise whitespace and merge short fragments ──────────────
+    clauses: List[str] = []
+    for block in raw_blocks:
+        block = re.sub(r"\s+", " ", block).strip()
+        if len(block) < min_length:
+            if clauses:
+                clauses[-1] = clauses[-1] + " " + block
+            continue
+        clauses.append(block)
+
+    return clauses[:150]  # cap at 150 clauses
 
 
 @router.post("/upload")

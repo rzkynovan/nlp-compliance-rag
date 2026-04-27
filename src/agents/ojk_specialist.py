@@ -233,12 +233,14 @@ TUGAS:
 4. Jika tidak patuh, identifikasi pasal yang dilanggar
 
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
-a) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK (misal: klausa tentang limit saldo tidak perlu dievaluasi terhadap pasal SLA pengaduan).
-b) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 20 hari).
-c) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan nilainya SESUAI regulasi.
-d) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian melanggar — HANYA jika ada ketentuan konkret yang bisa dibandingkan.
-e) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
-f) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
+a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP relevan dengan fokus OJK. Topik yang relevan: SLA pengaduan, perlindungan konsumen, klausula baku eksonerasi, transparansi informasi, persetujuan konsumen, data privasi. Topik TIDAK relevan untuk OJK: batas saldo teknis, batas transaksi teknis, KYC teknis — ini domain BI.
+b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK yang ditemukan. Jangan paksa relevansi hanya karena retrieval mengambil pasal tertentu.
+c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 10 hari kerja).
+d) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan nilainya SESUAI regulasi.
+e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian melanggar — HANYA jika ada ketentuan konkret yang bisa dibandingkan.
+f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
+g) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
+h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 (bukan Pasal 44 Ayat 3) karena Pasal 46 Ayat 2 secara eksplisit melarang klausula eksonerasi/baku yang memberikan kewenangan sepihak kepada PUJK.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")

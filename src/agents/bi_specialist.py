@@ -233,12 +233,13 @@ TUGAS:
 3. Jika tidak patuh, identifikasi pasal yang dilanggar dengan nomor PERSIS dari dokumen di atas
 
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
-a) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI (misal: klausa tentang data privasi tidak perlu dievaluasi terhadap pasal limit saldo).
-b) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan Rp 2jt).
-c) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama dan nilainya SESUAI regulasi.
-d) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian lain melanggar — HANYA jika ada nilai konkret yang bisa dibandingkan.
-e) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
-f) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
+a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP RELEVAN dengan fokus BI. Topik yang relevan untuk BI: batas saldo, batas transaksi, KYC, settlement, penyelenggaraan pembayaran. Topik TIDAK relevan: penanganan keluhan/pengaduan, data privasi, klausula baku, perlindungan konsumen — ini domain OJK, kembalikan NOT_ADDRESSED.
+b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI. Contoh: klausa tentang penanganan keluhan → NOT_ADDRESSED (meskipun retrieval mengambil pasal saldo). Klausa tentang transfer ke merchant → NOT_ADDRESSED terhadap pasal KYC jika tidak ada angka saldo yang ditetapkan.
+c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan Rp 2jt).
+d) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama dan nilainya SESUAI regulasi.
+e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian lain melanggar — HANYA jika ada nilai konkret yang bisa dibandingkan dalam klausa yang sama.
+f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation. Klausa keluhan yang tidak menyebut batas saldo BUKAN pelanggaran BI.
+g) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")
