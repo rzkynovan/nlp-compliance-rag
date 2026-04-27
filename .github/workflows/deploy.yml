@@ -28,9 +28,6 @@ jobs:
             cd ~/nlp-compliance-rag
             git pull origin main
 
-            # ── Write .env from secret (base64-encoded to preserve newlines) ──
-            echo "${{ secrets.ENV_FILE_B64 }}" | base64 -d > docker/.env
-
             # ── Set image tag to short commit SHA ─────────────────────────────
             export IMAGE_TAG=$(git rev-parse --short HEAD)
             echo "Building images with tag: $IMAGE_TAG"
