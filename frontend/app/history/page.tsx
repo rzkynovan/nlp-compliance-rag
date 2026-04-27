@@ -397,7 +397,16 @@ export default function HistoryPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [search, setSearch] = useState("");
+  const [debouncedSearch, setDebouncedSearch] = useState("");
   const [page, setPage] = useState(0);
+
+  // Debounce search input so we don't fire a request on every keystroke
+  useMemo(() => {
+    const t = setTimeout(() => setDebouncedSearch(search), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const statusParam = activeFilter !== "Semua" ? activeFilter : "";
 
   const { data: stats } = useQuery<AuditHistoryStats>({
     queryKey: ["audit-history-stats"],
@@ -406,34 +415,28 @@ export default function HistoryPage() {
   });
 
   const { data: history, isLoading, error } = useQuery<AuditHistory[]>({
-    queryKey: ["audit-history", page],
-    queryFn: () => getAuditHistory(page * PAGE_SIZE, PAGE_SIZE) as Promise<AuditHistory[]>,
+    queryKey: ["audit-history", page, debouncedSearch, statusParam],
+    queryFn: () => getAuditHistory(page * PAGE_SIZE, PAGE_SIZE, debouncedSearch, statusParam) as Promise<AuditHistory[]>,
     refetchInterval: 30_000,
   });
 
-  const filtered = useMemo(() => {
-    if (!history) return [];
-    let items = history;
+  const filtered = history ?? [];
 
-    if (activeFilter !== "Semua") {
-      items = items.filter(h => {
-        const eff = getEffectiveStatus(h);
-        return eff === activeFilter;
-      });
-    }
+  // Total pages: when filtering/searching, derive from current result size; otherwise use stats
+  const isFiltering = !!debouncedSearch || !!statusParam;
+  const totalPages = isFiltering
+    ? (filtered.length === PAGE_SIZE ? page + 2 : page + 1)  // rough estimate
+    : stats ? Math.ceil(stats.total / PAGE_SIZE) : 1;
 
-    if (search.trim()) {
-      const q = search.toLowerCase();
-      items = items.filter(h =>
-        h.clause?.toLowerCase().includes(q) ||
-        h.request_id?.toLowerCase().includes(q)
-      );
-    }
+  const handleFilterChange = (f: string) => {
+    setActiveFilter(f);
+    setPage(0);
+  };
 
-    return items;
-  }, [history, activeFilter, search]);
-
-  const totalPages = stats ? Math.ceil(stats.total / PAGE_SIZE) : 1;
+  const handleSearchChange = (v: string) => {
+    setSearch(v);
+    setPage(0);
+  };
 
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
@@ -483,7 +486,7 @@ export default function HistoryPage() {
               type="text"
               placeholder="Cari klausa atau ID audit..."
               value={search}
-              onChange={e => setSearch(e.target.value)}
+              onChange={e => handleSearchChange(e.target.value)}
               className="w-full pl-9 pr-4 py-2 text-sm border border-slate-200 rounded-lg bg-white
                 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
             />
@@ -497,7 +500,7 @@ export default function HistoryPage() {
               return (
                 <button
                   key={f}
-                  onClick={() => setActiveFilter(f)}
+                  onClick={() => handleFilterChange(f)}
                   className={cn(
                     "shrink-0 text-xs px-3 py-1.5 rounded-full border font-medium transition-all",
                     activeFilter === f
@@ -550,11 +553,12 @@ export default function HistoryPage() {
         </Card>
       ) : filtered.length > 0 ? (
         <div className="space-y-3">
-          {search || activeFilter !== "Semua" ? (
+          {isFiltering && (
             <p className="text-xs text-slate-400 px-1">
-              {filtered.length} hasil{search ? ` untuk "${search}"` : ""}
+              {filtered.length} hasil pada halaman ini{debouncedSearch ? ` untuk "${debouncedSearch}"` : ""}
+              {filtered.length === PAGE_SIZE ? " (mungkin ada lebih)" : ""}
             </p>
-          ) : null}
+          )}
           {filtered.map((item, idx) => (
             <HistoryCard
               key={item.request_id}
@@ -586,7 +590,7 @@ export default function HistoryPage() {
       )}
 
       {/* ── Pagination controls ── */}
-      {stats && stats.total > PAGE_SIZE && !search && activeFilter === "Semua" && (
+      {totalPages > 1 && (
         <div className="flex items-center justify-center gap-3 pt-2">
           <button
             onClick={() => setPage(p => Math.max(0, p - 1))}

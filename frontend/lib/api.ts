@@ -16,8 +16,16 @@ export async function analyzeSop(data: AuditRequest): Promise<AuditResponse> {
   return apiClient.post("audit/analyze", { json: data }).json<AuditResponse>();
 }
 
-export async function getAuditHistory(skip: number = 0, limit: number = 20) {
-  return apiClient.get("audit/history", { searchParams: { skip, limit } }).json();
+export async function getAuditHistory(
+  skip: number = 0,
+  limit: number = 20,
+  search: string = "",
+  status: string = "",
+) {
+  const params: Record<string, string | number> = { skip, limit };
+  if (search) params.search = search;
+  if (status) params.status = status;
+  return apiClient.get("audit/history", { searchParams: params }).json();
 }
 
 export interface AuditHistoryStats {

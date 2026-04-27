@@ -201,9 +201,21 @@ async def get_audit_history_stats():
 
 
 @router.get("/history", response_model=List[AuditResponse])
-async def get_audit_history(skip: int = 0, limit: int = 20):
-    # Return newest first, paginated
+async def get_audit_history(
+    skip: int = 0,
+    limit: int = 20,
+    search: str = "",
+    status: str = "",
+):
     newest_first = list(reversed(audit_history))
+    if status:
+        newest_first = [h for h in newest_first if h.final_status.value == status]
+    if search:
+        q = search.lower()
+        newest_first = [
+            h for h in newest_first
+            if (h.clause and q in h.clause.lower()) or (h.request_id and q in h.request_id.lower())
+        ]
     return newest_first[skip:skip + limit]
 
 
