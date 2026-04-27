@@ -189,3 +189,5 @@ llama_cache/
 *.db
 *.sqlite
 *.sqlite3
+src/agents/test_ojk_prompt.py
+src/agents/test_ojk_prompt_results.json
