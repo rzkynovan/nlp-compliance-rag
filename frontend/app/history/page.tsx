@@ -9,10 +9,11 @@ import {
   Clock, FileText, CheckCircle2, XCircle, AlertTriangle,
   HelpCircle, ChevronDown, ChevronUp, Search, Filter,
   MessageSquare, Ban, BarChart3, Zap, ShieldCheck, ShieldAlert,
-  Download,
+  Download, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { getAuditHistory } from "@/lib/api";
+import { getAuditHistory, getAuditHistoryStats } from "@/lib/api";
+import type { AuditHistoryStats } from "@/lib/api";
 import { Card, CardContent } from "@/components/ui/card";
 import { ResultCard } from "@/components/audit/ResultCard";
 import type { AuditResponse } from "@/lib/api/client";
@@ -101,30 +102,17 @@ function AgentPill({
   );
 }
 
-// ── Summary stat cards ────────────────────────────────────────────────
-function SummaryBar({ history }: { history: AuditHistory[] }) {
-  const stats = useMemo(() => {
-    const compliant   = history.filter(h => h.final_status === "COMPLIANT").length;
-    const nonCompliant = history.filter(h => h.final_status === "NON_COMPLIANT").length;
-    const partial     = history.filter(h => ["PARTIALLY_COMPLIANT", "NEEDS_REVIEW"].includes(h.final_status)).length;
-    const avgLatency  = history.length > 0
-      ? (history.reduce((acc, h) => acc + (h.latency_ms || 0), 0) / history.length).toFixed(0)
-      : "0";
-    return { compliant, nonCompliant, partial, avgLatency, total: history.length };
-  }, [history]);
-
-  const complianceRate = stats.total > 0
-    ? ((stats.compliant / stats.total) * 100).toFixed(0)
-    : "0";
-
+// ── Summary stat cards (driven by /history/stats — all records) ───────
+function SummaryBar({ stats }: { stats: AuditHistoryStats }) {
+  const rows = [
+    { label: "Total Audit",       value: stats.total,                      icon: FileText,    color: "text-slate-600",   bg: "bg-slate-100" },
+    { label: "Patuh",             value: stats.compliant,                  icon: CheckCircle2,color: "text-emerald-600", bg: "bg-emerald-100" },
+    { label: "Tidak Patuh",       value: stats.non_compliant,              icon: XCircle,     color: "text-red-600",     bg: "bg-red-100" },
+    { label: "Rata-rata Latency", value: `${stats.avg_latency_ms}ms`,      icon: Zap,         color: "text-blue-600",    bg: "bg-blue-100" },
+  ];
   return (
     <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-      {[
-        { label: "Total Audit",       value: stats.total,       icon: FileText,    color: "text-slate-600",   bg: "bg-slate-100" },
-        { label: "Patuh",             value: stats.compliant,   icon: CheckCircle2,color: "text-emerald-600", bg: "bg-emerald-100" },
-        { label: "Tidak Patuh",       value: stats.nonCompliant,icon: XCircle,     color: "text-red-600",     bg: "bg-red-100" },
-        { label: "Rata-rata Latency", value: `${stats.avgLatency}ms`, icon: Zap,   color: "text-blue-600",    bg: "bg-blue-100" },
-      ].map((s) => (
+      {rows.map((s) => (
         <div key={s.label} className="rounded-xl border border-slate-200 bg-white p-4">
           <div className={cn("h-8 w-8 rounded-lg flex items-center justify-center mb-2", s.bg)}>
             <s.icon className={cn("h-4 w-4", s.color)} />
@@ -402,15 +390,24 @@ function ExportMenu({ items, label }: { items: AuditHistory[]; label: string }) 
   );
 }
 
+const PAGE_SIZE = 20;
+
 // ── Main page ─────────────────────────────────────────────────────────
 export default function HistoryPage() {
   const [expandedIds, setExpandedIds] = useState<Set<string>>(new Set());
   const [activeFilter, setActiveFilter] = useState("Semua");
   const [search, setSearch] = useState("");
+  const [page, setPage] = useState(0);
+
+  const { data: stats } = useQuery<AuditHistoryStats>({
+    queryKey: ["audit-history-stats"],
+    queryFn: getAuditHistoryStats,
+    refetchInterval: 30_000,
+  });
 
   const { data: history, isLoading, error } = useQuery<AuditHistory[]>({
-    queryKey: ["audit-history"],
-    queryFn: () => getAuditHistory(0, 100) as Promise<AuditHistory[]>,
+    queryKey: ["audit-history", page],
+    queryFn: () => getAuditHistory(page * PAGE_SIZE, PAGE_SIZE) as Promise<AuditHistory[]>,
     refetchInterval: 30_000,
   });
 
@@ -436,6 +433,8 @@ export default function HistoryPage() {
     return items;
   }, [history, activeFilter, search]);
 
+  const totalPages = stats ? Math.ceil(stats.total / PAGE_SIZE) : 1;
+
   const toggleExpand = (id: string) => {
     setExpandedIds(prev => {
       const next = new Set(prev);
@@ -455,25 +454,27 @@ export default function HistoryPage() {
             Daftar semua audit yang telah dilakukan · Klik kartu untuk melihat detail
           </p>
         </div>
-        {history && history.length > 0 && (
+        {stats && stats.total > 0 && (
           <div className="flex items-center gap-2">
             <div className="flex items-center gap-1.5 text-xs text-slate-400">
               <BarChart3 className="h-3.5 w-3.5" />
-              {history.length} total
+              {stats.total} total
             </div>
-            {filtered.length < history.length && filtered.length > 0 && (
+            {filtered.length > 0 && activeFilter !== "Semua" && (
               <ExportMenu items={filtered} label={`(${filtered.length} filtered)`} />
             )}
-            <ExportMenu items={history} label="semua" />
+            {history && history.length > 0 && (
+              <ExportMenu items={history} label="halaman ini" />
+            )}
           </div>
         )}
       </div>
 
       {/* ── Summary stats ── */}
-      {history && history.length > 0 && <SummaryBar history={history} />}
+      {stats && stats.total > 0 && <SummaryBar stats={stats} />}
 
       {/* ── Search + filter ── */}
-      {history && history.length > 0 && (
+      {stats && stats.total > 0 && (
         <div className="flex flex-col sm:flex-row gap-3">
           {/* Search */}
           <div className="relative flex-1">
@@ -564,7 +565,7 @@ export default function HistoryPage() {
             />
           ))}
         </div>
-      ) : history && history.length > 0 ? (
+      ) : stats && stats.total > 0 ? (
         <div className="rounded-xl border-2 border-dashed border-slate-200 p-12 flex flex-col items-center gap-3 text-center">
           <Search className="h-10 w-10 text-slate-300" />
           <div>
@@ -581,6 +582,42 @@ export default function HistoryPage() {
             <p className="font-medium text-slate-600">Belum ada riwayat audit</p>
             <p className="text-sm text-slate-400 mt-1">Audit pertama Anda akan muncul di sini</p>
           </div>
+        </div>
+      )}
+
+      {/* ── Pagination controls ── */}
+      {stats && stats.total > PAGE_SIZE && !search && activeFilter === "Semua" && (
+        <div className="flex items-center justify-center gap-3 pt-2">
+          <button
+            onClick={() => setPage(p => Math.max(0, p - 1))}
+            disabled={page === 0}
+            className={cn(
+              "flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all",
+              page === 0
+                ? "border-slate-200 text-slate-300 cursor-not-allowed bg-white"
+                : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+            )}
+          >
+            <ChevronLeft className="h-3.5 w-3.5" />
+            Sebelumnya
+          </button>
+          <span className="text-xs text-slate-500">
+            Halaman <span className="font-semibold text-slate-700">{page + 1}</span> dari{" "}
+            <span className="font-semibold text-slate-700">{totalPages}</span>
+          </span>
+          <button
+            onClick={() => setPage(p => Math.min(totalPages - 1, p + 1))}
+            disabled={page >= totalPages - 1}
+            className={cn(
+              "flex items-center gap-1 text-xs font-medium px-3 py-1.5 rounded-lg border transition-all",
+              page >= totalPages - 1
+                ? "border-slate-200 text-slate-300 cursor-not-allowed bg-white"
+                : "border-slate-200 text-slate-600 hover:bg-slate-50 bg-white"
+            )}
+          >
+            Selanjutnya
+            <ChevronRight className="h-3.5 w-3.5" />
+          </button>
         </div>
       )}
     </div>

@@ -20,6 +20,20 @@ export async function getAuditHistory(skip: number = 0, limit: number = 20) {
   return apiClient.get("audit/history", { searchParams: { skip, limit } }).json();
 }
 
+export interface AuditHistoryStats {
+  total: number;
+  compliant: number;
+  non_compliant: number;
+  partially_compliant: number;
+  not_addressed: number;
+  unclear: number;
+  avg_latency_ms: number;
+}
+
+export async function getAuditHistoryStats(): Promise<AuditHistoryStats> {
+  return apiClient.get("audit/history/stats").json<AuditHistoryStats>();
+}
+
 export async function uploadDocument(file: File): Promise<UploadDocumentResult> {
   const formData = new FormData();
   formData.append("file", file);

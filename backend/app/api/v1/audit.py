@@ -176,9 +176,33 @@ async def batch_analyze(request: BatchAuditRequest, background_tasks: Background
     )
 
 
+@router.get("/history/stats")
+async def get_audit_history_stats():
+    """Aggregate stats across ALL audit records — not paginated."""
+    total = len(audit_history)
+    if total == 0:
+        return {"total": 0, "compliant": 0, "non_compliant": 0, "partially_compliant": 0,
+                "not_addressed": 0, "unclear": 0, "avg_latency_ms": 0}
+    compliant    = sum(1 for h in audit_history if h.final_status == "COMPLIANT")
+    non_compliant= sum(1 for h in audit_history if h.final_status == "NON_COMPLIANT")
+    partial      = sum(1 for h in audit_history if h.final_status in ("PARTIALLY_COMPLIANT", "NEEDS_REVIEW"))
+    not_addressed= sum(1 for h in audit_history if h.final_status == "NOT_ADDRESSED")
+    unclear      = sum(1 for h in audit_history if h.final_status == "UNCLEAR")
+    avg_latency  = round(sum(h.latency_ms or 0 for h in audit_history) / total, 0)
+    return {
+        "total": total,
+        "compliant": compliant,
+        "non_compliant": non_compliant,
+        "partially_compliant": partial,
+        "not_addressed": not_addressed,
+        "unclear": unclear,
+        "avg_latency_ms": avg_latency,
+    }
+
+
 @router.get("/history", response_model=List[AuditResponse])
-async def get_audit_history(skip: int = 0, limit: int = 100):
-    # Return newest first, with full AuditResponse including agent verdicts
+async def get_audit_history(skip: int = 0, limit: int = 20):
+    # Return newest first, paginated
     newest_first = list(reversed(audit_history))
     return newest_first[skip:skip + limit]
 
