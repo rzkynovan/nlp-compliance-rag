@@ -238,7 +238,7 @@ b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasa
 c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 10 hari kerja).
 d) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan nilainya SESUAI regulasi.
 e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian melanggar — HANYA jika ada ketentuan konkret yang bisa dibandingkan.
-f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation.
+f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation. Contoh: klausa tentang batas saldo yang tidak menyebutkan kanal pengaduan BUKAN pelanggaran Pasal 75 — itu hanya bukan topiknya. Klausa teknis/operasional yang tidak mengatur hubungan konsumen → NOT_ADDRESSED, bukan NON_COMPLIANT.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
 h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 (bukan Pasal 44 Ayat 3) karena Pasal 46 Ayat 2 secara eksplisit melarang klausula eksonerasi/baku yang memberikan kewenangan sepihak kepada PUJK.
 

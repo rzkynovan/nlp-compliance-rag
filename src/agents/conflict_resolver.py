@@ -108,6 +108,12 @@ class ConflictResolverAgent:
             final_status = "NON_COMPLIANT"
         elif all(s in ("NOT_ADDRESSED", "UNCLEAR") for s in all_statuses):
             final_status = "NOT_ADDRESSED"
+        elif "COMPLIANT" in all_statuses and all(
+            s in ("COMPLIANT", "NOT_ADDRESSED", "UNCLEAR") for s in all_statuses
+        ):
+            # Satu agen COMPLIANT, agen lain NOT_ADDRESSED/UNCLEAR (bukan domain-nya).
+            # Regulator yang relevan sudah menilai patuh → final COMPLIANT.
+            final_status = "COMPLIANT"
         elif "PARTIALLY_COMPLIANT" in all_statuses:
             # Jika satu agen PARTIALLY_COMPLIANT dan agen lain NOT_ADDRESSED,
             # final tetap PARTIALLY_COMPLIANT hanya jika ada violations konkret.

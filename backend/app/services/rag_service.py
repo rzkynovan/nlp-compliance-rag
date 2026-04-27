@@ -258,18 +258,30 @@ class RAGAuditService:
                 status_code=429
             )
         
-        # Try using multi-agent system with RAG
+        # Try using multi-agent system with RAG (with exponential backoff retry)
         if self._check_chroma_available():
-            try:
-                result = await self._analyze_with_multi_agent(
-                    clause=clause,
-                    regulator=regulator,
-                    top_k=top_k,
-                    request_id=request_id
-                )
-            except Exception as e:
-                logger.error(f"Multi-agent analysis failed: {e}")
-                # Fallback to LLM-only
+            import asyncio as _asyncio
+            last_exc = None
+            for attempt in range(1, 4):  # up to 3 attempts
+                try:
+                    result = await self._analyze_with_multi_agent(
+                        clause=clause,
+                        regulator=regulator,
+                        top_k=top_k,
+                        request_id=request_id
+                    )
+                    last_exc = None
+                    break
+                except Exception as e:
+                    last_exc = e
+                    if attempt < 3:
+                        wait = 2 ** attempt  # 2s, 4s
+                        logger.warning(
+                            f"Multi-agent attempt {attempt} failed ({e}), retrying in {wait}s…"
+                        )
+                        await _asyncio.sleep(wait)
+            if last_exc is not None:
+                logger.error(f"Multi-agent analysis failed after 3 attempts: {last_exc}")
                 result = await self._analyze_llm_only(
                     clause=clause,
                     regulator=regulator,
