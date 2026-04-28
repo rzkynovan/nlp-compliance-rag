@@ -232,15 +232,93 @@ async def get_audit_detail(request_id: str):
 ALLOWED_UPLOAD_EXTENSIONS = {".pdf", ".txt", ".md"}
 MAX_FILE_SIZE_BYTES = 10 * 1024 * 1024  # 10 MB
 
+# Regex untuk strip header/footer browser (timestamp + URL + nomor halaman)
+# Contoh: "3/23/26, 3:36 AM Syarat dan Ketentuan GoPay https://... 17/19"
+_BROWSER_HEADER_RE = re.compile(
+    r'\d{1,2}/\d{1,2}/\d{2,4},?\s+\d{1,2}:\d{2}\s*(?:AM|PM)?\s*.*?https?://\S+\s*\d+/\d+',
+    re.IGNORECASE,
+)
 
-def _extract_pdf_text(content: bytes) -> str:
+# Mapping ligature yang rusak akibat encoding PDF → ASCII
+_LIGATURE_MAP = [
+    ("ﬁ", "fi"),   # ﬁ  (fi ligature)
+    ("ﬂ", "fl"),   # ﬂ  (fl ligature)
+    ("ﬃ", "ffi"),  # ﬃ
+    ("ﬄ", "ffl"),  # ﬄ
+    ("ï¬",    "fi"),   # fi ligature salah-decode via latin-1
+    ("ï¬‚",   "fl"),   # fl ligature salah-decode
+    ("’", "'"),    # right single quotation mark
+    ("‘", "'"),    # left single quotation mark
+    ("“", '"'),    # left double quotation mark
+    ("”", '"'),    # right double quotation mark
+    ("–", "-"),    # en dash
+    ("—", "--"),   # em dash
+]
+
+
+def _clean_pdf_text(text: str) -> str:
+    """Bersihkan artefak umum dari PDF hasil browser print."""
+    # Fix ligature dan karakter khusus
+    for bad, good in _LIGATURE_MAP:
+        text = text.replace(bad, good)
+    # Strip baris header/footer browser
+    text = _BROWSER_HEADER_RE.sub("", text)
+    # Hapus baris yang hanya berisi URL
+    text = re.sub(r'^\s*https?://\S+\s*$', '', text, flags=re.MULTILINE)
+    # Normalise multiple blank lines
+    text = re.sub(r'\n{3,}', '\n\n', text)
+    return text.strip()
+
+
+async def _extract_pdf_text_llamaparse(content: bytes, filename: str) -> str:
+    """
+    Ekstrak teks PDF menggunakan LlamaParse API.
+    Menghasilkan Markdown terstruktur yang mempertahankan heading dan list.
+    """
+    import tempfile
+    from app.config import settings
+
+    api_key = settings.LLAMA_CLOUD_API_KEY
+    if not api_key:
+        raise HTTPException(status_code=501, detail="LLAMA_CLOUD_API_KEY tidak dikonfigurasi.")
+
+    try:
+        from llama_parse import LlamaParse
+    except ImportError:
+        raise HTTPException(status_code=501, detail="llama-parse tidak terinstall.")
+
+    try:
+        with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
+            tmp.write(content)
+            tmp_path = tmp.name
+
+        parser = LlamaParse(
+            api_key=api_key,
+            result_type="markdown",
+            language="id",
+            verbose=False,
+        )
+        docs = await parser.aload_data(tmp_path)
+        return "\n\n".join(doc.text for doc in docs if doc.text.strip())
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"LlamaParse gagal memproses PDF: {str(e)}")
+    finally:
+        import os as _os
+        try:
+            _os.unlink(tmp_path)
+        except Exception:
+            pass
+
+
+def _extract_pdf_text_pypdf(content: bytes) -> str:
+    """Fallback: ekstrak teks PDF menggunakan pypdf (gratis, lokal)."""
     try:
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(content))
         pages = [page.extract_text() or "" for page in reader.pages]
         return "\n\n".join(p.strip() for p in pages if p.strip())
     except ImportError:
-        raise HTTPException(status_code=501, detail="Parsing PDF membutuhkan library pypdf. Hubungi administrator.")
+        raise HTTPException(status_code=501, detail="Parsing PDF membutuhkan library pypdf.")
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"Gagal membaca PDF: {str(e)}")
 
@@ -263,6 +341,15 @@ def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
        the preceding clause.
     """
     text = re.sub(r"\r\n", "\n", text)
+
+    # ── Step 0: handle LlamaParse Markdown headings as clause boundaries ─────
+    # LlamaParse menghasilkan "## 28. Hak Kekayaan Intelektual" → ubah ke sentinel
+    text = re.sub(
+        r"(^|\n)(#{1,3}\s+\d{1,2}\.\s+[^\n]+)",
+        lambda m: m.group(1) + _CLAUSE_SENTINEL + m.group(2).lstrip("#").strip() + "\n",
+        text,
+        flags=re.MULTILINE,
+    )
 
     # ── Step 1: mark structural boundaries ──────────────────────────────────
     def _mark(m: re.Match) -> str:  # type: ignore[type-arg]
@@ -339,9 +426,14 @@ async def upload_document(file: UploadFile = File(...)):
         raise HTTPException(status_code=400, detail="File tidak boleh kosong.")
 
     if ext == ".pdf":
-        text = _extract_pdf_text(content)
+        from app.config import settings
+        if settings.LLAMA_CLOUD_API_KEY:
+            text = await _extract_pdf_text_llamaparse(content, file.filename)
+        else:
+            text = _extract_pdf_text_pypdf(content)
+        text = _clean_pdf_text(text)
     else:
-        text = content.decode("utf-8", errors="replace")
+        text = _clean_pdf_text(content.decode("utf-8", errors="replace"))
 
     if not text.strip():
         raise HTTPException(status_code=422, detail="Dokumen tidak mengandung teks yang dapat dibaca.")
