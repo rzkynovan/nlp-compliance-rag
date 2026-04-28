@@ -87,7 +87,7 @@ class OJKSpecialistAgent(BaseAgent):
             chroma_path = str(Path(__file__).parent.parent.parent / "data" / "processed" / "chroma_db")
         
         self.llm = OpenAI(
-            model="gpt-4o",
+            model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
             api_key=api_key,
             temperature=0.1
         )
