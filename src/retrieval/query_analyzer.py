@@ -94,6 +94,12 @@ _COMPLIANCE_KEYWORDS = {
     "data", "pribadi", "privasi", "keamanan",
     # Lembaga
     "fintech", "penyelenggara", "operator", "merchant", "acquiring",
+    # Klausul T&C umum yang relevan untuk audit
+    "layanan", "akun", "gopay", "ovo", "dana", "shopeepay", "linkaja",
+    "pengguna", "penyelenggara", "penyedia", "kuasa", "klaim", "ganti rugi",
+    "tanggung jawab", "liability", "force majeure", "keadaan kahar",
+    "ketentuan", "perjanjian", "klausul", "syarat", "modifikasi", "aplikasi",
+    "pihak ketiga", "melepaskan", "pengalihan", "hak", "kewenangan",
 }
 
 # ─── Pola sapaan (greeting) ──────────────────────────────────────
