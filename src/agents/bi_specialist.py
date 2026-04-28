@@ -90,7 +90,7 @@ class BISpecialistAgent(BaseAgent):
             chroma_path = str(Path(__file__).parent.parent.parent / "data" / "processed" / "chroma_db")
         
         self.llm = OpenAI(
-            model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+            model=os.getenv("LLM_MODEL", "gpt-5.4-mini"),
             api_key=api_key,
             temperature=0.1
         )
@@ -240,6 +240,8 @@ d) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama dan nilainya SES
 e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian lain melanggar — HANYA jika ada nilai konkret yang bisa dibandingkan dalam klausa yang sama.
 f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation. Klausa keluhan yang tidak menyebut batas saldo BUKAN pelanggaran BI.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
+h) Jika status adalah NOT_ADDRESSED, field "violations" HARUS [] dan field "recommendations" HARUS [] — jangan isi rekomendasi generik seperti "tambahkan KYC" atau "tambahkan batas saldo" untuk klausa yang tidak relevan dengan BI.
+i) Rekomendasi HANYA boleh diisi jika ada pelanggaran atau kekurangan KONKRET pada klausa yang RELEVAN dengan topik BI. Rekomendasi harus spesifik terhadap isi klausa, bukan saran umum menambah regulasi BI.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")

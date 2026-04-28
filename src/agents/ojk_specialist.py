@@ -87,7 +87,7 @@ class OJKSpecialistAgent(BaseAgent):
             chroma_path = str(Path(__file__).parent.parent.parent / "data" / "processed" / "chroma_db")
         
         self.llm = OpenAI(
-            model=os.getenv("LLM_MODEL", "gpt-4o-mini"),
+            model=os.getenv("LLM_MODEL", "gpt-5.4-mini"),
             api_key=api_key,
             temperature=0.1
         )
@@ -247,6 +247,8 @@ g) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
 h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 (bukan Pasal 44 Ayat 3) karena Pasal 46 Ayat 2 secara eksplisit melarang klausula eksonerasi/baku yang memberikan kewenangan sepihak kepada PUJK.
 i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban atau sanksi yang ditujukan kepada PUJK/regulator sendiri. Pasal yang mengatur kewajiban internal PUJK (misal: "PUJK wajib menjaga kerahasiaan data", "sanksi administratif bagi PUJK yang melanggar") BUKAN kewajiban yang harus ditulis ulang di SOP konsumen — SOP tidak harus memuat ulang seluruh isi regulasi. Violation hanya terjadi jika SOP SECARA AKTIF bertentangan, bukan karena tidak meng-copy pasal regulasi.
 j) Bedakan antara "klausa tanggung jawab user" dengan "klausula eksonerasi yang dilarang". Klausa yang mewajibkan user menjaga PIN/OTP/keamanan akun sendiri adalah tanggung jawab user yang wajar — ini BUKAN klausula eksonerasi. Klausula eksonerasi yang dilarang adalah klausa yang mengalihkan tanggung jawab PUJK atas kesalahannya sendiri kepada konsumen (misal: "kami tidak bertanggung jawab atas kerugian akibat kelalaian kami").
+k) Jika status adalah NOT_ADDRESSED, field "violations" HARUS [] dan field "recommendations" HARUS [] — jangan isi rekomendasi generik seperti "tambahkan prosedur pengaduan" atau "tambahkan perlindungan konsumen" untuk klausa yang tidak relevan dengan OJK.
+l) Rekomendasi HANYA boleh diisi jika ada pelanggaran atau kekurangan KONKRET pada klausa yang RELEVAN dengan topik OJK. Rekomendasi harus spesifik terhadap isi klausa, bukan saran umum. Untuk PARTIALLY_COMPLIANT tanpa violations[], rekomendasi harus menjelaskan SECARA KONKRET apa yang perlu ditambahkan/diubah di klausa tersebut.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")
