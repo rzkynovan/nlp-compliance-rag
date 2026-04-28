@@ -35,7 +35,7 @@ export default function AuditPage() {
   const isBatchMode = batchResults.length > 0;
 
   // ── Single clause audit (from text form) ──────────────────────────
-  const handleSingleSubmit = async (data: { clause: string; context?: string; top_k?: number; regulator?: "all" | "BI" | "OJK" }) => {
+  const handleSingleSubmit = async (data: { clause: string; context?: string; top_k?: number; regulator?: "all" | "BI" | "OJK"; use_cache?: boolean }) => {
     setSinglePending(true);
     setSingleError(null);
     setResult(null);

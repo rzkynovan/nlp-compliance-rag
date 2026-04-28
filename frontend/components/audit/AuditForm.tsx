@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -28,6 +29,7 @@ const auditFormSchema = z.object({
   context: z.string().optional(),
   top_k: z.number().min(1).max(20).default(5),
   regulator: z.enum(["all", "BI", "OJK"]).default("all"),
+  use_cache: z.boolean().default(true),
 });
 
 type AuditFormValues = z.infer<typeof auditFormSchema>;
@@ -45,8 +47,9 @@ export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditF
       clause: defaultValues?.clause || "",
       clause_id: defaultValues?.clause_id || "",
       context: defaultValues?.context || "",
-      top_k: defaultValues?.top_k ||5,
+      top_k: defaultValues?.top_k || 5,
       regulator: defaultValues?.regulator || "all",
+      use_cache: true,
     },
   });
 
@@ -150,6 +153,24 @@ export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditF
                 />
               </FormControl>
               <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="use_cache"
+          render={({ field }) => (
+            <FormItem className="flex items-center gap-2">
+              <FormControl>
+                <Checkbox
+                  checked={field.value}
+                  onCheckedChange={field.onChange}
+                />
+              </FormControl>
+              <FormLabel className="!mt-0 text-sm font-normal text-slate-600 cursor-pointer">
+                Gunakan cache (nonaktifkan untuk paksa re-run)
+              </FormLabel>
             </FormItem>
           )}
         />

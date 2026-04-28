@@ -35,6 +35,7 @@ class AuditRequest(BaseModel):
     context: Optional[str] = Field(None, description="Additional context")
     top_k: int = Field(default=5, ge=1, le=10, description="Number of documents to retrieve")
     regulator: str = Field(default="all", description="Regulator to check (all, BI, OJK)")
+    use_cache: bool = Field(default=True, description="Set to false to force re-run and skip cache")
 
 
 class AuditResponse(BaseModel):

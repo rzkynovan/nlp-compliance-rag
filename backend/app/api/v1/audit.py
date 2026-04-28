@@ -115,7 +115,7 @@ async def analyze_sop(request: AuditRequest):
             regulator=request.regulator,
             top_k=request.top_k,
             clause_id=request.clause_id,
-            use_cache=True
+            use_cache=request.use_cache
         )
         
         latency_ms = (time.time() - start_time) * 1000

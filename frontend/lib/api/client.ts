@@ -19,6 +19,7 @@ export interface AuditRequest {
   context?: string;
   top_k?: number;
   regulator?: "all" | "BI" | "OJK";
+  use_cache?: boolean;
 }
 
 export type ComplianceStatus =
