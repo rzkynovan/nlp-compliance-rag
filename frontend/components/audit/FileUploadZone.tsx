@@ -74,7 +74,7 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
     } finally {
       setIsUploading(false);
     }
-  }, [apiUrl]);
+  }, [apiUrl, useLlamaparseCache]);
 
   const onDrop = useCallback(
     (e: React.DragEvent<HTMLDivElement>) => {
