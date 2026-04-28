@@ -257,14 +257,27 @@ _LIGATURE_MAP = [
 
 
 def _clean_pdf_text(text: str) -> str:
-    """Bersihkan artefak umum dari PDF hasil browser print."""
+    """Bersihkan artefak umum dari PDF hasil browser print / LlamaParse."""
     # Fix ligature dan karakter khusus
     for bad, good in _LIGATURE_MAP:
         text = text.replace(bad, good)
-    # Strip baris header/footer browser
+
+    # Fix italic spacing dari LlamaParse: "d a t a m i n e" → "data mine"
+    # Deteksi: 3+ huruf tunggal berurutan dipisah spasi
+    text = re.sub(r'\b([a-zA-Z]) ([a-zA-Z]) ([a-zA-Z])(?: ([a-zA-Z]))*\b',
+                  lambda m: m.group(0).replace(" ", ""), text)
+
+    # Strip baris header/footer browser (timestamp + URL + nomor halaman)
     text = _BROWSER_HEADER_RE.sub("", text)
     # Hapus baris yang hanya berisi URL
     text = re.sub(r'^\s*https?://\S+\s*$', '', text, flags=re.MULTILINE)
+    # Hapus URL yang muncul di tengah/akhir paragraf (sisa LlamaParse page footer)
+    text = re.sub(r'\s*https?://\S+\s*\d+/\d+', '', text)
+    # Hapus heading halaman LlamaParse yang muncul di tengah teks
+    # Contoh: "# Syarat dan Ketentuan GoPay" atau "Syarat dan Ketentuan GoPay" standalone
+    text = re.sub(r'#{1,3}\s+[^\n]{5,60}\n', '', text)
+    text = re.sub(r'(?<!\w)(Syarat dan Ketentuan GoPay|Terms and Conditions GoPay)\s*', '', text)
+
     # Normalise multiple blank lines
     text = re.sub(r'\n{3,}', '\n\n', text)
     return text.strip()
@@ -398,9 +411,10 @@ def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
         return m.group(1) + _CLAUSE_SENTINEL + "".join(m.groups()[1:])
 
     # Numbered section heading: "12. Judul" at line start (capital first letter)
+    # Tangkap dengan \n di akhir ATAU end-of-string ($) agar tidak bleeding ke klausul sebelumnya
     text = re.sub(
-        r"(?<!\d)(\n|^)(\d{1,2}\.\s+)([A-Z][^\n]{0,80}\n)",
-        _mark,
+        r"(?<!\d)(\n|^)(\d{1,2}\.\s+)([A-Z][^\n]{0,80})(\n|$)",
+        lambda m: m.group(1) + _CLAUSE_SENTINEL + m.group(2) + m.group(3) + "\n",
         text,
         flags=re.MULTILINE,
     )
@@ -432,9 +446,14 @@ def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
             raw_blocks.append(block)
 
     # ── Step 3: normalise whitespace and merge short fragments ──────────────
+    # Pattern untuk strip trailing section title yang bleeding: "33. Judul Berikut" di akhir
+    _TRAILING_SECTION_RE = re.compile(r'\s+\d{1,2}\.\s+[A-Z][^\s.]{0,40}$')
+
     clauses: List[str] = []
     for block in raw_blocks:
         block = re.sub(r"\s+", " ", block).strip()
+        # Strip trailing section title dari klausul sebelumnya
+        block = _TRAILING_SECTION_RE.sub("", block).strip()
         if len(block) < min_length:
             if clauses:
                 clauses[-1] = clauses[-1] + " " + block

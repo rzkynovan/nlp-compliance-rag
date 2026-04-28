@@ -139,8 +139,25 @@ _NOISE_PATTERNS = [
     re.compile(r'^\s*(?:Nomor|Versi|Revisi|Diterbitkan|Berlaku)\s*[:：]', re.MULTILINE),
 ]
 
+# ─── Boilerplate legal yang TIDAK pernah relevan BI/OJK ──────────
+# Klausa-klausa ini selalu NOT_ADDRESSED — skip tanpa memanggil LLM
+_LEGAL_BOILERPLATE_RE = re.compile(
+    r'^(?:\d{1,2}\.\s+)?(?:'
+    r'keterpisahan|severability|'
+    r'hukum yang mengatur|governing law|pilihan hukum|'
+    r'tidak ada pengesampingan|non.?waiver|pengesampingan\s+kami|'
+    r'bahasa\s+ketentuan|ketentuan\s+ini\s+dibuat\s+dalam\s+bahasa|'
+    r'hak kekayaan intelektual|intellectual property|hak cipta.*merek'
+    r')',
+    re.IGNORECASE,
+)
+
 # Jumlah kata minimum agar klausa dianggap substantif
 _MIN_SUBSTANTIVE_WORDS = 20
+
+# Threshold rasio kata tunggal untuk deteksi teks garbled
+# Teks normal: <30% kata 1-huruf. Teks garbled: >60% kata 1-huruf
+_GARBLED_SINGLE_CHAR_RATIO = 0.55
 
 
 def is_noise_clause(text: str) -> bool:
@@ -149,8 +166,21 @@ def is_noise_clause(text: str) -> bool:
     Klausa yang noise tidak perlu diaudit oleh agent.
     """
     stripped = text.strip()
+
+    # ── Deteksi teks garbled (karakter ter-spacing) ───────────────
+    words = stripped.split()
+    if len(words) >= 10:
+        single_char_count = sum(1 for w in words if len(w) == 1 and w.isalpha())
+        if single_char_count / len(words) > _GARBLED_SINGLE_CHAR_RATIO:
+            return True
+
+    # ── Deteksi boilerplate legal standar ────────────────────────
+    first_200 = stripped[:200]
+    if _LEGAL_BOILERPLATE_RE.search(first_200):
+        return True
+
     # Terlalu pendek untuk jadi klausa regulasi
-    if len(stripped.split()) < _MIN_SUBSTANTIVE_WORDS:
+    if len(words) < _MIN_SUBSTANTIVE_WORDS:
         for pat in _NOISE_PATTERNS:
             if pat.search(stripped):
                 return True
