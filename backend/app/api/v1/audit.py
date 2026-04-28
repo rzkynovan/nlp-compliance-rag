@@ -431,9 +431,9 @@ async def upload_document(file: UploadFile = File(...)):
             text = await _extract_pdf_text_llamaparse(content, file.filename)
         else:
             text = _extract_pdf_text_pypdf(content)
-        text = _clean_pdf_text(text)
+        text = _clean_pdf_text(text)  # strip artefak PDF: ligature, header/footer browser
     else:
-        text = _clean_pdf_text(content.decode("utf-8", errors="replace"))
+        text = content.decode("utf-8", errors="replace")  # TXT/MD: decode langsung, tanpa cleaning PDF
 
     if not text.strip():
         raise HTTPException(status_code=422, detail="Dokumen tidak mengandung teks yang dapat dibaca.")
