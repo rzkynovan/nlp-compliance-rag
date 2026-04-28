@@ -4,8 +4,8 @@
 
 **Nama Proyek:** Multi-Agent RAG for Compliance Audit
 **Teknologi:** FastAPI + Next.js + ChromaDB + BM25 + MLflow + Docker
-**Status:** Phase 8 — E2E Testing Complete (28/29 passed)
-**Last Updated:** 2026-04-24
+**Status:** Phase 9 — Production Hardening & Evaluation (April 2026)
+**Last Updated:** 2026-04-28
 
 ---
 
@@ -481,6 +481,7 @@ interface AuditRequest {
   regulator: "all" | "BI" | "OJK";
   top_k?: number;
   clause_id?: string;
+  use_cache?: boolean;  // default true; set false untuk paksa re-run skip cache
 }
 
 // Backend response — 6 status class
@@ -587,6 +588,8 @@ POST /api/v1/audit/batch
 }
 
 # Document upload → extract clauses
+# PDF: LlamaParse (jika LLAMA_CLOUD_API_KEY) / pypdf fallback + _clean_pdf_text()
+# TXT/MD: Python decode() langsung
 POST /api/v1/audit/upload
 Content-Type: multipart/form-data
 file: <PDF|TXT|MD file, max 10MB>
@@ -599,6 +602,12 @@ file: <PDF|TXT|MD file, max 10MB>
   "clauses": ["klausa 1...", "klausa 2...", ...],
   "clause_count": 12
 }
+
+# Audit history (paginated + server-side search/filter)
+GET /api/v1/audit/history?skip=0&limit=20&search=keluhan&status=NON_COMPLIANT
+
+# Aggregate stats (all records, not paginated)
+GET /api/v1/audit/history/stats
 ```
 
 ### Cost Tracking
@@ -810,4 +819,42 @@ docker-compose logs -f backend
 
 ---
 
-*Last updated: 2026-04-24*
+---
+
+## Phase 9: Production Hardening & GoPay Evaluation (2026-04-28)
+
+### Perubahan Backend
+
+| Fitur | File | Keterangan |
+|-------|------|-----------|
+| `/audit/history/stats` endpoint | `audit.py` | Agregat stats semua record (tidak paginated) — total, compliant, non_compliant, avg_latency |
+| `/audit/history` pagination | `audit.py` | Default `limit=20`, tambah `?search=` dan `?status=` untuk server-side filter |
+| `use_cache` field di `AuditRequest` | `models/audit.py` | Default `true`; set `false` untuk paksa re-run melewati cache |
+| LlamaParse PDF upload | `audit.py` | PDF diekstrak via LlamaParse jika `LLAMA_CLOUD_API_KEY` ada, fallback ke pypdf |
+| `_clean_pdf_text()` | `audit.py` | Strip header/footer browser, fix ligature `ï¬→fi`, normalise whitespace |
+| `_split_into_clauses()` | `audit.py` | Tambah Step 0: handle Markdown heading dari LlamaParse (`## 28. Judul`) sebagai clause boundary |
+| QueryAnalyzer domain keywords | `query_analyzer.py` | Tambah keyword T&C umum (`layanan`, `akun`, `kuasa`, `ketentuan`, dll) agar klausul force majeure/eksonerasi tidak salah klasifikasi sebagai OUT_OF_SCOPE |
+
+### Perubahan Frontend
+
+| Fitur | File | Keterangan |
+|-------|------|-----------|
+| Pagination history | `history/page.tsx` | Dua query terpisah: stats (semua record) + list (paginated 20/hal) |
+| Server-side search/filter | `history/page.tsx` | `debouncedSearch` dan `statusParam` dikirim ke backend sebagai query params |
+| Checkbox "Gunakan cache" | `AuditForm.tsx` | shadcn Checkbox, default centang; uncentang untuk force re-run |
+| `use_cache` di AuditRequest | `lib/api/client.ts` | Field opsional diteruskan ke backend |
+
+### Evaluasi GoPay T&C (101 Klausul)
+
+Audit penuh T\&C GoPay (101 klausul) selesai April 2026. Distribusi verdik:
+- **4** COMPLIANT
+- **10** NON_COMPLIANT / PARTIALLY_COMPLIANT
+- **87** NOT_ADDRESSED (HKI, pilihan hukum, dll — di luar domain BI/OJK)
+
+Temuan utama: irrevocable authority (Pasal 46 Ayat 2), pengalihan hak sepihak (Pasal 52), force majeure eksonerasi, penolakan keluhan tanpa batas waktu (Pasal 71 Ayat 5).
+
+Masalah parsing PDF (klausul terpotong page break, header/footer browser, ligature encoding) berhasil diatasi dengan pipeline LlamaParse + `_clean_pdf_text()`.
+
+---
+
+*Last updated: 2026-04-28*

@@ -624,5 +624,58 @@ tanpa referensi pasal yang eksplisit).
 
 ---
 
+---
+
+## Phase 9: Production Hardening & GoPay Evaluation (2026-04-28)
+
+### Backend — Audit History & Cache
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| `/audit/history/stats` endpoint | ✅ | `audit.py` | Agregat stats semua record, tidak paginated |
+| Pagination `/audit/history` | ✅ | `audit.py` | Default limit=20, newest-first |
+| Server-side search & filter | ✅ | `audit.py` | `?search=` dan `?status=` query params, filter sebelum paginate |
+| `use_cache` field di AuditRequest | ✅ | `models/audit.py`, `audit.py` | Default true; false = paksa re-run skip cache |
+| CI/CD fix: env dari server | ✅ | `.github/workflows/deploy.yml` | Hapus step overwrite `.env` dari GitHub secret |
+
+### Backend — PDF Upload Pipeline
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| LlamaParse untuk PDF upload | ✅ | `audit.py` | Pakai LlamaParse jika `LLAMA_CLOUD_API_KEY` ada |
+| pypdf fallback | ✅ | `audit.py` | Otomatis fallback jika API key tidak ada |
+| `_clean_pdf_text()` | ✅ | `audit.py` | Strip header/footer browser (timestamp+URL+halaman), fix ligature `ï¬→fi` |
+| LlamaParse Markdown heading support | ✅ | `audit.py` | `_split_into_clauses()` Step 0: `## 28. Judul` sebagai clause boundary |
+| QueryAnalyzer domain keywords | ✅ | `query_analyzer.py` | Tambah keyword T&C umum; fix klausul force majeure/eksonerasi salah klasifikasi OUT_OF_SCOPE |
+
+### Frontend
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| Stats card dari `/history/stats` | ✅ | `history/page.tsx` | Total, Patuh, Tidak Patuh, Latency selalu dari semua record |
+| Pagination history list | ✅ | `history/page.tsx` | 20/halaman, Prev/Next controls |
+| Server-side search/filter | ✅ | `history/page.tsx` | Debounce 300ms, reset page saat filter berubah |
+| Checkbox "Gunakan cache" | ✅ | `AuditForm.tsx`, `client.ts` | shadcn Checkbox; berlaku di `/` dan `/audit` |
+| shadcn Checkbox + components.json | ✅ | `components/ui/checkbox.tsx` | Install via `npx shadcn@latest add checkbox` |
+
+### Evaluasi GoPay T&C
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Audit 101 klausul GoPay T&C | ✅ | Selesai April 2026; 4 COMPLIANT, 10 NON/PARTIALLY, 87 NOT_ADDRESSED |
+| Identifikasi false positives | ✅ | Absence-of-mention pattern; memperkuat justifikasi human-in-the-loop |
+| Update proposal dengan temuan | ✅ | `proposal_its.tex` — distribusi verdik, 5 temuan utama, paragraph false positive |
+
+### Proposal Tugas Akhir
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Update model LLM (GPT-4o → GPT-4o-mini) | ✅ | Semua bagian proposal diperbarui |
+| Update komponen teknologi (PostgreSQL, Redis, MLflow) | ✅ | Klarifikasi scope aktual vs rencana |
+| Update temuan GoPay T&C | ✅ | Distribusi verdik + 5 temuan bernomor + false positive paragraph |
+| Update PDF parser ke LlamaParse + pypdf | ✅ | Tabel Komponen diperbarui |
+
+---
+
 *Generated: 2025-04-05*
-*Last updated: 2026-04-24*
+*Last updated: 2026-04-28*
