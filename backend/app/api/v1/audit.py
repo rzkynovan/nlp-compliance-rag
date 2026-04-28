@@ -270,12 +270,16 @@ def _clean_pdf_text(text: str) -> str:
     return text.strip()
 
 
-async def _extract_pdf_text_llamaparse(content: bytes, filename: str) -> str:
+async def _extract_pdf_text_llamaparse(content: bytes, filename: str, use_cache: bool = True) -> tuple[str, bool]:
     """
-    Ekstrak teks PDF menggunakan LlamaParse API.
-    Menghasilkan Markdown terstruktur yang mempertahankan heading dan list.
+    Ekstrak teks PDF menggunakan LlamaParse API dengan caching berbasis SHA-256.
+
+    Returns:
+        (text, from_cache) — from_cache=True jika hasil diambil dari cache disk.
     """
     import tempfile
+    import sys
+    from pathlib import Path
     from app.config import settings
 
     api_key = settings.LLAMA_CLOUD_API_KEY
@@ -287,11 +291,34 @@ async def _extract_pdf_text_llamaparse(content: bytes, filename: str) -> str:
     except ImportError:
         raise HTTPException(status_code=501, detail="llama-parse tidak terinstall.")
 
+    # Resolve llama_cache dari src/
+    _src_paths = ["/app/src", str(Path(__file__).resolve().parent.parent.parent.parent.parent / "src")]
+    for p in _src_paths:
+        if Path(p).exists() and p not in sys.path:
+            sys.path.insert(0, p)
+
+    import os as _os
+    tmp_path = None
     try:
         with tempfile.NamedTemporaryFile(suffix=".pdf", delete=False) as tmp:
             tmp.write(content)
             tmp_path = tmp.name
 
+        # ── Cache check ───────────────────────────────────────────────────
+        if use_cache:
+            try:
+                from llama_cache import get_cache
+                cache = get_cache()
+                cached_docs = cache.get(tmp_path)
+                if cached_docs:
+                    text = "\n\n".join(d["text"] for d in cached_docs if d.get("text", "").strip())
+                    return text, True
+            except Exception as cache_err:
+                # Cache error non-fatal — lanjut ke parse
+                import logging
+                logging.getLogger(__name__).warning(f"LlamaParse cache read error: {cache_err}")
+
+        # ── Parse via API ─────────────────────────────────────────────────
         parser = LlamaParse(
             api_key=api_key,
             result_type="markdown",
@@ -299,15 +326,30 @@ async def _extract_pdf_text_llamaparse(content: bytes, filename: str) -> str:
             verbose=False,
         )
         docs = await parser.aload_data(tmp_path)
-        return "\n\n".join(doc.text for doc in docs if doc.text.strip())
+
+        # ── Simpan ke cache ───────────────────────────────────────────────
+        if use_cache:
+            try:
+                from llama_cache import get_cache
+                cache = get_cache()
+                cache.set(tmp_path, docs, metadata={"source_filename": filename})
+            except Exception as cache_err:
+                import logging
+                logging.getLogger(__name__).warning(f"LlamaParse cache write error: {cache_err}")
+
+        text = "\n\n".join(doc.text for doc in docs if doc.text.strip())
+        return text, False
+
+    except HTTPException:
+        raise
     except Exception as e:
         raise HTTPException(status_code=422, detail=f"LlamaParse gagal memproses PDF: {str(e)}")
     finally:
-        import os as _os
-        try:
-            _os.unlink(tmp_path)
-        except Exception:
-            pass
+        if tmp_path:
+            try:
+                _os.unlink(tmp_path)
+            except Exception:
+                pass
 
 
 def _extract_pdf_text_pypdf(content: bytes) -> str:
@@ -403,11 +445,16 @@ def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
 
 
 @router.post("/upload")
-async def upload_document(file: UploadFile = File(...)):
+async def upload_document(
+    file: UploadFile = File(...),
+    use_llamaparse_cache: bool = True,
+):
     """
     Extract text from an uploaded PDF, TXT, or MD document.
-    Returns the full text and a list of paragraph-level clauses
-    ready to be passed to POST /audit/analyze.
+
+    - PDF: LlamaParse (jika API key ada) dengan disk cache berbasis SHA-256 konten file.
+           Set use_llamaparse_cache=false untuk memaksa re-parse.
+    - TXT/MD: Python decode langsung.
     """
     if not file.filename:
         raise HTTPException(status_code=400, detail="Nama file tidak boleh kosong.")
@@ -425,15 +472,18 @@ async def upload_document(file: UploadFile = File(...)):
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="File tidak boleh kosong.")
 
+    parsed_from_cache = False
     if ext == ".pdf":
         from app.config import settings
         if settings.LLAMA_CLOUD_API_KEY:
-            text = await _extract_pdf_text_llamaparse(content, file.filename)
+            text, parsed_from_cache = await _extract_pdf_text_llamaparse(
+                content, file.filename, use_cache=use_llamaparse_cache
+            )
         else:
             text = _extract_pdf_text_pypdf(content)
-        text = _clean_pdf_text(text)  # strip artefak PDF: ligature, header/footer browser
+        text = _clean_pdf_text(text)
     else:
-        text = content.decode("utf-8", errors="replace")  # TXT/MD: decode langsung, tanpa cleaning PDF
+        text = content.decode("utf-8", errors="replace")
 
     if not text.strip():
         raise HTTPException(status_code=422, detail="Dokumen tidak mengandung teks yang dapat dibaca.")
@@ -443,8 +493,8 @@ async def upload_document(file: UploadFile = File(...)):
     return {
         "filename": file.filename,
         "file_size_kb": round(len(content) / 1024, 1),
-        "page_count": None if ext != ".pdf" else None,  # could fill with len(reader.pages) if needed
         "text": text,
         "clauses": clauses,
         "clause_count": len(clauses),
+        "parsed_from_cache": parsed_from_cache,
     }

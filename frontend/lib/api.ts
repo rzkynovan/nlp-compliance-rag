@@ -10,6 +10,7 @@ export interface UploadDocumentResult {
   text: string;
   clauses: string[];
   clause_count: number;
+  parsed_from_cache: boolean;
 }
 
 export async function analyzeSop(data: AuditRequest): Promise<AuditResponse> {
@@ -42,11 +43,13 @@ export async function getAuditHistoryStats(): Promise<AuditHistoryStats> {
   return apiClient.get("audit/history/stats").json<AuditHistoryStats>();
 }
 
-export async function uploadDocument(file: File): Promise<UploadDocumentResult> {
+export async function uploadDocument(file: File, useLlamaparseCache: boolean = true): Promise<UploadDocumentResult> {
   const formData = new FormData();
   formData.append("file", file);
-  // Use ky without json Content-Type so multipart is set automatically
-  return apiClient.post("audit/upload", { body: formData }).json<UploadDocumentResult>();
+  return apiClient.post("audit/upload", {
+    body: formData,
+    searchParams: { use_llamaparse_cache: useLlamaparseCache },
+  }).json<UploadDocumentResult>();
 }
 
 export async function searchRegulations(query: string, regulator?: string, topK: number = 5) {

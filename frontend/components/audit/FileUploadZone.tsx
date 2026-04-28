@@ -21,6 +21,7 @@ interface UploadResult {
   text: string;
   clauses: string[];
   clause_count: number;
+  parsed_from_cache: boolean;
 }
 
 interface FileUploadZoneProps {
@@ -35,6 +36,9 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
   const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
+  const [useLlamaparseCache, setUseLlamaparseCache] = useState(true);
+
+  const isPdf = file?.name.toLowerCase().endsWith(".pdf") ?? false;
 
   const handleUpload = useCallback(async (selectedFile: File) => {
     setError(null);
@@ -45,9 +49,13 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    const isPdfFile = selectedFile.name.toLowerCase().endsWith(".pdf");
 
     try {
-      const res = await fetch(`${apiUrl}/audit/upload`, {
+      const url = new URL(`${apiUrl}/audit/upload`);
+      if (isPdfFile) url.searchParams.set("use_llamaparse_cache", String(useLlamaparseCache));
+
+      const res = await fetch(url.toString(), {
         method: "POST",
         body: formData,
       });
@@ -159,6 +167,19 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
           </label>
         </div>
 
+        {/* Cache toggle — hanya tampil untuk PDF */}
+        <label className="flex items-center gap-2 cursor-pointer select-none px-1">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 accent-blue-600"
+            checked={useLlamaparseCache}
+            onChange={e => setUseLlamaparseCache(e.target.checked)}
+          />
+          <span className="text-xs text-slate-500">
+            Gunakan cache LlamaParse untuk PDF (nonaktifkan untuk paksa re-parse)
+          </span>
+        </label>
+
         {error && (
           <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
             <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
@@ -196,8 +217,13 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
             <p className="text-sm font-medium text-slate-800 leading-none">
               {uploadResult!.filename}
             </p>
-            <p className="text-xs text-slate-400 mt-0.5">
+            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
               {uploadResult!.file_size_kb} KB · {uploadResult!.clause_count} klausa ditemukan
+              {uploadResult!.parsed_from_cache && (
+                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-medium">
+                  cache
+                </span>
+              )}
             </p>
           </div>
         </div>
