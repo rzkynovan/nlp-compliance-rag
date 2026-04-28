@@ -123,7 +123,16 @@ async def analyze_sop(request: AuditRequest):
         
         bi_verdict = _extract_verdict_data(result.get("bi_verdict"), "BI_SPECIALIST")
         ojk_verdict = _extract_verdict_data(result.get("ojk_verdict"), "OJK_SPECIALIST")
-        
+
+        # Aggregate violations from both agents into root field
+        all_violations = list(result.get("violations") or [])
+        for v in (bi_verdict.violations or []):
+            if v and v not in all_violations:
+                all_violations.append(v)
+        for v in (ojk_verdict.violations or []):
+            if v and v not in all_violations:
+                all_violations.append(v)
+
         response = AuditResponse(
             request_id=request_id,
             timestamp=datetime.now(),
@@ -134,10 +143,10 @@ async def analyze_sop(request: AuditRequest):
             final_status=_map_status(result.get("final_status", "UNCLEAR")),
             overall_confidence=result.get("overall_confidence", 0.5),
             risk_score=_map_risk_score(result.get("risk_score")),
-            violations=result.get("violations", []),
+            violations=all_violations,
             recommendations=result.get("recommendations", []),
             latency_ms=result.get("latency_ms", latency_ms),
-            model_used=result.get("model_used", "gpt-4o-mini"),
+            model_used=result.get("model_used", "gpt-5.4-mini"),
             tokens_used=0
         )
         

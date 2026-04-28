@@ -89,14 +89,23 @@ def get_db() -> Session:
 
 # ── Helpers: AuditResponse ↔ AuditHistoryRow ─────────────────────────────────
 
+def _fix_encoding(text: str) -> str:
+    """Fix double-encoded UTF-8 artifacts (e.g. â for em dash —)."""
+    if not isinstance(text, str):
+        return text
+    try:
+        return text.encode("latin-1").decode("utf-8")
+    except (UnicodeDecodeError, UnicodeEncodeError):
+        return text
+
 def _to_row(response) -> AuditHistoryRow:
     """Convert AuditResponse Pydantic model → DB row."""
     def _ser(obj):
         if obj is None:
             return None
         if hasattr(obj, "model_dump"):
-            return json.dumps(obj.model_dump())
-        return json.dumps(obj)
+            return json.dumps(obj.model_dump(), ensure_ascii=False)
+        return json.dumps(obj, ensure_ascii=False)
 
     return AuditHistoryRow(
         request_id          = response.request_id,
@@ -157,6 +166,6 @@ def _from_row(row: AuditHistoryRow, response_class, verdict_class, evidence_clas
         summary             = row.summary,
         bi_verdict          = _deser_verdict(row.bi_verdict_json, "BI_SPECIALIST"),
         ojk_verdict         = _deser_verdict(row.ojk_verdict_json, "OJK_SPECIALIST"),
-        violations          = json.loads(row.violations_json or "[]"),
-        recommendations     = json.loads(row.recommendations_json or "[]"),
+        violations          = [_fix_encoding(v) for v in json.loads(row.violations_json or "[]")],
+        recommendations     = [_fix_encoding(r) if isinstance(r, str) else r for r in json.loads(row.recommendations_json or "[]")],
     )
