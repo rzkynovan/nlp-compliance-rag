@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File
+from fastapi import APIRouter, HTTPException, BackgroundTasks, UploadFile, File, Depends
 from typing import List
 from datetime import datetime
 import uuid
@@ -8,16 +8,17 @@ import os
 import io
 import re
 
+from sqlalchemy.orm import Session
+from sqlalchemy import func, case
+
 from app.models.audit import (
     AuditRequest, AuditResponse, BatchAuditRequest, BatchAuditResponse,
     ComplianceStatus, AgentVerdict, EvidenceItem, AuditHistoryItem
 )
 from app.services.rag_service import get_rag_service
+from app.db import get_db, _to_row, _from_row, AuditHistoryRow
 
 router = APIRouter(prefix="/audit", tags=["audit"])
-
-# Store full AuditResponse so history endpoint can return complete agent verdicts
-audit_history: List[AuditResponse] = []
 
 RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75}
 
@@ -140,8 +141,19 @@ async def analyze_sop(request: AuditRequest):
             tokens_used=0
         )
         
-        # Store full response (not AuditHistoryItem) so history has all agent details
-        audit_history.append(response)
+        # Persist to PostgreSQL
+        try:
+            from app.db import get_session_factory
+            factory = get_session_factory()
+            db = factory()
+            try:
+                db.add(_to_row(response))
+                db.commit()
+            finally:
+                db.close()
+        except Exception as db_err:
+            import logging
+            logging.getLogger(__name__).warning(f"DB write failed (returning response anyway): {db_err}")
 
         return response
         
@@ -179,25 +191,28 @@ async def batch_analyze(request: BatchAuditRequest, background_tasks: Background
 @router.get("/history/stats")
 async def get_audit_history_stats():
     """Aggregate stats across ALL audit records — not paginated."""
-    total = len(audit_history)
-    if total == 0:
-        return {"total": 0, "compliant": 0, "non_compliant": 0, "partially_compliant": 0,
-                "not_addressed": 0, "unclear": 0, "avg_latency_ms": 0}
-    compliant    = sum(1 for h in audit_history if h.final_status == "COMPLIANT")
-    non_compliant= sum(1 for h in audit_history if h.final_status == "NON_COMPLIANT")
-    partial      = sum(1 for h in audit_history if h.final_status in ("PARTIALLY_COMPLIANT", "NEEDS_REVIEW"))
-    not_addressed= sum(1 for h in audit_history if h.final_status == "NOT_ADDRESSED")
-    unclear      = sum(1 for h in audit_history if h.final_status == "UNCLEAR")
-    avg_latency  = round(sum(h.latency_ms or 0 for h in audit_history) / total, 0)
-    return {
-        "total": total,
-        "compliant": compliant,
-        "non_compliant": non_compliant,
-        "partially_compliant": partial,
-        "not_addressed": not_addressed,
-        "unclear": unclear,
-        "avg_latency_ms": avg_latency,
-    }
+    from app.db import get_session_factory
+    factory = get_session_factory()
+    db = factory()
+    try:
+        total = db.query(func.count(AuditHistoryRow.request_id)).scalar() or 0
+        if total == 0:
+            return {"total": 0, "compliant": 0, "non_compliant": 0, "partially_compliant": 0,
+                    "not_addressed": 0, "unclear": 0, "avg_latency_ms": 0}
+        rows = db.query(AuditHistoryRow.final_status, func.count().label("cnt")).group_by(AuditHistoryRow.final_status).all()
+        counts = {r.final_status: r.cnt for r in rows}
+        avg_latency = db.query(func.avg(AuditHistoryRow.latency_ms)).scalar() or 0
+        return {
+            "total": total,
+            "compliant": counts.get("COMPLIANT", 0),
+            "non_compliant": counts.get("NON_COMPLIANT", 0),
+            "partially_compliant": counts.get("PARTIALLY_COMPLIANT", 0) + counts.get("NEEDS_REVIEW", 0),
+            "not_addressed": counts.get("NOT_ADDRESSED", 0),
+            "unclear": counts.get("UNCLEAR", 0),
+            "avg_latency_ms": round(avg_latency, 0),
+        }
+    finally:
+        db.close()
 
 
 @router.get("/history", response_model=List[AuditResponse])
@@ -207,24 +222,38 @@ async def get_audit_history(
     search: str = "",
     status: str = "",
 ):
-    newest_first = list(reversed(audit_history))
-    if status:
-        newest_first = [h for h in newest_first if h.final_status.value == status]
-    if search:
-        q = search.lower()
-        newest_first = [
-            h for h in newest_first
-            if (h.clause and q in h.clause.lower()) or (h.request_id and q in h.request_id.lower())
-        ]
-    return newest_first[skip:skip + limit]
+    from app.db import get_session_factory
+    factory = get_session_factory()
+    db = factory()
+    try:
+        q = db.query(AuditHistoryRow)
+        if status:
+            q = q.filter(AuditHistoryRow.final_status == status)
+        if search:
+            term = f"%{search.lower()}%"
+            from sqlalchemy import or_
+            q = q.filter(or_(
+                func.lower(AuditHistoryRow.clause).like(term),
+                func.lower(AuditHistoryRow.request_id).like(term),
+            ))
+        rows = q.order_by(AuditHistoryRow.timestamp.desc()).offset(skip).limit(limit).all()
+        return [_from_row(r, AuditResponse, AgentVerdict, EvidenceItem, ComplianceStatus) for r in rows]
+    finally:
+        db.close()
 
 
 @router.get("/{request_id}", response_model=AuditResponse)
 async def get_audit_detail(request_id: str):
-    for item in audit_history:
-        if item.request_id == request_id:
-            return item
-    raise HTTPException(status_code=404, detail="Audit request not found")
+    from app.db import get_session_factory
+    factory = get_session_factory()
+    db = factory()
+    try:
+        row = db.query(AuditHistoryRow).filter(AuditHistoryRow.request_id == request_id).first()
+        if not row:
+            raise HTTPException(status_code=404, detail="Audit request not found")
+        return _from_row(row, AuditResponse, AgentVerdict, EvidenceItem, ComplianceStatus)
+    finally:
+        db.close()
 
 
 # ── Document Upload ────────────────────────────────────────────────────────────

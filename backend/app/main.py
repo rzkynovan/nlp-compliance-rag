@@ -15,6 +15,8 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
+    from app.db import init_db
+    init_db()
     log.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     log.info(f"MLflow Tracking URI: {settings.MLFLOW_TRACKING_URI}")
     log.info(f"LLM Model: {settings.LLM_MODEL}")
