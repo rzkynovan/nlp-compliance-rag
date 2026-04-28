@@ -56,7 +56,7 @@ export default function AuditPage() {
   };
 
   // ── Batch audit (from file upload multi-select) ────────────────────
-  const handleClausesSelect = async (clauses: string[]) => {
+  const handleClausesSelect = async (clauses: string[], useCache: boolean = true) => {
     if (clauses.length === 1) {
       // Single clause: switch to text tab + prefill
       setPrefilledClause(clauses[0]);
@@ -80,7 +80,7 @@ export default function AuditPage() {
     for (let i = 0; i < clauses.length; i++) {
       setBatchProgress({ current: i + 1, total: clauses.length });
       try {
-        const res = await analyzeSop({ clause: clauses[i] });
+        const res = await analyzeSop({ clause: clauses[i], use_cache: useCache });
         results.push(res);
         setBatchResults([...results]);
       } catch (e) {

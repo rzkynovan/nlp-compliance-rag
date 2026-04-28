@@ -25,7 +25,7 @@ interface UploadResult {
 }
 
 interface FileUploadZoneProps {
-  onClausesSelect: (clauses: string[]) => void;
+  onClausesSelect: (clauses: string[], useCache: boolean) => void;
   apiUrl: string;
 }
 
@@ -37,6 +37,7 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
   const [error, setError] = useState<string | null>(null);
   const [file, setFile] = useState<File | null>(null);
   const [useLlamaparseCache, setUseLlamaparseCache] = useState(true);
+  const [useAuditCache, setUseAuditCache] = useState(true);
 
   const isPdf = file?.name.toLowerCase().endsWith(".pdf") ?? false;
 
@@ -122,7 +123,7 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
   const handleAudit = () => {
     if (selectedIndices.size === 0 || !uploadResult) return;
     const clauses = Array.from(selectedIndices).sort((a, b) => a - b).map((i) => uploadResult.clauses[i]);
-    onClausesSelect(clauses);
+    onClausesSelect(clauses, useAuditCache);
   };
 
   // ── Empty / drag-drop state ────────────────────────────────────────
@@ -167,7 +168,7 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
           </label>
         </div>
 
-        {/* Cache toggle — hanya tampil untuk PDF */}
+        {/* Cache toggles */}
         <label className="flex items-center gap-2 cursor-pointer select-none px-1">
           <input
             type="checkbox"
@@ -177,6 +178,17 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
           />
           <span className="text-xs text-slate-500">
             Gunakan cache LlamaParse untuk PDF (nonaktifkan untuk paksa re-parse)
+          </span>
+        </label>
+        <label className="flex items-center gap-2 cursor-pointer select-none px-1">
+          <input
+            type="checkbox"
+            className="h-4 w-4 rounded border-slate-300 accent-blue-600"
+            checked={useAuditCache}
+            onChange={e => setUseAuditCache(e.target.checked)}
+          />
+          <span className="text-xs text-slate-500">
+            Gunakan cache hasil audit (nonaktifkan untuk paksa re-run)
           </span>
         </label>
 
@@ -306,6 +318,19 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
           })}
         </div>
       </div>
+
+      {/* Audit cache toggle */}
+      <label className="flex items-center gap-2 cursor-pointer select-none px-1">
+        <input
+          type="checkbox"
+          className="h-4 w-4 rounded border-slate-300 accent-blue-600"
+          checked={useAuditCache}
+          onChange={e => setUseAuditCache(e.target.checked)}
+        />
+        <span className="text-xs text-slate-500">
+          Gunakan cache hasil audit (nonaktifkan untuk paksa re-run)
+        </span>
+      </label>
 
       {/* Action button */}
       <Button
