@@ -4,7 +4,7 @@
 
 **Nama Proyek:** Multi-Agent RAG for Compliance Audit
 **Teknologi:** FastAPI + Next.js + ChromaDB + BM25 + MLflow + Docker
-**Status:** Phase 9 — Production Hardening & Evaluation (April 2026)
+**Status:** Phase 10 — LLM Upgrade, PostgreSQL Persistence & Bug Fixes (April 2026)
 **Last Updated:** 2026-04-28
 
 ---
@@ -155,7 +155,7 @@ class Settings(BaseSettings):
     OPENAI_API_KEY: str
     LLAMAPARSE_API_KEY: str
     CHROMADB_PERSIST_DIR: str
-    LLM_MODEL: str = "gpt-4o-mini"         # Cost optimized
+    LLM_MODEL: str = "gpt-5.4-mini"        # Cost optimized (upgrade dari gpt-4o-mini)
     EMBEDDING_MODEL: str = "text-embedding-3-large"  # 3072 dim — wajib cocok dengan ChromaDB
     DAILY_BUDGET_LIMIT_USD: float = 5.0
     ALLOWED_ORIGINS: str = "http://localhost:3000"   # Parsed via allowed_origins_list property
@@ -377,7 +377,7 @@ class CoordinatorAgent:
 class BISpecialistAgent(BaseAgent):
     def initialize(self, api_key, chroma_path):
         # 1. Initialize OpenAI LLM
-        self.llm = OpenAI(model="gpt-4o-mini")
+        self.llm = OpenAI(model=os.getenv("LLM_MODEL", "gpt-5.4-mini"))
         # 2. Load ChromaDB collection
         self.collection = chromadb.get_collection("bi_regulations")
         # 3. Setup embedding model — WAJIB text-embedding-3-large (3072 dim)
@@ -511,6 +511,7 @@ interface UploadDocumentResult {
   text: string;
   clauses: string[];
   clause_count: number;
+  parsed_from_cache: boolean;  // true jika hasil LlamaParse diambil dari disk cache
 }
 ```
 
@@ -763,7 +764,7 @@ docker-compose logs -f backend
            ▼                                       ▼
 ┌──────────────────────┐             ┌─────────────────────────┐
 │   ChromaDB + BM25    │             │     OpenAI API          │
-│   (Hybrid Retrieval) │             │  LLM: gpt-4o-mini       │
+│   (Hybrid Retrieval) │             │  LLM: gpt-5.4-mini      │
 │                      │             │  Embeddings:            │
 │ BI:  1,590 vectors   │             │  text-embedding-3-large │
 │ OJK: 1,031 vectors   │             │  (3072 dim) ⚠️           │
@@ -791,7 +792,7 @@ docker-compose logs -f backend
 ### Cost Optimization
 
 - **Caching**: 24-hour TTL untuk query identik
-- **Model Selection**: gpt-4o-mini (lebih ekonomis dari gpt-4o)
+- **Model Selection**: gpt-5.4-mini (upgrade dari gpt-4o-mini — reasoning lebih kuat, harga $0.75/1M token input)
 - **Embeddings**: text-embedding-3-large (wajib cocok dengan ChromaDB — jangan diganti)
 - **Budget Tracking**: Daily limit enforcement via `CostTracker`
 - **Rate Limiting**: API protection via `RateLimiter`
@@ -835,25 +836,74 @@ docker-compose logs -f backend
 | `_split_into_clauses()` | `audit.py` | Tambah Step 0: handle Markdown heading dari LlamaParse (`## 28. Judul`) sebagai clause boundary |
 | QueryAnalyzer domain keywords | `query_analyzer.py` | Tambah keyword T&C umum (`layanan`, `akun`, `kuasa`, `ketentuan`, dll) agar klausul force majeure/eksonerasi tidak salah klasifikasi sebagai OUT_OF_SCOPE |
 
-### Perubahan Frontend
+### Evaluasi GoPay T&C (121 Klausul)
 
-| Fitur | File | Keterangan |
-|-------|------|-----------|
-| Pagination history | `history/page.tsx` | Dua query terpisah: stats (semua record) + list (paginated 20/hal) |
-| Server-side search/filter | `history/page.tsx` | `debouncedSearch` dan `statusParam` dikirim ke backend sebagai query params |
-| Checkbox "Gunakan cache" | `AuditForm.tsx` | shadcn Checkbox, default centang; uncentang untuk force re-run |
-| `use_cache` di AuditRequest | `lib/api/client.ts` | Field opsional diteruskan ke backend |
-
-### Evaluasi GoPay T&C (101 Klausul)
-
-Audit penuh T\&C GoPay (101 klausul) selesai April 2026. Distribusi verdik:
+Audit penuh T&C GoPay (121 klausul) selesai April 2026. Distribusi verdik:
 - **4** COMPLIANT
-- **10** NON_COMPLIANT / PARTIALLY_COMPLIANT
-- **87** NOT_ADDRESSED (HKI, pilihan hukum, dll — di luar domain BI/OJK)
+- **8** PARTIALLY_COMPLIANT
+- **10** NON_COMPLIANT
+- **99** NOT_ADDRESSED (HKI, pilihan hukum, larangan penggunaan sistem, dll)
 
-Temuan utama: irrevocable authority (Pasal 46 Ayat 2), pengalihan hak sepihak (Pasal 52), force majeure eksonerasi, penolakan keluhan tanpa batas waktu (Pasal 71 Ayat 5).
+Rata-rata latency: ~10.500ms per klausul (GPT-5.4-mini).
 
-Masalah parsing PDF (klausul terpotong page break, header/footer browser, ligature encoding) berhasil diatasi dengan pipeline LlamaParse + `_clean_pdf_text()`.
+Temuan utama: irrevocable authority (Pasal 46 Ayat 2), klausula eksonerasi liability (Pasal 46 Ayat 2), pembatasan ganti rugi (Pasal 10), penolakan keluhan tanpa batas waktu (Pasal 71 Ayat 4).
+
+---
+
+## Phase 10: LLM Upgrade, PostgreSQL Persistence & Bug Fixes (2026-04-28)
+
+### PostgreSQL Persistence
+
+Audit history sebelumnya disimpan di in-memory list (`audit_history: List[AuditResponse] = []`) yang hilang saat container restart. Kini menggunakan PostgreSQL dengan named Docker volume.
+
+```python
+# backend/app/db.py — SQLAlchemy model
+class AuditHistoryRow(Base):
+    __tablename__ = "audit_history"
+    request_id         = Column(String, primary_key=True)
+    timestamp          = Column(DateTime, default=datetime.utcnow, index=True)
+    clause             = Column(Text)
+    final_status       = Column(String, index=True)
+    overall_confidence = Column(Float)
+    # ... + bi_verdict_json, ojk_verdict_json, violations_json (JSON text)
+```
+
+**Prune database (development):**
+```bash
+~/nlp-compliance-rag/scripts/prune_db.sh        # interaktif
+~/nlp-compliance-rag/scripts/prune_db.sh --yes  # langsung
+```
+
+### LLM Upgrade: GPT-5.4-mini
+
+Model diupgrade dari `gpt-4o-mini` ke `gpt-5.4-mini` (OpenAI terbaru, $0.75/1M token input):
+- Instruction following lebih reliable untuk prompt panjang dengan aturan conditional
+- Rekomendasi tidak lagi generik untuk klausa NOT_ADDRESSED
+- Nomor pasal lebih konsisten (fix Pasal 44 → Pasal 46 untuk irrevocable)
+
+Set di server via `docker/.env`:
+```
+LLM_MODEL=gpt-5.4-mini
+```
+
+### Prompt Improvements
+
+**BI Specialist** (rule h/i):
+- `recommendations=[]` wajib jika status NOT_ADDRESSED
+- Rekomendasi hanya diisi untuk klausa yang relevan dan konkret
+
+**OJK Specialist** (rule k/l):
+- Sama dengan BI + PARTIALLY_COMPLIANT harus sertakan rekomendasi konkret
+- Tidak boleh rekomendasi generik "tambahkan prosedur pengaduan"
+
+### Bug Fixes
+
+| Bug | Root Cause | Fix |
+|-----|------------|-----|
+| `violations[]` root selalu `[]` | Tidak di-populate dari agent verdicts | Agregasi `bi_verdict.violations + ojk_verdict.violations` di `analyze_sop` |
+| Karakter `â` di violations text | Em dash `—` double-encoded latin-1/UTF-8 | `ensure_ascii=False` di `json.dumps` + `_fix_encoding()` saat deserialize |
+| LlamaParse cache toggle tidak bekerja | `useLlamaparseCache` tidak ada di `useCallback` deps | Tambahkan ke dependency array |
+| Audit cache bypass tidak ada di Upload tab | `FileUploadZone` hanya punya LlamaParse toggle | Tambah checkbox `useAuditCache`, diteruskan via `onClausesSelect(clauses, useCache)` |
 
 ---
 

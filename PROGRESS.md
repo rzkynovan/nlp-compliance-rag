@@ -662,7 +662,7 @@ tanpa referensi pasal yang eksplisit).
 
 | Task | Status | Notes |
 |------|--------|-------|
-| Audit 101 klausul GoPay T&C | ✅ | Selesai April 2026; 4 COMPLIANT, 10 NON/PARTIALLY, 87 NOT_ADDRESSED |
+| Audit 121 klausul GoPay T&C | ✅ | Selesai April 2026; 4 COMPLIANT, 8 PARTIALLY, 10 NON_COMPLIANT, 99 NOT_ADDRESSED |
 | Identifikasi false positives | ✅ | Absence-of-mention pattern; memperkuat justifikasi human-in-the-loop |
 | Update proposal dengan temuan | ✅ | `proposal_its.tex` — distribusi verdik, 5 temuan utama, paragraph false positive |
 
@@ -674,6 +674,56 @@ tanpa referensi pasal yang eksplisit).
 | Update komponen teknologi (PostgreSQL, Redis, MLflow) | ✅ | Klarifikasi scope aktual vs rencana |
 | Update temuan GoPay T&C | ✅ | Distribusi verdik + 5 temuan bernomor + false positive paragraph |
 | Update PDF parser ke LlamaParse + pypdf | ✅ | Tabel Komponen diperbarui |
+
+---
+
+## Phase 10: LLM Upgrade, PostgreSQL Persistence & Bug Fixes (2026-04-28)
+
+### Backend — PostgreSQL Persistence
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| `db.py` — SQLAlchemy ORM | ✅ | `backend/app/db.py` | `AuditHistoryRow` model, engine, session factory |
+| `init_db()` di startup lifespan | ✅ | `backend/app/main.py` | `Base.metadata.create_all()` — tabel dibuat otomatis |
+| Simpan audit ke PostgreSQL | ✅ | `audit.py` | Ganti `audit_history.append()` → `db.add(_to_row(response))` |
+| `/history/stats` dari DB | ✅ | `audit.py` | SQL `COUNT` + `AVG` — bukan loop in-memory |
+| `/history` query dari DB | ✅ | `audit.py` | Filter `?search=` dan `?status=` via SQLAlchemy |
+| `/{request_id}` dari DB | ✅ | `audit.py` | Lookup by primary key |
+| Named Docker volume | ✅ | `docker/docker-compose.yml` | `postgres_data` — data survive container restart |
+| `prune_db.sh` script | ✅ | `scripts/prune_db.sh` | Hapus semua record + konfirmasi interaktif / `--yes` flag |
+
+### Backend — Bug Fixes
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| `violations[]` root selalu kosong | ✅ | `audit.py` | Agregasi dari `bi_verdict.violations` + `ojk_verdict.violations` |
+| Encoding `â` (em dash rusak) | ✅ | `db.py` | `ensure_ascii=False` + `_fix_encoding()` latin-1→UTF-8 saat deserialize |
+| Default model label | ✅ | `audit.py` | `model_used` default diupdate ke `gpt-5.4-mini` |
+
+### LLM & Prompt
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| Upgrade ke GPT-5.4-mini | ✅ | `bi_specialist.py`, `ojk_specialist.py`, `.env.example` | Ganti `gpt-4o-mini` → `gpt-5.4-mini`; update env server manual |
+| BI prompt: aturan NOT_ADDRESSED recs | ✅ | `bi_specialist.py` | Rule h/i: `recommendations=[]` jika NOT_ADDRESSED; rekomendasi harus spesifik |
+| OJK prompt: aturan NOT_ADDRESSED recs | ✅ | `ojk_specialist.py` | Rule k/l: sama + PARTIALLY_COMPLIANT harus konkret |
+| Fix pasal irrevocable (44→46) | ✅ | `ojk_specialist.py` | Sudah ada di rule h sebelumnya, konsisten dengan GPT-5.4-mini |
+
+### Frontend
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| Checkbox "Gunakan cache audit" di Upload tab | ✅ | `FileUploadZone.tsx` | Muncul sebelum upload & di clause list view; diteruskan ke `analyzeSop` |
+| Fix stale closure `useLlamaparseCache` | ✅ | `FileUploadZone.tsx` | Tambah ke deps `useCallback` — sebelumnya selalu kirim `true` |
+
+### Proposal Tugas Akhir
+
+| Task | Status | Notes |
+|------|--------|-------|
+| Update model LLM ke GPT-5.4-mini | ✅ | Semua bagian: abstrak, batasan masalah, tabel komponen, mekanisme inferensi |
+| Update PostgreSQL: hapus "in-memory fallback" | ✅ | Tabel komponen diperbarui ke persistent + named Docker volume |
+| Update jumlah klausul GoPay (101 → 121) | ✅ | Abstrak ID/EN + tabel tahapan |
+| Update distribusi verdik GoPay | ✅ | 4C / 8PC / 10NC / 99NA, latency ±10.500ms |
 
 ---
 
