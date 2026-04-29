@@ -88,12 +88,23 @@ class BISpecialistAgent(BaseAgent):
         """
         if chroma_path is None:
             chroma_path = str(Path(__file__).parent.parent.parent / "data" / "processed" / "chroma_db")
-        
-        self.llm = OpenAI(
-            model=os.getenv("LLM_MODEL", "gpt-5.4-mini"),
-            api_key=api_key,
-            temperature=0.1
-        )
+
+        provider = os.getenv("LLM_PROVIDER", "openai").lower()
+        model    = os.getenv("LLM_MODEL", "gpt-5.4-mini")
+
+        if provider == "anthropic":
+            from llama_index.llms.anthropic import Anthropic
+            self.llm = Anthropic(
+                model=model,
+                api_key=api_key or os.getenv("ANTHROPIC_API_KEY", ""),
+                max_tokens=4096,
+            )
+        else:
+            self.llm = OpenAI(
+                model=model,
+                api_key=api_key,
+                temperature=0.1,
+            )
         
         Settings.embed_model = OpenAIEmbedding(
             model="text-embedding-3-large",
