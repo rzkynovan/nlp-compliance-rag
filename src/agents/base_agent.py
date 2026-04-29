@@ -44,6 +44,10 @@ class AgentVerdict(BaseModel):
     reasoning_trace: str
     risk_level: str = "MEDIUM"
     recommendations: List[str] = []
+    # Checklist fields — populated when PARTIALLY_COMPLIANT via coverage gap
+    checklist_topic: Optional[str] = None
+    checklist_covered: List[str] = []
+    missing_elements: List[str] = []
 
 
 class BaseAgent(ABC):

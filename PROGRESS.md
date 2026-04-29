@@ -727,5 +727,62 @@ tanpa referensi pasal yang eksplisit).
 
 ---
 
+---
+
+## Phase 11: Ablation Study & Skripsi TA (2026-04-29)
+
+### Evaluasi Sistematis — Golden Dataset (12 Klausul SOP Dummy NusantaraPay)
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| `evaluation_runner.py` | ✅ | `src/evaluation_runner.py` | 12 klausul hardcoded ground truth, MLflow tracking |
+| `run_ablation.sh` (rewrite) | ✅ | `scripts/run_ablation.sh` | Dijalankan dari HOST via `docker-compose exec -e` |
+| Anthropic SDK wrapper (`_AnthropicLLM`) | ✅ | `bi_specialist.py`, `ojk_specialist.py` | `.complete(prompt).text` interface kompatibel |
+| Provider routing via env | ✅ | `bi_specialist.py`, `ojk_specialist.py` | `LLM_PROVIDER=anthropic` → `_AnthropicLLM`; embedding selalu pakai `OPENAI_API_KEY` |
+| MLflow named volume | ✅ | `docker-compose.yml` | `mlflow_data` → SQLite survive container restart |
+| `COPY scripts/` di Dockerfile | ✅ | `docker/backend.Dockerfile` | `evaluation_runner.py` + `run_ablation.sh` tersedia di container |
+
+### Hasil Ablation Study
+
+**Dataset:** 12 klausul SOP Dummy NusantaraPay
+**Distribusi Ground Truth:** 2 NOT_ADDRESSED · 4 PARTIALLY_COMPLIANT · 6 NON_COMPLIANT
+
+| Metrik | GPT-5.4-mini | Claude Haiku 4.5 | Target |
+|--------|-------------|-----------------|--------|
+| Accuracy | 0.583 | **0.667** | — |
+| Macro F1 | 0.525 | **0.556** | — |
+| Recall NON_COMPLIANT | 0.833 | **1.000** ✅ | ≥ 0.90 |
+| F1 NON_COMPLIANT | 0.909 | **1.000** | — |
+| F1 PARTIALLY_COMPLIANT | 0.000 ❌ | 0.000 ❌ | — |
+| F1 NOT_ADDRESSED | 0.667 | 0.667 | — |
+| Avg Latency | **7.985 s** | 28.525 s | — |
+| Hit Rate@5 (retrieval) | 0.000 | 0.000 | ≥ 0.85 |
+
+**Kesimpulan:**
+- **Claude Haiku 4.5 memenuhi target Recall NON_COMPLIANT ≥ 0.90** (1.000 vs 0.833 GPT)
+- Kedua model gagal mendeteksi PARTIALLY_COMPLIANT (F1=0.000) — keterbatasan pendekatan *active-conflict detection*; klausul data privasi yang tidak secara aktif bertentangan tidak terdeteksi
+- Hit Rate@5 = 0.000 akibat limitasi metodologi evaluasi retrieval (string matching gagal cocokkan teks chunk vs label ground truth) — bukan kegagalan retrieval nyata
+- GPT-5.4-mini unggul latensi (3.6× lebih cepat), Claude Haiku 4.5 unggul recall
+
+### Klausul yang Gagal Terdeteksi
+
+| Klausul | Ground Truth | GPT-5.4-mini | Claude Haiku 4.5 |
+|---------|-------------|-------------|-----------------|
+| BAB3-03 (pembekuan akun rating bintang 1) | NON_COMPLIANT | NOT_ADDRESSED ❌ | NON_COMPLIANT ✅ |
+| BAB2-01..04 (data privasi PARTIALLY_COMPLIANT) | PARTIALLY_COMPLIANT | COMPLIANT/NOT_ADDRESSED ❌ | COMPLIANT/NOT_ADDRESSED ❌ |
+
+### Skripsi Tugas Akhir
+
+| Task | Status | Files | Notes |
+|------|--------|-------|-------|
+| `skripsi_ta.tex` (lengkap) | ✅ | `/Users/rzkynovan/Tugas Akhir/skripsi_ta.tex` | BAB I–V + Lampiran A–C |
+| `skripsi_ta.pdf` (kompilasi) | ✅ | `/Users/rzkynovan/Tugas Akhir/skripsi_ta.pdf` | 41 halaman, pdflatex 2 pass |
+| BAB IV: Hasil & Pembahasan | ✅ | `skripsi_ta.tex` | Tabel ablation, analisis error, GoPay eval |
+| BAB V: Kesimpulan & Saran | ✅ | `skripsi_ta.tex` | 3 kesimpulan + keterbatasan + saran |
+| Abstract update (ID+EN) | ✅ | `skripsi_ta.tex` | Recall 1.000 Claude Haiku, 0.833 GPT |
+| Lampiran C: hasil per-klausul | ✅ | `skripsi_ta.tex` | 12 baris tabel evaluasi lengkap |
+
+---
+
 *Generated: 2025-04-05*
-*Last updated: 2026-04-28*
+*Last updated: 2026-04-29*

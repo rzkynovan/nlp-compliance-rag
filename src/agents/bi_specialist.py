@@ -242,18 +242,105 @@ class BISpecialistAgent(BaseAgent):
             retrieved_context="\n---\n".join([a["content"] for a in articles]),
             reasoning_trace=parsed.get("reasoning", ""),
             risk_level=parsed.get("risk_level", "MEDIUM"),
-            recommendations=parsed.get("recommendations", [])
+            recommendations=parsed.get("recommendations", []),
+            checklist_topic=parsed.get("checklist_topic"),
+            checklist_covered=parsed.get("checklist_covered", []),
+            missing_elements=parsed.get("missing_elements", []),
         )
     
+    # Sub-elemen wajib per topik regulasi — digunakan untuk deteksi PARTIALLY_COMPLIANT
+    TOPIC_CHECKLISTS = {
+        "BALANCE_LIMIT": {
+            "label": "Batas Saldo E-Wallet",
+            "trigger_keywords": [
+                "saldo", "balance", "maksimal", "maksimum", "limit saldo",
+                "unverified", "verified", "terverifikasi", "belum terverifikasi",
+                "rekening dasar", "rekening premium"
+            ],
+            "elements": [
+                "(A) Batas saldo akun UNVERIFIED: ≤ Rp 2.000.000 (sesuai PBI 23/6/2021 Pasal 160 Ayat 1)",
+                "(B) Batas saldo akun VERIFIED: ≤ Rp 10.000.000 (sesuai PBI 23/6/2021 Pasal 160 Ayat 1)",
+                "(C) Ketentuan peningkatan tier melalui verifikasi KYC yang jelas",
+            ],
+            "rule": (
+                "Jika klausa MEMBAHAS batas saldo → periksa berapa sub-elemen (A–C) yang dicakup. "
+                "Jika nilai yang disebutkan MELEBIHI batas → NON_COMPLIANT untuk tier tersebut. "
+                "Jika hanya satu tier dicakup dan yang lain tidak → PARTIALLY_COMPLIANT. "
+                "Jika semua tier disebutkan dengan nilai sesuai → COMPLIANT."
+            ),
+        },
+        "TRANSACTION_LIMIT": {
+            "label": "Batas Transaksi Bulanan",
+            "trigger_keywords": [
+                "transaksi", "transfer", "batas transaksi", "limit transaksi",
+                "bulanan", "per bulan", "masuk", "keluar", "debit", "kredit",
+                "unlimited", "tidak dibatasi", "tanpa batas"
+            ],
+            "elements": [
+                "(A) Batas transaksi MASUK bulanan: ≤ Rp 20.000.000 (sesuai PBI 23/6/2021 Pasal 160 Ayat 2)",
+                "(B) Batas transaksi KELUAR bulanan: ≤ Rp 20.000.000",
+                "(C) Pemberlakuan limit untuk kedua tier (unverified dan verified)",
+            ],
+            "rule": (
+                "Jika klausa MEMBAHAS batas transaksi → periksa sub-elemen (A–C). "
+                "Jika menyebutkan 'unlimited' atau 'tanpa batas' → NON_COMPLIANT. "
+                "Jika hanya arah masuk/keluar saja yang disebutkan → PARTIALLY_COMPLIANT. "
+                "Jika semua limit sesuai → COMPLIANT."
+            ),
+        },
+        "KYC_VERIFICATION": {
+            "label": "KYC dan Verifikasi Identitas",
+            "trigger_keywords": [
+                "kyc", "verifikasi", "identitas", "nik", "ktp", "kartu tanda penduduk",
+                "selfie", "liveness", "dokumen identitas", "pengenal diri"
+            ],
+            "elements": [
+                "(A) Mekanisme verifikasi identitas pengguna (NIK/KTP/dokumen resmi)",
+                "(B) Proses upgrade tier dari unverified ke verified",
+                "(C) Konsekuensi KYC pada limit saldo dan transaksi yang berubah",
+            ],
+            "rule": (
+                "Jika klausa MEMBAHAS KYC/verifikasi → periksa sub-elemen (A–C). "
+                "Jika 1–2 terpenuhi → PARTIALLY_COMPLIANT. Jika semua terpenuhi → COMPLIANT."
+            ),
+        },
+    }
+
+    def _build_checklist_section(self, clause: str) -> str:
+        """
+        Bangun bagian CHECKLIST PARTIALLY_COMPLIANT untuk semua topik BI.
+        """
+        lines = [
+            "",
+            "MEKANISME CHECKLIST PARTIALLY_COMPLIANT:",
+            "Gunakan checklist berikut untuk menentukan apakah klausa yang relevan",
+            "mencakup SEMUA sub-elemen yang diwajibkan regulasi BI.",
+            "",
+        ]
+        for topic_key, topic in self.TOPIC_CHECKLISTS.items():
+            lines.append(f"[TOPIK: {topic['label']}]")
+            lines.append("Sub-elemen yang diperiksa:")
+            for elem in topic["elements"]:
+                lines.append(f"  {elem}")
+            lines.append(f"Aturan: {topic['rule']}")
+            lines.append("")
+        lines.append(
+            "PENTING: Checklist HANYA berlaku jika klausa SECARA EKSPLISIT membahas topik tersebut. "
+            "Jangan paksa checklist jika klausa tidak relevan dengan topik."
+        )
+        return "\n".join(lines)
+
     def build_prompt(self, clause: str, articles: List[Dict]) -> str:
         """
-        Build structured prompt for BI compliance check.
+        Build structured prompt for BI compliance check with checklist mechanism.
         """
         articles_text = "\n\n".join([
             f"[{a['metadata'].get('regulator', 'BI')}] {a['content']}"
             for a in articles
         ])
-        
+
+        checklist_section = self._build_checklist_section(clause)
+
         return f"""Kamu adalah Auditor Kepatuhan Regulasi Bank Indonesia (BI Specialist).
 
 PASAL-PASAL REGULASI BI YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PERSIS dari dokumen ini):
@@ -263,31 +350,38 @@ KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
 TUGAS:
-1. Analisis apakah klausa SOP SECARA EKSPLISIT mengatur topik yang dibahas pasal regulasi di atas
-2. Perhatikan khususnya aspek: batas saldo, batas transaksi, KYC, settlement
-3. Jika tidak patuh, identifikasi pasal yang dilanggar dengan nomor PERSIS dari dokumen di atas
+1. Tentukan apakah topik klausa SOP relevan dengan fokus BI
+2. Jika relevan: jalankan MEKANISME CHECKLIST di bawah untuk deteksi PARTIALLY_COMPLIANT
+3. Identifikasi pelanggaran aktif (jika ada) dengan nomor pasal PERSIS dari dokumen di atas
+{checklist_section}
 
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
 a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP RELEVAN dengan fokus BI. Topik yang relevan untuk BI: batas saldo, batas transaksi, KYC, settlement, penyelenggaraan pembayaran. Topik TIDAK relevan: penanganan keluhan/pengaduan, data privasi, klausula baku, perlindungan konsumen — ini domain OJK, kembalikan NOT_ADDRESSED.
-b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI. Contoh: klausa tentang penanganan keluhan → NOT_ADDRESSED (meskipun retrieval mengambil pasal saldo). Klausa tentang transfer ke merchant → NOT_ADDRESSED terhadap pasal KYC jika tidak ada angka saldo yang ditetapkan.
-c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan Rp 2jt).
-d) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama dan nilainya SESUAI regulasi.
-e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian lain melanggar — HANYA jika ada nilai konkret yang bisa dibandingkan dalam klausa yang sama.
-f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation. Klausa keluhan yang tidak menyebut batas saldo BUKAN pelanggaran BI.
+b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI. Jangan paksa relevansi hanya karena retrieval mengambil pasal tertentu.
+c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan maksimal Rp 2jt).
+d) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama, mencakup SEMUA sub-elemen wajib, dan nilainya SESUAI regulasi.
+e) Gunakan "PARTIALLY_COMPLIANT" dalam DUA skenario:
+   SKENARIO 1 — KONFLIK PARSIAL: klausa menetapkan nilai yang sebagian sesuai dan sebagian bertentangan (misal: saldo unverified sesuai tapi saldo verified melebihi batas).
+   SKENARIO 2 — CAKUPAN TIDAK LENGKAP: klausa SECARA EKSPLISIT membahas topik BI yang sama namun hanya mencakup SEBAGIAN sub-elemen dari checklist. Contoh: klausa hanya menyebutkan batas saldo untuk akun unverified tanpa menyebut batas untuk akun verified → PARTIALLY_COMPLIANT (hanya (A), bukan (A)+(B)+(C)).
+f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention BOLEH menjadi dasar PARTIALLY_COMPLIANT (bukan NON_COMPLIANT) jika klausa SECARA EKSPLISIT membahas topik BI yang sama dan hanya mencakup sebagian sub-elemen.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
-h) Jika status adalah NOT_ADDRESSED, field "violations" HARUS [] dan field "recommendations" HARUS [] — jangan isi rekomendasi generik seperti "tambahkan KYC" atau "tambahkan batas saldo" untuk klausa yang tidak relevan dengan BI.
-i) Rekomendasi HANYA boleh diisi jika ada pelanggaran atau kekurangan KONKRET pada klausa yang RELEVAN dengan topik BI. Rekomendasi harus spesifik terhadap isi klausa, bukan saran umum menambah regulasi BI.
+h) Jika status adalah NOT_ADDRESSED: "violations" HARUS [] dan "recommendations" HARUS [].
+i) Rekomendasi HANYA diisi untuk klausa RELEVAN. Untuk PARTIALLY_COMPLIANT, sebutkan SECARA KONKRET sub-elemen mana yang perlu ditambahkan.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")
 - "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "PBI No. 23/6/PBI/2021")
-- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai/aturan bertentangan), bukan karena tidak disebutkan
+- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai bertentangan), bukan karena tidak disebutkan
+- Untuk PARTIALLY_COMPLIANT karena cakupan tidak lengkap: violations[] boleh kosong, gunakan missing_elements
 
 OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
     "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
+    "checklist_topic": "nama topik checklist yang digunakan (jika ada), atau null",
+    "checklist_covered": ["sub-elemen yang DICAKUP oleh klausa, misal: (A) Batas saldo unverified Rp 2jt"],
+    "missing_elements": ["sub-elemen yang TIDAK dicakup klausa tapi wajib ada, misal: (B) Batas saldo verified, (C) Ketentuan upgrade KYC"],
     "violations": [
         {{
             "article": "[nomor pasal dari dokumen regulasi di atas]",
@@ -297,7 +391,7 @@ OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
             "actual": "nilai atau ketentuan aktual yang tertulis di klausa SOP"
         }}
     ],
-    "reasoning": "langkah penalaran detail step-by-step, termasuk apakah klausa relevan dengan topik pasal",
-    "recommendations": ["rekomendasi perbaikan konkret 1", "rekomendasi perbaikan konkret 2"]
+    "reasoning": "langkah penalaran detail: (1) apakah klausa relevan, (2) topik checklist apa yang digunakan, (3) sub-elemen mana yang terpenuhi dan tidak, (4) kesimpulan status",
+    "recommendations": ["rekomendasi perbaikan konkret — untuk PARTIALLY_COMPLIANT sebutkan sub-elemen spesifik yang harus ditambahkan"]
 }}\
 """

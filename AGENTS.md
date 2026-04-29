@@ -907,4 +907,92 @@ LLM_MODEL=gpt-5.4-mini
 
 ---
 
-*Last updated: 2026-04-28*
+---
+
+## Phase 11: Ablation Study — GPT-5.4-mini vs Claude Haiku 4.5 (2026-04-29)
+
+### Cara Menjalankan Ablation Study
+
+```bash
+# Dari HOST (bukan di dalam container)
+~/nlp-compliance-rag/scripts/run_ablation.sh
+```
+
+Script membaca `OPENAI_API_KEY` dan `ANTHROPIC_API_KEY` dari `docker/.env`, lalu menjalankan dua run via `docker-compose exec -e`.
+
+**Run 1 — GPT-5.4-mini:**
+```
+LLM_PROVIDER=openai  LLM_MODEL=gpt-5.4-mini
+```
+
+**Run 2 — Claude Haiku 4.5:**
+```
+LLM_PROVIDER=anthropic  LLM_MODEL=claude-haiku-4-5-20251001
+```
+
+### Hasil Ablation Study (Golden Dataset 12 Klausul)
+
+| Metrik | GPT-5.4-mini | Claude Haiku 4.5 | Target |
+|--------|-------------|-----------------|--------|
+| Accuracy | 0.583 | **0.667** | — |
+| Macro F1 | 0.525 | **0.556** | — |
+| Recall NON_COMPLIANT | 0.833 | **1.000** ✅ | ≥ 0.90 |
+| F1 NON_COMPLIANT | 0.909 | **1.000** | — |
+| F1 PARTIALLY_COMPLIANT | 0.000 | 0.000 | — |
+| Avg Latency | **7.985 s** | 28.525 s | — |
+
+**Claude Haiku 4.5 memenuhi target Recall ≥ 0.90; GPT-5.4-mini tidak (0.833).**
+
+### Integrasi Anthropic SDK
+
+Kedua specialist agent (`bi_specialist.py`, `ojk_specialist.py`) mendukung dua provider via env var `LLM_PROVIDER`:
+
+```python
+class _AnthropicLLM:
+    """Wrapper Anthropic SDK agar kompatibel dengan llm.complete(prompt).text."""
+    def __init__(self, api_key, model, max_tokens=4096):
+        self._client = anthropic.Anthropic(api_key=api_key)
+    def complete(self, prompt):
+        msg = self._client.messages.create(model=self._model, ...)
+        r.text = msg.content[0].text
+        return r
+
+# Di initialize():
+if LLM_PROVIDER == "anthropic":
+    self.llm = _AnthropicLLM(api_key=os.getenv("ANTHROPIC_API_KEY"), model=model)
+else:
+    self.llm = OpenAI(model=model, api_key=api_key)
+
+# Embedding SELALU pakai OpenAI key (ChromaDB dibangun dengan text-embedding-3-large)
+openai_key = api_key if provider != "anthropic" else os.getenv("OPENAI_API_KEY", api_key)
+Settings.embed_model = OpenAIEmbedding(api_key=openai_key)
+```
+
+> ⚠️ **PENTING:** Saat `LLM_PROVIDER=anthropic`, tetap wajib set `OPENAI_API_KEY` di env karena embedding model menggunakan endpoint OpenAI, bukan Anthropic.
+
+### Keterbatasan yang Ditemukan
+
+| Keterbatasan | Detail |
+|-------------|--------|
+| PARTIALLY_COMPLIANT F1=0.000 | Pendekatan *active-conflict detection* tidak dapat mendeteksi klausul yang tidak secara eksplisit menyebut ketentuan regulasi. Contoh: klausul data privasi (AES-256, right to erasure) tidak aktif melanggar → sistem klasifikasikan NOT_ADDRESSED/COMPLIANT |
+| Hit Rate@5 = 0.000 | Limitasi metodologi: evaluasi retrieval menggunakan string matching antara teks chunk dan label ground truth — tidak valid. Perlu anotasi manual chunk-per-query |
+| Latensi Claude Haiku 4.5 | 28.5 s/klausul (vs 8.0 s GPT-5.4-mini) — trade-off recall vs latensi untuk production |
+
+### MLflow Persistence
+
+MLflow SQLite DB kini disimpan di named Docker volume `mlflow_data` (bukan di dalam container):
+
+```yaml
+# docker/docker-compose.yml
+mlflow:
+  command: mlflow server ... --backend-store-uri sqlite:////mlflow/db/mlflow.db
+  volumes:
+    - mlflow_data:/mlflow/db
+    - mlflow_artifacts:/mlflow/artifacts
+```
+
+Hasil experiment survive container restart. Lihat di: `http://<server-ip>:5001`
+
+---
+
+*Last updated: 2026-04-29*

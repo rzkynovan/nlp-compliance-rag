@@ -20,6 +20,8 @@ from app.db import get_db, _to_row, _from_row, AuditHistoryRow
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
+_SENTINEL = object()  # used by _extract_verdict_data for getattr fallback
+
 RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75}
 
 
@@ -54,9 +56,23 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
             evidence=[],
             reasoning="No verdict available"
         )
-    
+
+    # Normalise: accept both Pydantic objects and dicts
+    def _get(key, *fallback_keys, default=None):
+        if isinstance(verdict_data, dict):
+            for k in (key, *fallback_keys):
+                if k in verdict_data:
+                    return verdict_data[k]
+            return default
+        # Pydantic / dataclass object
+        for k in (key, *fallback_keys):
+            val = getattr(verdict_data, k, _SENTINEL)
+            if val is not _SENTINEL:
+                return val
+        return default
+
     # Extract violations - handle both dict and string formats
-    raw_violations = verdict_data.get("violations", verdict_data.get("violated_articles", []))
+    raw_violations = _get("violations", "violated_articles", default=[])
     violations = []
     for v in raw_violations:
         if isinstance(v, dict):
@@ -85,7 +101,7 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
     
     # Extract evidence
     evidence = []
-    for e in verdict_data.get("evidence", []):
+    for e in _get("evidence", default=[]):
         if isinstance(e, dict):
             evidence.append(EvidenceItem(
                 regulation=e.get("regulation", ""),
@@ -93,14 +109,17 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
                 article_text=e.get("article_text", ""),
                 relevance_score=e.get("relevance_score", 0.5)
             ))
-    
+
     return AgentVerdict(
         agent_name=agent_name,
-        status=_map_status(verdict_data.get("verdict", verdict_data.get("status", "UNCLEAR"))),
-        confidence=verdict_data.get("confidence_score", verdict_data.get("confidence", 0.5)),
+        status=_map_status(_get("verdict", "status", default="UNCLEAR")),
+        confidence=_get("confidence_score", "confidence", default=0.5),
         violations=violations,
         evidence=evidence,
-        reasoning=verdict_data.get("reasoning_trace", verdict_data.get("reasoning", ""))
+        reasoning=_get("reasoning_trace", "reasoning", default=""),
+        checklist_topic=_get("checklist_topic", default=None),
+        checklist_covered=_get("checklist_covered", default=[]) or [],
+        missing_elements=_get("missing_elements", default=[]) or [],
     )
 
 

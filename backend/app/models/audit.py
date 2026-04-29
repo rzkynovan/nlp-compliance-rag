@@ -27,6 +27,9 @@ class AgentVerdict(BaseModel):
     violations: List[str] = Field(default_factory=list)
     evidence: List[EvidenceItem] = Field(default_factory=list)
     reasoning: str = Field(..., description="Agent reasoning")
+    checklist_topic: Optional[str] = Field(None, description="Regulatory checklist topic used")
+    checklist_covered: List[str] = Field(default_factory=list, description="Sub-elements covered by clause")
+    missing_elements: List[str] = Field(default_factory=list, description="Sub-elements missing from clause")
 
 
 class AuditRequest(BaseModel):

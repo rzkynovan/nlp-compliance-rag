@@ -240,18 +240,113 @@ class OJKSpecialistAgent(BaseAgent):
             retrieved_context="\n---\n".join([a["content"] for a in articles]),
             reasoning_trace=parsed.get("reasoning", ""),
             risk_level=parsed.get("risk_level", "MEDIUM"),
-            recommendations=parsed.get("recommendations", [])
+            recommendations=parsed.get("recommendations", []),
+            checklist_topic=parsed.get("checklist_topic"),
+            checklist_covered=parsed.get("checklist_covered", []),
+            missing_elements=parsed.get("missing_elements", []),
         )
     
+    # Sub-elemen wajib per topik regulasi — digunakan untuk deteksi PARTIALLY_COMPLIANT
+    TOPIC_CHECKLISTS = {
+        "DATA_PRIVACY": {
+            "label": "Perlindungan Data Pribadi",
+            "trigger_keywords": [
+                "data pribadi", "privasi", "persetujuan", "consent", "enkripsi",
+                "hapus data", "right to erasure", "hak penghapusan", "aes", "keamanan data",
+                "tidak dijual", "tidak dibagikan", "pihak ketiga", "tujuan penggunaan"
+            ],
+            "elements": [
+                "(A) Persetujuan eksplisit konsumen sebelum pemrosesan data pribadi",
+                "(B) Penjelasan tujuan spesifik penggunaan data",
+                "(C) Standar keamanan teknis (enkripsi/keamanan penyimpanan data)",
+                "(D) Hak konsumen mengakses dan mengoreksi data pribadi",
+                "(E) Hak konsumen meminta penghapusan data (right to erasure)",
+                "(F) Larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit",
+            ],
+            "rule": (
+                "Jika klausa MEMBAHAS topik ini → periksa berapa sub-elemen (A–F) yang "
+                "SECARA EKSPLISIT disebutkan. Jika 1–5 terpenuhi → PARTIALLY_COMPLIANT "
+                "(sebutkan mana yang terpenuhi dan mana yang missing di missing_elements). "
+                "Jika semua 6 terpenuhi → COMPLIANT. Jika klausa tidak membahas topik ini → NOT_ADDRESSED."
+            ),
+        },
+        "COMPLAINT_SLA": {
+            "label": "Penanganan Pengaduan / SLA",
+            "trigger_keywords": [
+                "pengaduan", "keluhan", "complain", "sla", "penyelesaian", "hari kerja",
+                "konfirmasi", "bukti terima", "tindak lanjut", "pemberitahuan pengaduan"
+            ],
+            "elements": [
+                "(A) Batas waktu penyelesaian pengaduan tertulis ≤ 20 hari kerja (dengan opsi perpanjangan 10 hari)",
+                "(B) Konfirmasi penerimaan pengaduan kepada konsumen dengan bukti tertulis",
+                "(C) Kesempatan konsumen melengkapi dokumen yang kurang (≥ 10 hari kerja)",
+                "(D) Respons tertulis kepada konsumen berisi keputusan dan alasannya",
+            ],
+            "rule": (
+                "Jika klausa MEMBAHAS SLA/prosedur pengaduan → periksa berapa sub-elemen (A–D) yang "
+                "SECARA EKSPLISIT disebutkan. Jika 1–3 terpenuhi → PARTIALLY_COMPLIANT. "
+                "Jika semua 4 terpenuhi → COMPLIANT. Jika nilai yang disebutkan bertentangan "
+                "(misal SLA > 20 hari kerja) → NON_COMPLIANT."
+            ),
+        },
+        "PROHIBITED_CLAUSE": {
+            "label": "Klausula Baku / Eksonerasi",
+            "trigger_keywords": [
+                "eksonerasi", "tidak bertanggung jawab", "melepaskan klaim",
+                "tidak dapat dituntut", "force majeure", "kuasa tidak dapat ditarik",
+                "irrevocable", "pembebasan tanggung jawab", "mengubah syarat sepihak"
+            ],
+            "elements": [
+                "(A) Pembebasan tanggung jawab PUJK atas kesalahan/kelalaian PUJK sendiri",
+                "(B) Kewenangan sepihak PUJK mengubah syarat tanpa persetujuan konsumen",
+                "(C) Pengalihan hak/kewajiban PUJK tanpa pemberitahuan kepada konsumen",
+                "(D) Pembatasan hak konsumen mengajukan gugatan/keberatan hukum",
+            ],
+            "rule": (
+                "Ini adalah checklist LARANGAN — berbeda dari checklist kelengkapan. "
+                "Jika klausa mengandung SALAH SATU dari (A–D) → NON_COMPLIANT. "
+                "Jika klausa membahas topik ini namun hanya melepaskan sebagian tanggung jawab "
+                "(bukan semua) → PARTIALLY_COMPLIANT."
+            ),
+        },
+    }
+
+    def _build_checklist_section(self, clause: str) -> str:
+        """
+        Bangun bagian CHECKLIST PARTIALLY_COMPLIANT berdasarkan topik yang mungkin relevan
+        dengan isi klausa. Semua checklist disertakan agar LLM bisa memilih yang relevan.
+        """
+        lines = [
+            "",
+            "MEKANISME CHECKLIST PARTIALLY_COMPLIANT:",
+            "Gunakan checklist berikut untuk menentukan apakah klausa yang relevan",
+            "mencakup SEMUA sub-elemen yang diwajibkan regulasi.",
+            "",
+        ]
+        for topic_key, topic in self.TOPIC_CHECKLISTS.items():
+            lines.append(f"[TOPIK: {topic['label']}]")
+            lines.append("Sub-elemen yang diperiksa:")
+            for elem in topic["elements"]:
+                lines.append(f"  {elem}")
+            lines.append(f"Aturan: {topic['rule']}")
+            lines.append("")
+        lines.append(
+            "PENTING: Checklist HANYA berlaku jika klausa SECARA EKSPLISIT membahas topik tersebut. "
+            "Jangan paksa checklist jika klausa tidak relevan dengan topik."
+        )
+        return "\n".join(lines)
+
     def build_prompt(self, clause: str, articles: List[Dict]) -> str:
         """
-        Build structured prompt for OJK compliance check.
+        Build structured prompt for OJK compliance check with checklist mechanism.
         """
         articles_text = "\n\n".join([
             f"[{a['metadata'].get('regulator', 'OJK')}] {a['content']}"
             for a in articles
         ])
-        
+
+        checklist_section = self._build_checklist_section(clause)
+
         return f"""Kamu adalah Auditor Kepatuhan Regulasi Otoritas Jasa Keuangan (OJK Specialist).
 
 PASAL-PASAL REGULASI OJK YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PERSIS dari dokumen ini):
@@ -261,50 +356,53 @@ KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
 TUGAS:
-1. Analisis apakah klausa SOP SECARA EKSPLISIT mengatur topik yang dibahas pasal regulasi di atas
-2. Perhatikan khususnya: perlindungan konsumen, SLA pengaduan, klausula baku
-3. Evaluasi dampak terhadap hak-hak konsumen HANYA jika klausa relevan dengan topik tersebut
-4. Jika tidak patuh, identifikasi pasal yang dilanggar
+1. Tentukan apakah topik klausa SOP relevan dengan fokus OJK
+2. Jika relevan: jalankan MEKANISME CHECKLIST di bawah untuk deteksi PARTIALLY_COMPLIANT
+3. Identifikasi pelanggaran aktif (jika ada) dengan nomor pasal PERSIS dari dokumen di atas
+4. Evaluasi dampak terhadap hak-hak konsumen
+{checklist_section}
 
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
 a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP relevan dengan fokus OJK. Topik yang relevan: SLA pengaduan, perlindungan konsumen, klausula baku eksonerasi, transparansi informasi, persetujuan konsumen, data privasi. Topik TIDAK relevan untuk OJK: batas saldo teknis, batas transaksi teknis, KYC teknis — ini domain BI.
 b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK yang ditemukan. Jangan paksa relevansi hanya karena retrieval mengambil pasal tertentu.
-c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 10 hari kerja).
-d) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan nilainya SESUAI regulasi.
-e) Gunakan "PARTIALLY_COMPLIANT" jika sebagian sesuai, sebagian melanggar — HANYA jika ada ketentuan konkret yang bisa dibandingkan.
-f) JANGAN laporkan violation karena klausa "tidak menyebutkan" sesuatu — absence of mention ≠ violation. Aturan ini berlaku bahkan jika klausa SOP membahas topik yang SAMA dengan pasal regulasi. Contoh-contoh BUKAN violation:
-   - SOP mengatur prosedur pengaduan tapi tidak menyebutkan "jangka waktu 10 hari melengkapi dokumen" → BUKAN pelanggaran Pasal 71 (SOP tidak melarang pemberian waktu, hanya tidak menyebutkannya). PENGECUALIAN: jika SOP secara eksplisit menyatakan "kami berhak menolak langsung" tanpa memberi kesempatan melengkapi → itu baru konflik aktif.
-   - SOP mengatur koreksi saldo tapi tidak menyebutkan "penawaran permintaan maaf atau ganti rugi" → BUKAN pelanggaran Pasal 78 (SOP tidak melarang kompensasi, hanya tidak menyebutkan)
-   - SOP mengatur penanganan keluhan tapi tidak menyebutkan "sanksi administratif" → BUKAN violation (sanksi adalah urusan regulator, bukan kewajiban yang harus ditulis di SOP konsumen)
-   Violation AKTIF = SOP menetapkan aturan yang BERLAWANAN dengan regulasi: misal SOP menetapkan "SLA pengaduan 60 hari" padahal regulasi menetapkan maksimal 20 hari kerja — ini baru NON_COMPLIANT.
+c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 20 hari kerja), ATAU klausa mengandung klausula eksonerasi yang dilarang.
+d) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan mencakup SEMUA sub-elemen wajib sesuai checklist DAN nilainya sesuai regulasi.
+e) Gunakan "PARTIALLY_COMPLIANT" dalam DUA skenario:
+   SKENARIO 1 — KONFLIK PARSIAL: klausa menetapkan nilai/aturan yang sebagian sesuai dan sebagian bertentangan dengan regulasi.
+   SKENARIO 2 — CAKUPAN TIDAK LENGKAP: klausa SECARA EKSPLISIT membahas topik yang sama dengan pasal regulasi di atas, namun menurut MEKANISME CHECKLIST hanya mencakup SEBAGIAN (bukan semua) sub-elemen yang diwajibkan. Contoh konkret: klausa yang HANYA menyebutkan "kami menggunakan enkripsi AES-256 untuk melindungi data" → ini topik Data Pribadi, mencakup sub-elemen (C) saja, sehingga PARTIALLY_COMPLIANT karena (A)(B)(D)(E)(F) tidak dicakup.
+f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention BOLEH menjadi dasar PARTIALLY_COMPLIANT (bukan NON_COMPLIANT) jika klausa SECARA EKSPLISIT membahas topik regulasi yang sama dan hanya mencakup sebagian sub-elemen dari checklist.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
-h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 (bukan Pasal 44 Ayat 3) karena Pasal 46 Ayat 2 secara eksplisit melarang klausula eksonerasi/baku yang memberikan kewenangan sepihak kepada PUJK.
-i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban atau sanksi yang ditujukan kepada PUJK/regulator sendiri. Pasal yang mengatur kewajiban internal PUJK (misal: "PUJK wajib menjaga kerahasiaan data", "sanksi administratif bagi PUJK yang melanggar") BUKAN kewajiban yang harus ditulis ulang di SOP konsumen — SOP tidak harus memuat ulang seluruh isi regulasi. Violation hanya terjadi jika SOP SECARA AKTIF bertentangan, bukan karena tidak meng-copy pasal regulasi.
-j) Bedakan antara "klausa tanggung jawab user" dengan "klausula eksonerasi yang dilarang". Klausa yang mewajibkan user menjaga PIN/OTP/keamanan akun sendiri adalah tanggung jawab user yang wajar — ini BUKAN klausula eksonerasi. Klausula eksonerasi yang dilarang adalah klausa yang mengalihkan tanggung jawab PUJK atas kesalahannya sendiri kepada konsumen (misal: "kami tidak bertanggung jawab atas kerugian akibat kelalaian kami").
-k) Jika status adalah NOT_ADDRESSED, field "violations" HARUS [] dan field "recommendations" HARUS [] — jangan isi rekomendasi generik seperti "tambahkan prosedur pengaduan" atau "tambahkan perlindungan konsumen" untuk klausa yang tidak relevan dengan OJK.
-l) Rekomendasi HANYA boleh diisi jika ada pelanggaran atau kekurangan KONKRET pada klausa yang RELEVAN dengan topik OJK. Rekomendasi harus spesifik terhadap isi klausa, bukan saran umum. Untuk PARTIALLY_COMPLIANT tanpa violations[], rekomendasi harus menjelaskan SECARA KONKRET apa yang perlu ditambahkan/diubah di klausa tersebut.
+h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 karena secara eksplisit melarang klausula baku yang memberikan kewenangan sepihak kepada PUJK.
+i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban internal PUJK atau sanksi regulatoris — itu urusan regulator, bukan kewajiban yang harus ditulis di SOP konsumen.
+j) Bedakan "klausa tanggung jawab user" (wajar) dengan "klausula eksonerasi" (dilarang). Kewajiban user menjaga PIN/OTP adalah tanggung jawab user yang sah.
+k) Jika status adalah NOT_ADDRESSED: "violations" HARUS [] dan "recommendations" HARUS [].
+l) Rekomendasi HANYA diisi jika ada pelanggaran atau kekurangan KONKRET. Untuk PARTIALLY_COMPLIANT, rekomendasi harus SPESIFIK: sebutkan sub-elemen mana yang perlu ditambahkan ke klausa tersebut.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")
-- "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen (misal: "POJK No. 22/POJK.07/2023")
-- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai/aturan bertentangan), bukan karena tidak disebutkan
+- "regulation": gunakan nama regulasi PERSIS seperti tertulis di dokumen
+- Hanya isi violations[] jika ada pelanggaran AKTIF (nilai/aturan bertentangan atau klausula terlarang)
+- Untuk PARTIALLY_COMPLIANT karena cakupan tidak lengkap: violations[] boleh kosong, gunakan missing_elements
 
 OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
     "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
+    "checklist_topic": "nama topik checklist yang digunakan (jika ada), atau null",
+    "checklist_covered": ["sub-elemen yang DICAKUP oleh klausa, misal: (C) Standar keamanan AES-256"],
+    "missing_elements": ["sub-elemen yang TIDAK dicakup klausa tapi wajib ada di regulasi, misal: (A) Persetujuan eksplisit, (B) Tujuan penggunaan, ..."],
     "violations": [
         {{
             "article": "[nomor pasal dari dokumen regulasi di atas]",
             "regulation": "[nama regulasi dari dokumen di atas]",
-            "violation": "penjelasan detail mengapa klausa SOP melanggar pasal ini dan dampaknya ke konsumen",
+            "violation": "penjelasan detail mengapa klausa SOP melanggar pasal ini",
             "required": "ketentuan yang diwajibkan oleh pasal tersebut",
             "actual": "kondisi aktual yang tertulis di klausa SOP"
         }}
     ],
-    "reasoning": "langkah penalaran detail termasuk apakah klausa relevan dengan topik pasal, dan analisis dampak ke konsumen",
-    "recommendations": ["rekomendasi perbaikan konkret dari sudut pandang perlindungan konsumen"]
+    "reasoning": "langkah penalaran detail: (1) apakah klausa relevan, (2) topik checklist apa yang digunakan, (3) sub-elemen mana yang terpenuhi dan tidak, (4) kesimpulan status",
+    "recommendations": ["rekomendasi perbaikan konkret — untuk PARTIALLY_COMPLIANT sebutkan sub-elemen spesifik yang harus ditambahkan"]
 }}\
 """
     
