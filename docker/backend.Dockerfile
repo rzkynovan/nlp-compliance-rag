@@ -19,6 +19,10 @@ COPY backend/ .
 # This makes the image self-contained and deployable via docker pull alone
 COPY src/ /app/src/
 
+# Copy utility scripts
+COPY scripts/ /app/scripts/
+RUN chmod +x /app/scripts/*.sh
+
 EXPOSE 8000
 
 CMD ["uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000"]
