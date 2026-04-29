@@ -18,8 +18,8 @@ if [ -f "$ROOT/docker/.env" ]; then
   set +a
 fi
 
-# Override MLflow URI untuk akses dari luar container
-MLFLOW_TRACKING_URI="${MLFLOW_TRACKING_URI_EXTERNAL:-http://localhost:5001}"
+# Di dalam container MLflow tersedia di http://mlflow:5000 (service name Docker)
+MLFLOW_TRACKING_URI="http://mlflow:5000"
 export MLFLOW_TRACKING_URI
 
 echo "================================================"

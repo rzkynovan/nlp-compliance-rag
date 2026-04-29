@@ -19,6 +19,29 @@ import chromadb
 
 from .base_agent import BaseAgent, AgentVerdict, ViolatedArticle
 
+
+class _AnthropicLLM:
+    """Lightweight wrapper agar Anthropic SDK kompatibel dengan llm.complete(prompt).text."""
+    def __init__(self, api_key: str, model: str, max_tokens: int = 4096):
+        import anthropic
+        self._client = anthropic.Anthropic(api_key=api_key)
+        self._model  = model
+        self._max_tokens = max_tokens
+
+    def complete(self, prompt: str):
+        msg = self._client.messages.create(
+            model=self._model,
+            max_tokens=self._max_tokens,
+            messages=[{"role": "user", "content": prompt}],
+        )
+        text = msg.content[0].text
+
+        class _Resp:
+            pass
+        r = _Resp()
+        r.text = text
+        return r
+
 # Tambahkan src ke path agar retrieval dapat diimport
 _SRC_DIR = Path(__file__).resolve().parent.parent
 if str(_SRC_DIR) not in sys.path:
@@ -93,11 +116,9 @@ class BISpecialistAgent(BaseAgent):
         model    = os.getenv("LLM_MODEL", "gpt-5.4-mini")
 
         if provider == "anthropic":
-            from llama_index.llms.anthropic import Anthropic
-            self.llm = Anthropic(
-                model=model,
+            self.llm = _AnthropicLLM(
                 api_key=api_key or os.getenv("ANTHROPIC_API_KEY", ""),
-                max_tokens=4096,
+                model=model,
             )
         else:
             self.llm = OpenAI(
