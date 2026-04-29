@@ -326,8 +326,10 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
     print(f"{'='*60}\n")
 
     coordinator = CoordinatorAgent()
+    # Selalu kirim OpenAI key ke coordinator — dipakai untuk ChromaDB embeddings
+    # Anthropic key dibaca dari env (ANTHROPIC_API_KEY) langsung di agent initialize
     coordinator.initialize(
-        api_key=api_key if provider == "openai" else ant_key,
+        api_key=api_key,
         chroma_path=chroma_path
     )
 

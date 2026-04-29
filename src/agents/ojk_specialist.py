@@ -114,7 +114,7 @@ class OJKSpecialistAgent(BaseAgent):
 
         if provider == "anthropic":
             self.llm = _AnthropicLLM(
-                api_key=api_key or os.getenv("ANTHROPIC_API_KEY", ""),
+                api_key=os.getenv("ANTHROPIC_API_KEY", ""),
                 model=model,
             )
         else:
@@ -123,10 +123,12 @@ class OJKSpecialistAgent(BaseAgent):
                 api_key=api_key,
                 temperature=0.1,
             )
-        
+
+        # Embedding selalu pakai OpenAI (ChromaDB dibangun dengan text-embedding-3-large)
+        openai_key = api_key if provider != "anthropic" else os.getenv("OPENAI_API_KEY", api_key)
         Settings.embed_model = OpenAIEmbedding(
             model="text-embedding-3-large",
-            api_key=api_key
+            api_key=openai_key
         )
         
         try:
