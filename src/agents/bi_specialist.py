@@ -349,24 +349,39 @@ PASAL-PASAL REGULASI BI YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PERS
 KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
-TUGAS:
-1. Tentukan apakah topik klausa SOP relevan dengan fokus BI
-2. Jika relevan: jalankan MEKANISME CHECKLIST di bawah untuk deteksi PARTIALLY_COMPLIANT
-3. Identifikasi pelanggaran aktif (jika ada) dengan nomor pasal PERSIS dari dokumen di atas
+ALUR WAJIB — IKUTI LANGKAH INI SECARA BERURUTAN:
+Langkah 1: Tentukan apakah klausa relevan dengan topik BI (batas saldo, batas transaksi, KYC, settlement).
+Langkah 2: Jika RELEVAN → identifikasi topik checklist yang berlaku dari MEKANISME CHECKLIST di bawah.
+Langkah 3: Tandai setiap sub-elemen checklist sebagai "ADA" atau "TIDAK ADA" berdasarkan isi klausa.
+Langkah 4: Hitung berapa sub-elemen yang ada vs total. Tentukan status berdasarkan aturan checklist.
+Langkah 5: Isi output JSON dengan hasil analisis.
 {checklist_section}
 
+CONTOH WAJIB — BACA UNTUK MEMAHAMI CARA KERJA CHECKLIST:
+Klausa contoh: "Saldo maksimum akun pengguna yang belum diverifikasi adalah Rp 2.000.000."
+Langkah 1: Topik relevan BI? YA — membahas batas saldo.
+Langkah 2: Topik checklist = BALANCE_LIMIT (Batas Saldo E-Wallet).
+Langkah 3: Periksa 3 sub-elemen:
+  (A) Batas saldo UNVERIFIED → ADA ✓ (Rp 2.000.000 sesuai regulasi)
+  (B) Batas saldo VERIFIED → TIDAK ADA di klausa
+  (C) Ketentuan upgrade KYC → TIDAK ADA di klausa
+Langkah 4: 1 dari 3 sub-elemen terpenuhi.
+Langkah 5: Status = PARTIALLY_COMPLIANT (bukan COMPLIANT — COMPLIANT butuh semua 3 sub-elemen)
+  checklist_covered = ["(A) Batas saldo unverified Rp 2.000.000 sesuai regulasi"]
+  missing_elements = ["(B) Batas saldo VERIFIED tidak disebutkan", "(C) Ketentuan upgrade KYC tidak disebutkan"]
+
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
-a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP RELEVAN dengan fokus BI. Topik yang relevan untuk BI: batas saldo, batas transaksi, KYC, settlement, penyelenggaraan pembayaran. Topik TIDAK relevan: penanganan keluhan/pengaduan, data privasi, klausula baku, perlindungan konsumen — ini domain OJK, kembalikan NOT_ADDRESSED.
-b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI. Jangan paksa relevansi hanya karena retrieval mengambil pasal tertentu.
-c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan saldo Rp 10jt padahal BI menetapkan maksimal Rp 2jt).
-d) Gunakan "COMPLIANT" jika klausa SOP mengatur topik yang sama, mencakup SEMUA sub-elemen wajib, dan nilainya SESUAI regulasi.
+a) Topik yang relevan BI: batas saldo, batas transaksi, KYC, settlement, penyelenggaraan pembayaran. Topik TIDAK relevan: penanganan keluhan/pengaduan, data privasi, klausula baku, perlindungan konsumen — ini domain OJK.
+b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI.
+c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (nilai disebutkan dan melebihi batas yang diijinkan).
+d) Gunakan "COMPLIANT" HANYA jika klausa mencakup SEMUA sub-elemen wajib dalam checklist DAN nilainya sesuai. Klausa yang hanya menyebut SATU elemen dari topik multi-elemen TIDAK boleh COMPLIANT.
 e) Gunakan "PARTIALLY_COMPLIANT" dalam DUA skenario:
-   SKENARIO 1 — KONFLIK PARSIAL: klausa menetapkan nilai yang sebagian sesuai dan sebagian bertentangan (misal: saldo unverified sesuai tapi saldo verified melebihi batas).
-   SKENARIO 2 — CAKUPAN TIDAK LENGKAP: klausa SECARA EKSPLISIT membahas topik BI yang sama namun hanya mencakup SEBAGIAN sub-elemen dari checklist. Contoh: klausa hanya menyebutkan batas saldo untuk akun unverified tanpa menyebut batas untuk akun verified → PARTIALLY_COMPLIANT (hanya (A), bukan (A)+(B)+(C)).
-f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention BOLEH menjadi dasar PARTIALLY_COMPLIANT (bukan NON_COMPLIANT) jika klausa SECARA EKSPLISIT membahas topik BI yang sama dan hanya mencakup sebagian sub-elemen.
+   SKENARIO 1 — KONFLIK PARSIAL: nilai sebagian sesuai dan sebagian bertentangan.
+   SKENARIO 2 — CAKUPAN TIDAK LENGKAP: klausa membahas topik BI namun hanya mencakup SEBAGIAN sub-elemen checklist. Ini adalah kasus umum — klausa tentang saldo unverified saja, atau transaksi masuk saja → PARTIALLY_COMPLIANT, bukan COMPLIANT.
+f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention ADALAH dasar PARTIALLY_COMPLIANT jika klausa membahas topik yang sama tapi tidak mencakup semua sub-elemen.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "PBI No. XX/XX".
 h) Jika status adalah NOT_ADDRESSED: "violations" HARUS [] dan "recommendations" HARUS [].
-i) Rekomendasi HANYA diisi untuk klausa RELEVAN. Untuk PARTIALLY_COMPLIANT, sebutkan SECARA KONKRET sub-elemen mana yang perlu ditambahkan.
+i) Rekomendasi HANYA diisi untuk klausa RELEVAN. Untuk PARTIALLY_COMPLIANT, sebutkan KONKRET sub-elemen yang perlu ditambahkan.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 160 Ayat 1")

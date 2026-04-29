@@ -102,25 +102,43 @@ class BaseAgent(ABC):
     def parse_llm_response(self, response: str) -> Dict:
         """
         Parse LLM JSON response into structured dict.
-        Override this for agent-specific parsing.
+        Normalises field types: reasoning must be str, list fields must be list.
         """
         import json
+        parsed = None
         try:
             start_idx = response.find("{")
             end_idx = response.rfind("}") + 1
             if start_idx != -1 and end_idx != 0:
                 json_str = response[start_idx:end_idx]
-                return json.loads(json_str)
+                parsed = json.loads(json_str)
         except json.JSONDecodeError:
             pass
-        
-        return {
-            "status": "NEEDS_REVIEW",
-            "confidence": 0.5,
-            "violations": [],
-            "reasoning": response,
-            "risk_level": "MEDIUM"
-        }
+
+        if parsed is None:
+            return {
+                "status": "NEEDS_REVIEW",
+                "confidence": 0.5,
+                "violations": [],
+                "reasoning": response,
+                "risk_level": "MEDIUM",
+                "checklist_topic": None,
+                "checklist_covered": [],
+                "missing_elements": [],
+            }
+
+        # Normalise: reasoning must be a plain string (model sometimes returns list)
+        for key in ("reasoning", "reasoning_trace"):
+            if key in parsed and not isinstance(parsed[key], str):
+                val = parsed[key]
+                parsed[key] = " ".join(val) if isinstance(val, list) else str(val)
+
+        # Normalise: list fields must actually be lists
+        for key in ("violations", "recommendations", "checklist_covered", "missing_elements"):
+            if key in parsed and not isinstance(parsed[key], list):
+                parsed[key] = [parsed[key]] if parsed[key] else []
+
+        return parsed
     
     def categorize_clause(self, clause: str) -> str:
         """

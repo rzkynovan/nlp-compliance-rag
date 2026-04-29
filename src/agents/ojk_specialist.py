@@ -355,28 +355,61 @@ PASAL-PASAL REGULASI OJK YANG RELEVAN (gunakan NAMA REGULASI dan NOMOR PASAL PER
 KLAUSA SOP/T&C YANG DIUJI:
 "{clause}"
 
-TUGAS:
-1. Tentukan apakah topik klausa SOP relevan dengan fokus OJK
-2. Jika relevan: jalankan MEKANISME CHECKLIST di bawah untuk deteksi PARTIALLY_COMPLIANT
-3. Identifikasi pelanggaran aktif (jika ada) dengan nomor pasal PERSIS dari dokumen di atas
-4. Evaluasi dampak terhadap hak-hak konsumen
+ALUR WAJIB — IKUTI LANGKAH INI SECARA BERURUTAN:
+Langkah 1: Tentukan apakah klausa relevan dengan topik OJK (data privasi, SLA pengaduan, klausula eksonerasi, hak konsumen).
+Langkah 2: Jika RELEVAN → identifikasi topik checklist yang berlaku dari MEKANISME CHECKLIST di bawah.
+Langkah 3: Tandai setiap sub-elemen checklist sebagai "ADA" atau "TIDAK ADA" berdasarkan isi klausa.
+Langkah 4: Hitung berapa sub-elemen yang ada vs total. Tentukan status berdasarkan aturan checklist.
+Langkah 5: Isi output JSON dengan hasil analisis.
 {checklist_section}
 
+CONTOH WAJIB (2 kasus) — BACA UNTUK MEMAHAMI CARA KERJA CHECKLIST:
+
+KASUS 1: Klausa tentang enkripsi
+Klausa: "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupun at-rest."
+Langkah 1: Topik relevan OJK? YA — membahas keamanan penyimpanan data pribadi.
+Langkah 2: Topik checklist = DATA_PRIVACY.
+Langkah 3:
+  (A) Persetujuan eksplisit → TIDAK ADA
+  (B) Tujuan penggunaan data → TIDAK ADA
+  (C) Standar keamanan teknis → ADA ✓ (AES-256)
+  (D) Hak akses/koreksi → TIDAK ADA
+  (E) Right to erasure → TIDAK ADA
+  (F) Larangan penjualan → TIDAK ADA
+Langkah 4: 1/6 terpenuhi. missing_elements = 5 item.
+→ Status: PARTIALLY_COMPLIANT ← WAJIB, meski AES-256-nya benar. COMPLIANT tidak boleh karena ada missing_elements.
+
+KASUS 2: Klausa tentang persetujuan konsumen
+Klausa: "Perusahaan wajib memperoleh persetujuan tertulis (explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi."
+Langkah 1: Topik relevan OJK? YA — membahas persetujuan data pribadi.
+Langkah 2: Topik checklist = DATA_PRIVACY.
+Langkah 3:
+  (A) Persetujuan eksplisit → ADA ✓ (explicit consent sebelum pengumpulan)
+  (B) Tujuan penggunaan data → TIDAK ADA (tidak menyebutkan tujuan spesifik)
+  (C) Standar keamanan teknis → TIDAK ADA
+  (D) Hak akses/koreksi → TIDAK ADA
+  (E) Right to erasure → TIDAK ADA
+  (F) Larangan penjualan → TIDAK ADA
+Langkah 4: 1/6 terpenuhi. missing_elements = 5 item.
+→ Status: PARTIALLY_COMPLIANT ← WAJIB, meski persetujuan yang ditetapkan sudah benar. Kebenaran satu elemen TIDAK menjadikannya COMPLIANT.
+
+⚠️ ATURAN KRITIS: Jika missing_elements NON-KOSONG setelah menjalankan checklist untuk topik yang relevan, status TIDAK BOLEH "COMPLIANT". Minimum statusnya adalah "PARTIALLY_COMPLIANT".
+
 ATURAN PENTING — BACA SEBELUM MENJAWAB:
-a) LANGKAH PERTAMA: Tentukan apakah topik klausa SOP relevan dengan fokus OJK. Topik yang relevan: SLA pengaduan, perlindungan konsumen, klausula baku eksonerasi, transparansi informasi, persetujuan konsumen, data privasi. Topik TIDAK relevan untuk OJK: batas saldo teknis, batas transaksi teknis, KYC teknis — ini domain BI.
-b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK yang ditemukan. Jangan paksa relevansi hanya karena retrieval mengambil pasal tertentu.
+a) Topik yang relevan OJK: SLA pengaduan, perlindungan konsumen, klausula baku eksonerasi, transparansi informasi, persetujuan konsumen, data privasi. Topik TIDAK relevan untuk OJK: batas saldo teknis, batas transaksi teknis, KYC teknis — ini domain BI.
+b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal OJK yang ditemukan.
 c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan aturan yang BERTENTANGAN dengan pasal regulasi (misal: SOP menetapkan SLA 60 hari padahal OJK menetapkan maksimal 20 hari kerja), ATAU klausa mengandung klausula eksonerasi yang dilarang.
-d) Gunakan "COMPLIANT" jika klausa mengatur topik yang sama dan mencakup SEMUA sub-elemen wajib sesuai checklist DAN nilainya sesuai regulasi.
+d) Gunakan "COMPLIANT" HANYA jika klausa mencakup SEMUA sub-elemen wajib dalam checklist DAN nilainya sesuai regulasi. PERHATIAN KHUSUS: Kebenaran atau kepatuhan SATU elemen tidak cukup untuk COMPLIANT. Klausa tentang consent yang sudah benar tapi tidak menyebut keamanan/erasure/tujuan = PARTIALLY_COMPLIANT. Klausa tentang AES-256 yang sudah benar tapi tidak menyebut consent/erasure = PARTIALLY_COMPLIANT.
 e) Gunakan "PARTIALLY_COMPLIANT" dalam DUA skenario:
-   SKENARIO 1 — KONFLIK PARSIAL: klausa menetapkan nilai/aturan yang sebagian sesuai dan sebagian bertentangan dengan regulasi.
-   SKENARIO 2 — CAKUPAN TIDAK LENGKAP: klausa SECARA EKSPLISIT membahas topik yang sama dengan pasal regulasi di atas, namun menurut MEKANISME CHECKLIST hanya mencakup SEBAGIAN (bukan semua) sub-elemen yang diwajibkan. Contoh konkret: klausa yang HANYA menyebutkan "kami menggunakan enkripsi AES-256 untuk melindungi data" → ini topik Data Pribadi, mencakup sub-elemen (C) saja, sehingga PARTIALLY_COMPLIANT karena (A)(B)(D)(E)(F) tidak dicakup.
-f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention BOLEH menjadi dasar PARTIALLY_COMPLIANT (bukan NON_COMPLIANT) jika klausa SECARA EKSPLISIT membahas topik regulasi yang sama dan hanya mencakup sebagian sub-elemen dari checklist.
+   SKENARIO 1 — KONFLIK PARSIAL: klausa menetapkan nilai/aturan yang sebagian sesuai dan sebagian bertentangan.
+   SKENARIO 2 — CAKUPAN TIDAK LENGKAP (yang sering terjadi): klausa membahas topik OJK namun hanya mencakup SEBAGIAN sub-elemen dari checklist. Ini adalah kasus paling umum untuk klausul data privasi — klausa tentang consent SAJA, enkripsi SAJA, atau hak hapus SAJA → semua PARTIALLY_COMPLIANT, bukan COMPLIANT.
+f) Absence of mention ≠ NON_COMPLIANT. Namun absence of mention ADALAH dasar PARTIALLY_COMPLIANT jika klausa membahas topik yang sama tapi tidak mencakup semua sub-elemen.
 g) JANGAN gunakan placeholder seperti "Pasal X" atau "POJK No. XX/XX".
-h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): ini tergolong klausula baku yang dilarang — gunakan Pasal 46 Ayat 2 karena secara eksplisit melarang klausula baku yang memberikan kewenangan sepihak kepada PUJK.
-i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban internal PUJK atau sanksi regulatoris — itu urusan regulator, bukan kewajiban yang harus ditulis di SOP konsumen.
-j) Bedakan "klausa tanggung jawab user" (wajar) dengan "klausula eksonerasi" (dilarang). Kewajiban user menjaga PIN/OTP adalah tanggung jawab user yang sah.
+h) Untuk klausula "kuasa yang tidak dapat ditarik kembali" (irrevocable authority): gunakan Pasal 46 Ayat 2.
+i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban internal PUJK atau sanksi regulatoris.
+j) Bedakan "klausa tanggung jawab user" (wajar) dengan "klausula eksonerasi" (dilarang).
 k) Jika status adalah NOT_ADDRESSED: "violations" HARUS [] dan "recommendations" HARUS [].
-l) Rekomendasi HANYA diisi jika ada pelanggaran atau kekurangan KONKRET. Untuk PARTIALLY_COMPLIANT, rekomendasi harus SPESIFIK: sebutkan sub-elemen mana yang perlu ditambahkan ke klausa tersebut.
+l) Rekomendasi HANYA diisi jika ada pelanggaran atau kekurangan KONKRET. Untuk PARTIALLY_COMPLIANT, rekomendasi harus SPESIFIK: sebutkan sub-elemen mana yang perlu ditambahkan.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")
