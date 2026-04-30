@@ -12,13 +12,13 @@ export function DashboardLayout({ children }: DashboardLayoutProps) {
   const collapsed = useUIStore((s) => s.isSidebarCollapsed);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-slate-50">
+    <div className="min-h-screen bg-slate-50">
       <Sidebar />
       {/* ml matches sidebar width: 256px expanded, 80px collapsed */}
       <motion.main
         animate={{ marginLeft: collapsed ? 80 : 256 }}
         transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-        className="flex-1 p-8 min-w-0 overflow-y-auto"
+        className="min-h-screen p-8 min-w-0"
       >
         {children}
       </motion.main>
