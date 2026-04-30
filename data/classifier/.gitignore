@@ -1,0 +1,5 @@
+# Generated model files — do not commit
+indobert_gate/
+gpt_train.jsonl
+gpt_val.jsonl
+gpt_finetuned_model_id.txt
