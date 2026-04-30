@@ -42,7 +42,6 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
             AutoModelForSequenceClassification,
             TrainingArguments,
             Trainer,
-            DataCollatorWithPadding,
         )
         import torch
         from torch.utils.data import Dataset as TorchDataset
@@ -68,14 +67,23 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
 
     class SOPDataset(TorchDataset):
         def __init__(self, texts, labels, tokenizer, max_len=128):
-            self.encodings = tokenizer(texts, truncation=True, padding=True, max_length=max_len)
+            self.texts = texts
             self.labels = labels
+            self.tokenizer = tokenizer
+            self.max_len = max_len
 
         def __len__(self):
             return len(self.labels)
 
         def __getitem__(self, idx):
-            item = {k: torch.tensor(v[idx]) for k, v in self.encodings.items()}
+            enc = self.tokenizer(
+                self.texts[idx],
+                truncation=True,
+                padding="max_length",
+                max_length=self.max_len,
+                return_tensors="pt",
+            )
+            item = {k: v.squeeze(0) for k, v in enc.items()}
             item["labels"] = torch.tensor(self.labels[idx], dtype=torch.long)
             return item
 
@@ -123,7 +131,6 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
         tokenizer=tokenizer,
-        data_collator=DataCollatorWithPadding(tokenizer),
         compute_metrics=compute_metrics,
     )
 
