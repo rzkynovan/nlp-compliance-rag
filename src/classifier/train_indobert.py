@@ -77,7 +77,7 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
 
         def __getitem__(self, idx):
             enc = self.tokenizer(
-                self.texts[idx],
+                str(self.texts[idx]),
                 truncation=True,
                 padding="max_length",
                 max_length=self.max_len,
@@ -130,7 +130,6 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
         args=training_args,
         train_dataset=train_dataset,
         eval_dataset=val_dataset,
-        tokenizer=tokenizer,
         compute_metrics=compute_metrics,
     )
 
