@@ -108,7 +108,7 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
         per_device_eval_batch_size=batch_size,
         learning_rate=lr,
         weight_decay=0.01,
-        evaluation_strategy="epoch",
+        eval_strategy="epoch",
         save_strategy="epoch",
         load_best_model_at_end=True,
         metric_for_best_model="f1",
