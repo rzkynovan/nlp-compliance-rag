@@ -53,7 +53,7 @@ export function Sidebar() {
       initial={false}
       animate={{ width: collapsed ? 80 : 256 }}
       transition={{ duration: 0.3, ease: [0.4, 0, 0.2, 1] }}
-      className="fixed left-0 top-0 h-screen bg-slate-900 text-white flex flex-col z-50 overflow-hidden"
+      className="shrink-0 h-full bg-slate-900 text-white flex flex-col z-50 overflow-hidden"
     >
       <div className="flex items-center justify-between p-4 border-b border-slate-700 shrink-0">
         <motion.span
