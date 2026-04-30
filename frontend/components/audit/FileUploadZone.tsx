@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import {
   Upload,
   FileText,
@@ -30,6 +31,7 @@ interface FileUploadZoneProps {
 }
 
 export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps) {
+  const token = useAuthStore((s) => s.token);
   const [isDragOver, setIsDragOver] = useState(false);
   const [isUploading, setIsUploading] = useState(false);
   const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
@@ -56,8 +58,12 @@ export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps)
       const url = new URL(`${apiUrl}/audit/upload`);
       if (isPdfFile) url.searchParams.set("use_llamaparse_cache", String(useLlamaparseCache));
 
+      const headers: Record<string, string> = {};
+      if (token) headers["Authorization"] = `Bearer ${token}`;
+
       const res = await fetch(url.toString(), {
         method: "POST",
+        headers,
         body: formData,
       });
 
