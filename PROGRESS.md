@@ -964,17 +964,70 @@ dengan tabel perbandingan 3 pendekatan + analisis trade-off accuracy vs latensi 
 
 ---
 
-### Urutan Implementasi
+### Urutan Implementasi (Waterfall — berdasarkan dependency teknis)
+
+Urutan ditentukan oleh dependency, bukan kemudahan. Frontend tidak boleh dimulai
+sebelum semua backend endpoint yang dibutuhkannya selesai.
 
 ```
-Minggu 1:  Poin 2 (Testing Doc)        — paling cepat, langsung ditunjukkan ke dosen
-Minggu 1:  Poin 1 Backend (Auth)       — JWT + seed users + route guards backend
-Minggu 2:  Poin 1 Frontend (Role UI)   — login page + middleware + sidebar filter
-Minggu 2:  Poin 3 Dataset              — kumpulkan 600 contoh SOP/non-SOP, labeling
-Minggu 3:  Poin 3 Training             — fine-tune IndoBERT + GPT-5.4-mini gate
-Minggu 3:  Poin 3 Integrasi + Evaluasi — ablation study gate, integrasikan ke pipeline
-Minggu 4:  Update skripsi              — tambah subseksi auth flow + gate classifier
+LAYER 0 — Infrastructure (tidak ada dependency)
+  [0.1] backend/requirements.txt     — tambah python-jose, passlib, transformers, torch
+  [0.2] docker/.env.example          — tambah JWT_SECRET_KEY, user passwords, SOP_GATE_MODEL
+
+LAYER 1 — DB Schema & Pydantic Models (butuh Layer 0)
+  [1.1] backend/app/models/user.py   — UserRow SQLAlchemy + UserResponse Pydantic
+  [1.2] backend/app/db.py            — tambah UserRow, seed_users() dari env vars
+  [1.3] backend/app/models/audit.py  — tambah is_sop_clause, gate_confidence, gate_model
+
+LAYER 2 — Core Auth Logic (butuh Layer 1)
+  [2.1] backend/app/core/auth.py     — JWT encode/decode, get_current_user dep, require_advanced dep
+
+LAYER 3 — Backend API Endpoints + Route Guards (butuh Layer 2)
+  [3.1] backend/app/api/v1/auth.py   — POST /login, GET /me, POST /logout
+  [3.2] backend/app/main.py          — include auth_router, panggil seed_users() di lifespan
+  [3.3] backend/app/api/v1/audit.py  — Depends(get_current_user) pada semua endpoint
+  [3.4] backend/app/api/v1/experiments.py — Depends(require_advanced)
+  [3.5] backend/app/api/v1/usage.py  — Depends(require_advanced)
+
+LAYER 4 — Dataset Gate Classifier (independen, bisa paralel dengan 0-3)
+  [4.1] src/classifier/build_dataset.py  — kumpulkan 600 contoh SOP/non-SOP
+  [4.2] data/classifier/dataset.csv      — file hasil labeling
+
+LAYER 5 — Model Training (butuh Layer 4)
+  [5.1] src/classifier/train_indobert.py       — fine-tune IndoBERT, simpan ke data/classifier/indobert_gate/
+  [5.2] src/classifier/train_gpt_finetune.py   — upload JSONL ke OpenAI, polling job, simpan model ID
+  [5.3] notebooks/gate_classifier_comparison.ipynb — eksplorasi, confusion matrix
+
+LAYER 6 — Gate Abstraction + Evaluation (butuh Layer 5)
+  [6.1] src/classifier/sop_gate.py      — abstract SOPGate + RuleBasedGate + IndoBERTGate + GPTFineTunedGate
+  [6.2] src/classifier/evaluate_gates.py — evaluasi 3 gate pada test set, log ke MLflow
+
+LAYER 7 — Backend Gate Integration (butuh Layer 3 + Layer 6)
+  [7.1] backend/app/services/rag_service.py — load gate via SOP_GATE_MODEL env, jalankan sebelum RAG
+  [7.2] backend/app/api/v1/audit.py         — expose gate fields di response, early return jika bukan SOP
+
+LAYER 8 — Backend Testing Doc Endpoint (butuh Layer 3)
+  [8.1] backend/app/api/v1/evaluation.py — GET /evaluation/golden-dataset
+                                           return 12 klausul + ground truth + prediksi terakhir
+
+LAYER 9 — Frontend (butuh Layer 3 + 7 + 8 semua selesai)
+  [9.1] frontend/lib/stores/auth-store.ts         — Zustand: user, token, role, login(), logout()
+  [9.2] frontend/lib/api/client.ts                — tambah Authorization header ke semua request
+  [9.3] frontend/app/login/page.tsx               — form login, submit ke /auth/login
+  [9.4] frontend/middleware.ts                    — Next.js middleware: guard route per role
+  [9.5] frontend/components/layout/Sidebar.tsx    — filter nav items berdasarkan role
+  [9.6] frontend/app/page.tsx                     — basic: stat sederhana; advanced: full dashboard
+  [9.7] frontend/app/experiments/page.tsx         — redirect basic → /audit
+  [9.8] frontend/app/settings/page.tsx            — redirect basic → /audit
+  [9.9] frontend/app/testing/page.tsx             — tabel golden dataset + export CSV/PDF
 ```
+
+**Catatan dependency kritis:**
+- Layer 9 (Frontend) adalah yang paling terakhir — tidak boleh dimulai sebelum
+  semua endpoint yang dipakai tersedia di backend
+- Layer 4-6 (Dataset + Training) bisa dikerjakan paralel dengan Layer 0-3
+  karena tidak ada dependency satu sama lain
+- Layer 7 membutuhkan KEDUANYA: Layer 3 (auth) dan Layer 6 (gate model) selesai
 
 ---
 
