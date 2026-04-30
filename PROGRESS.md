@@ -883,54 +883,98 @@ Jika klausa panjang → tampilkan 80 karakter + tombol "Lihat lengkap" (modal/to
 
 ---
 
-### Poin 3 — SOP Gate Classifier (Trained Model)
+### Poin 3 — SOP Gate Classifier: Fine-tuning Comparison Study
 
-**Motivasi:** Dosen prodi Sains Data ingin ada komponen ML yang ditraining sendiri,
-bukan sekadar memanggil API. Gate classifier memastikan input adalah klausa SOP valid
-sebelum masuk ke pipeline RAG yang mahal (latency + biaya).
+**Klarifikasi dosen (2026-04-30):** RAG pipeline tidak perlu di-fine-tune. Yang di-fine-tune
+adalah **gate classifier** — model yang memfilter apakah input adalah klausa SOP valid sebelum
+masuk ke RAG. Model untuk gate bebas: bisa IndoBERT, GPT, atau lainnya → dibandingkan sebagai
+ablation study baru.
 
-**Pendekatan:** TF-IDF + Logistic Regression sebagai baseline cepat, dengan opsi
-fine-tune IndoBERT untuk akurasi lebih tinggi. Model dilatih di notebook, disimpan
-sebagai `.pkl`, diload di backend saat startup.
+**Arsitektur gate (RAG tidak berubah):**
 
-#### Dataset
+```
+Input teks
+    ↓
+┌─────────────────────────────────────────┐
+│  SOP GATE (fine-tuned, dibandingkan)    │
+│                                         │
+│  A: Rule-based QueryAnalyzer  ← baseline│
+│  B: Fine-tuned IndoBERT       ← lokal   │
+│  C: Fine-tuned GPT-5.4-mini   ← API     │
+│     (konfirmasi: gpt-5.4-mini-2026-03-17│
+│      support fine-tuning di OpenAI UI)  │
+└─────────────────────────────────────────┘
+    ├── Bukan SOP (confidence > threshold)
+    │     → return: {final_status: "NOT_SOP_CLAUSE"}
+    │       tanpa panggil RAG (hemat biaya & latensi)
+    └── SOP valid
+          → lanjut ke CoordinatorAgent → RAG + LLM
+```
+
+**Mengapa GPT-5.4-mini untuk gate, bukan GPT-4o-mini:**
+`gpt-5.4-mini-2026-03-17` terkonfirmasi support fine-tuning via OpenAI dashboard.
+Menggunakan model yang **sama** dengan RAG pipeline → konsistensi stack, perbandingan lebih adil.
+
+#### Dataset Gate Classifier
 
 | Kelas | Sumber | Jumlah Target |
 |-------|--------|-------------|
-| Positif (SOP) | Klausa dari GoPay T&C (121), SOP Dummy (12), regulasi BI/OJK sebagian | ~300 contoh |
-| Negatif (bukan SOP) | Greeting ("halo selamat pagi"), lirik lagu, berita, kalimat acak, pertanyaan umum | ~300 contoh |
+| Positif (klausa SOP) | GoPay T&C (121 klausul) + SOP Dummy NusantaraPay (12) + sampel regulasi BI/OJK | ~300 contoh |
+| Negatif (bukan SOP) | Greeting ("halo selamat pagi"), lirik lagu, berita umum, kalimat percakapan, pertanyaan factual | ~300 contoh |
+
+Total: ~600 contoh, split 80/10/10 (train/val/test). Label binary: `1` = SOP, `0` = bukan SOP.
+
+#### Ablation Study Gate: 3 Pendekatan
+
+| Gate | Model | Training | Inference | Keterangan |
+|------|-------|----------|-----------|-----------|
+| **A** | Rule-based `QueryAnalyzer` | Tidak ada | Lokal, <1ms | Baseline — sudah ada |
+| **B** | `indobenchmark/indobert-base-p1` | HuggingFace Trainer, gratis | Lokal, ~50ms | Open-source, reproducible |
+| **C** | `gpt-5.4-mini-2026-03-17` fine-tuned | OpenAI Fine-tuning API, ~$2-5 | API, ~500ms | Model yang sama dengan RAG |
+
+Semua gate diuji pada **test set yang sama** → metric: Accuracy, Precision, Recall, F1.
+Khusus: **Precision kelas "bukan SOP" ≥ 0.95** (hindari false reject klausa SOP valid).
 
 #### File Baru
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `src/classifier/dataset.py` | ⬜ | Kumpulkan + label contoh positif/negatif, simpan ke `data/classifier/dataset.csv` |
-| `src/classifier/train.py` | ⬜ | TF-IDF (unigram+bigram, max_features=5000) + LogisticRegression; juga coba IndoBERT via `simpletransformers`; simpan model ke `data/classifier/sop_classifier.pkl` |
-| `src/classifier/sop_gate.py` | ⬜ | Class `SOPGateClassifier`: `load()`, `predict(text) → (is_sop: bool, confidence: float)` |
-| `notebooks/train_sop_classifier.ipynb` | ⬜ | Notebook eksplorasi: distribusi data, confusion matrix, classification report |
-| `data/classifier/` | ⬜ | `dataset.csv`, `sop_classifier.pkl`, `tfidf_vectorizer.pkl` |
+| `src/classifier/build_dataset.py` | ⬜ | Kumpulkan + label 600 contoh, simpan `data/classifier/dataset.csv` |
+| `src/classifier/train_indobert.py` | ⬜ | Fine-tune IndoBERT (HuggingFace Trainer), simpan model ke `data/classifier/indobert_gate/` |
+| `src/classifier/train_gpt_finetune.py` | ⬜ | Upload JSONL ke OpenAI Fine-tuning API, polling job status, simpan `fine_tuned_model_id` |
+| `src/classifier/sop_gate.py` | ⬜ | Abstrak `SOPGate` dengan 3 implementasi: `RuleBasedGate`, `IndoBERTGate`, `GPTFineTunedGate` |
+| `src/classifier/evaluate_gates.py` | ⬜ | Evaluasi ketiga gate pada test set → tabel perbandingan + log ke MLflow |
+| `notebooks/gate_classifier_comparison.ipynb` | ⬜ | Eksplorasi: distribusi data, confusion matrix per gate, feature importance IndoBERT |
+| `data/classifier/` | ⬜ | `dataset.csv`, `indobert_gate/`, `gpt_finetune_job_id.txt` |
 
-#### Integrasi ke Pipeline RAG
-
-```
-Input klausa
-    ↓
-SOPGateClassifier.predict()
-    ├── is_sop=False, confidence>0.8 → return langsung: {"final_status": "NOT_SOP_CLAUSE",
-    │                                                      "message": "Input bukan klausa SOP"}
-    └── is_sop=True (atau confidence rendah) → lanjut ke CoordinatorAgent → RAG
-```
+#### Integrasi ke RAG Pipeline
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `backend/app/services/rag_service.py` | ⬜ | Load `SOPGateClassifier` saat init, jalankan sebelum `audit_clause_async` |
-| `backend/app/models/audit.py` | ⬜ | Tambah field `is_sop_clause: bool`, `gate_confidence: float` di `AuditResponse` |
-| `backend/app/api/v1/audit.py` | ⬜ | Sertakan `is_sop_clause` + `gate_confidence` di response |
-| `backend/requirements.txt` | ⬜ | Tambah `scikit-learn>=1.3.0` (TF-IDF+LR), opsional `simpletransformers` untuk IndoBERT |
+| `backend/app/services/rag_service.py` | ⬜ | Load gate terpilih (config via env `SOP_GATE_MODEL=indobert/gpt/rule`), jalankan sebelum `audit_clause_async` |
+| `backend/app/models/audit.py` | ⬜ | Tambah `is_sop_clause: bool`, `gate_confidence: float`, `gate_model: str` di `AuditResponse` |
+| `backend/app/api/v1/audit.py` | ⬜ | Sertakan field gate di response; jika `is_sop=False` return early tanpa panggil LLM |
+| `backend/requirements.txt` | ⬜ | Tambah `transformers>=4.40.0`, `torch>=2.0.0` (untuk IndoBERT inference) |
+| `docker/.env.example` | ⬜ | Tambah `SOP_GATE_MODEL=indobert` (default: model terbaik dari ablation) |
 
-#### Evaluasi Classifier
+#### Output Akademis
 
-Target: Accuracy ≥ 0.90 pada test set, Precision bukan-SOP ≥ 0.95 (hindari false reject klausa SOP valid).
+Hasil ablation gate masuk ke skripsi sebagai subseksi baru **"4.X Evaluasi SOP Gate Classifier"**
+dengan tabel perbandingan 3 pendekatan + analisis trade-off accuracy vs latensi vs biaya.
+
+---
+
+### Urutan Implementasi
+
+```
+Minggu 1:  Poin 2 (Testing Doc)        — paling cepat, langsung ditunjukkan ke dosen
+Minggu 1:  Poin 1 Backend (Auth)       — JWT + seed users + route guards backend
+Minggu 2:  Poin 1 Frontend (Role UI)   — login page + middleware + sidebar filter
+Minggu 2:  Poin 3 Dataset              — kumpulkan 600 contoh SOP/non-SOP, labeling
+Minggu 3:  Poin 3 Training             — fine-tune IndoBERT + GPT-5.4-mini gate
+Minggu 3:  Poin 3 Integrasi + Evaluasi — ablation study gate, integrasikan ke pipeline
+Minggu 4:  Update skripsi              — tambah subseksi auth flow + gate classifier
+```
 
 ---
 
