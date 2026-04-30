@@ -784,5 +784,168 @@ tanpa referensi pasal yang eksplisit).
 
 ---
 
+---
+
+## Phase 12: Feedback Dosen — Auth, Testing Doc, SOP Classifier (2026-04-30)
+
+Tiga item dari feedback dosen setelah demo. Direncanakan berurutan sesuai dependensi.
+
+---
+
+### Poin 1 — Role-Based Authentication (Basic vs Advanced User)
+
+**Motivasi:** UI saat ini menampilkan semua fitur ke semua orang. Basic user tidak perlu
+melihat Latency, Biaya API, Experiments, Settings, Grafana. Advanced user = developer/auditor
+senior yang perlu semua fitur.
+
+#### Arsitektur Auth
+
+```
+POST /api/v1/auth/login   → { access_token, role }
+GET  /api/v1/auth/me      → { username, role }
+POST /api/v1/auth/logout  → 200 OK
+
+Role: "basic" | "advanced"
+Token: JWT (HS256), TTL 8 jam, stored di httpOnly cookie + Zustand store
+```
+
+#### Backend — File Baru / Dimodifikasi
+
+| File | Status | Keterangan |
+|------|--------|-----------|
+| `backend/app/core/auth.py` | ⬜ | JWT encode/decode, `get_current_user` dependency, `require_advanced` dependency |
+| `backend/app/models/user.py` | ⬜ | Pydantic + SQLAlchemy: `id`, `username`, `hashed_password`, `role` (basic/advanced) |
+| `backend/app/api/v1/auth.py` | ⬜ | `POST /login` (verify creds, return JWT), `GET /me`, `POST /logout` |
+| `backend/app/db.py` | ⬜ | Tambah `UserRow` SQLAlchemy model + seed function (buat user dari env vars saat startup) |
+| `backend/app/main.py` | ⬜ | Panggil `seed_users()` di lifespan, include `auth_router` |
+| `backend/app/api/v1/audit.py` | ⬜ | Tambah `Depends(get_current_user)` — semua user boleh audit |
+| `backend/app/api/v1/experiments.py` | ⬜ | Tambah `Depends(require_advanced)` — advanced only |
+| `backend/app/api/v1/usage.py` | ⬜ | Tambah `Depends(require_advanced)` — advanced only |
+| `backend/requirements.txt` | ⬜ | Tambah `python-jose[cryptography]>=3.3.0`, `passlib[bcrypt]>=1.7.4` |
+| `docker/.env.example` | ⬜ | Tambah `JWT_SECRET_KEY`, `BASIC_USER_PASSWORD`, `ADVANCED_USER_PASSWORD` |
+
+**Seed users:** Saat startup, backend otomatis buat 2 user dari env vars:
+```
+BASIC_USERNAME=user        BASIC_USER_PASSWORD=...
+ADVANCED_USERNAME=admin    ADVANCED_USER_PASSWORD=...
+```
+Tidak ada registrasi — sistem audit internal, bukan SaaS publik.
+
+#### Frontend — File Baru / Dimodifikasi
+
+| File | Status | Keterangan |
+|------|--------|-----------|
+| `frontend/app/login/page.tsx` | ⬜ | Halaman login: form username+password, submit ke `/api/v1/auth/login` |
+| `frontend/middleware.ts` | ⬜ | Next.js middleware: redirect unauthenticated ke `/login`, redirect basic user dari rute advanced |
+| `frontend/lib/stores/auth-store.ts` | ⬜ | Zustand: `{ user, token, role, login(), logout() }` |
+| `frontend/lib/api/client.ts` | ⬜ | Tambah `Authorization: Bearer <token>` header ke semua request |
+| `frontend/components/layout/Sidebar.tsx` | ⬜ | Render nav items berdasarkan role: basic → hanya Audit+History; advanced → semua |
+| `frontend/app/page.tsx` (dashboard) | ⬜ | Basic: tampilkan stat cards sederhana (total audit, patuh, tidak patuh). Advanced: tambah cost, latency, link ke MLflow |
+| `frontend/app/experiments/page.tsx` | ⬜ | Guard: redirect basic user ke `/audit` |
+| `frontend/app/settings/page.tsx` | ⬜ | Guard: redirect basic user ke `/audit` |
+
+#### Tabel Akses per Role
+
+| Halaman / Fitur | Basic User | Advanced User |
+|-----------------|-----------|--------------|
+| `/audit` — input & hasil audit | ✅ | ✅ |
+| `/history` — riwayat audit | ✅ | ✅ |
+| `/` dashboard — stat total audit | ✅ (simplified) | ✅ (full) |
+| Dashboard — Biaya API, Latency avg | ❌ | ✅ |
+| `/experiments` — MLflow runs | ❌ | ✅ |
+| `/settings` — konfigurasi sistem | ❌ | ✅ |
+| Grafana link | ❌ | ✅ |
+| Sidebar: menu Experiments & Settings | ❌ hidden | ✅ |
+
+---
+
+### Poin 2 — Dokumen Testing (Tabel Verifikasi Hasil RAG)
+
+**Motivasi:** Tanpa dokumen ini dosen tidak dapat memverifikasi apakah jawaban RAG benar atau tidak.
+Dokumen menampilkan: klausa SOP → kesalahan yang dirancang → hasil RAG → apakah benar.
+
+#### Pendekatan: Halaman `/testing` (Advanced Only) + Export PDF/CSV
+
+| File | Status | Keterangan |
+|------|--------|-----------|
+| `frontend/app/testing/page.tsx` | ⬜ | Tabel interaktif: ID, Klausa SOP, Label GT, Penjelasan Kesalahan, Prediksi Sistem, Status (✓/✗) |
+| `backend/app/api/v1/evaluation.py` | ⬜ | `GET /evaluation/golden-dataset` — return 12 klausul + ground truth + hasil run terakhir dari MLflow/JSON |
+| `frontend/app/testing/page.tsx` | ⬜ | Tombol "Export CSV" dan "Export PDF" untuk lampiran skripsi |
+
+**Format tabel:**
+
+| No | ID | Klausa SOP (ringkas) | Label Benar | Pasal Dilanggar | Prediksi Sistem | Benar? |
+|----|----|--------------------|-------------|----------------|-----------------|--------|
+| 1 | BAB1-01 | Ketentuan Umum... | NOT_ADDRESSED | — | NOT_ADDRESSED | ✅ |
+| ... | | | | | | |
+
+Jika klausa panjang → tampilkan 80 karakter + tombol "Lihat lengkap" (modal/tooltip).
+
+---
+
+### Poin 3 — SOP Gate Classifier (Trained Model)
+
+**Motivasi:** Dosen prodi Sains Data ingin ada komponen ML yang ditraining sendiri,
+bukan sekadar memanggil API. Gate classifier memastikan input adalah klausa SOP valid
+sebelum masuk ke pipeline RAG yang mahal (latency + biaya).
+
+**Pendekatan:** TF-IDF + Logistic Regression sebagai baseline cepat, dengan opsi
+fine-tune IndoBERT untuk akurasi lebih tinggi. Model dilatih di notebook, disimpan
+sebagai `.pkl`, diload di backend saat startup.
+
+#### Dataset
+
+| Kelas | Sumber | Jumlah Target |
+|-------|--------|-------------|
+| Positif (SOP) | Klausa dari GoPay T&C (121), SOP Dummy (12), regulasi BI/OJK sebagian | ~300 contoh |
+| Negatif (bukan SOP) | Greeting ("halo selamat pagi"), lirik lagu, berita, kalimat acak, pertanyaan umum | ~300 contoh |
+
+#### File Baru
+
+| File | Status | Keterangan |
+|------|--------|-----------|
+| `src/classifier/dataset.py` | ⬜ | Kumpulkan + label contoh positif/negatif, simpan ke `data/classifier/dataset.csv` |
+| `src/classifier/train.py` | ⬜ | TF-IDF (unigram+bigram, max_features=5000) + LogisticRegression; juga coba IndoBERT via `simpletransformers`; simpan model ke `data/classifier/sop_classifier.pkl` |
+| `src/classifier/sop_gate.py` | ⬜ | Class `SOPGateClassifier`: `load()`, `predict(text) → (is_sop: bool, confidence: float)` |
+| `notebooks/train_sop_classifier.ipynb` | ⬜ | Notebook eksplorasi: distribusi data, confusion matrix, classification report |
+| `data/classifier/` | ⬜ | `dataset.csv`, `sop_classifier.pkl`, `tfidf_vectorizer.pkl` |
+
+#### Integrasi ke Pipeline RAG
+
+```
+Input klausa
+    ↓
+SOPGateClassifier.predict()
+    ├── is_sop=False, confidence>0.8 → return langsung: {"final_status": "NOT_SOP_CLAUSE",
+    │                                                      "message": "Input bukan klausa SOP"}
+    └── is_sop=True (atau confidence rendah) → lanjut ke CoordinatorAgent → RAG
+```
+
+| File | Status | Keterangan |
+|------|--------|-----------|
+| `backend/app/services/rag_service.py` | ⬜ | Load `SOPGateClassifier` saat init, jalankan sebelum `audit_clause_async` |
+| `backend/app/models/audit.py` | ⬜ | Tambah field `is_sop_clause: bool`, `gate_confidence: float` di `AuditResponse` |
+| `backend/app/api/v1/audit.py` | ⬜ | Sertakan `is_sop_clause` + `gate_confidence` di response |
+| `backend/requirements.txt` | ⬜ | Tambah `scikit-learn>=1.3.0` (TF-IDF+LR), opsional `simpletransformers` untuk IndoBERT |
+
+#### Evaluasi Classifier
+
+Target: Accuracy ≥ 0.90 pada test set, Precision bukan-SOP ≥ 0.95 (hindari false reject klausa SOP valid).
+
+---
+
+### Urutan Implementasi
+
+```
+Minggu 1:  Poin 2 (Testing Doc) — paling cepat, langsung bisa ditunjukkan ke dosen
+Minggu 1:  Poin 1 Backend (Auth) — JWT + seed users + route guards
+Minggu 2:  Poin 1 Frontend (Role-based UI) — login page + middleware + sidebar filter
+Minggu 2:  Poin 3 Dataset + Training (SOP Classifier)
+Minggu 3:  Poin 3 Integrasi ke pipeline + uji end-to-end
+Minggu 3:  Update skripsi dengan tambahan komponen (classifier + auth flow)
+```
+
+---
+
 *Generated: 2025-04-05*
-*Last updated: 2026-04-29*
+*Last updated: 2026-04-30*
