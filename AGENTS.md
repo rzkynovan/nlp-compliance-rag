@@ -995,4 +995,74 @@ Hasil experiment survive container restart. Lihat di: `http://<server-ip>:5001`
 
 ---
 
-*Last updated: 2026-04-29*
+## Phase 12: Auth RBAC + Testing Doc + SOP Gate Classifier (2026-04-30)
+
+### Role-Based Authentication
+
+JWT auth (HS256, TTL 8 jam) dengan dua peran:
+- **basic**: akses Audit + History saja
+- **advanced**: akses penuh (Experiments, Settings, Testing Doc, cost tracking)
+
+Seeded dari env vars (`BASIC_USERNAME/PASSWORD`, `ADVANCED_USERNAME/PASSWORD`) saat startup.
+bcrypt langsung (tanpa passlib) untuk kompatibilitas dengan bcrypt>=4.x.
+
+### SOP Gate Classifier
+
+Pre-filter sebelum pipeline RAG. Tiga varian dibandingkan:
+
+| Gate | Accuracy | F1-W | Inference | Keterangan |
+|------|----------|------|-----------|-----------|
+| RuleBased | 0.917 | 0.917 | <1ms lokal | Baseline deterministik |
+| IndoBERT (fine-tuned) | **1.000** | **1.000** | ~50ms lokal | Default — `indobenchmark/indobert-base-p1` |
+| GPT Fine-tuned | **1.000** | **1.000** | ~500ms API | `ft:gpt-4.1-mini-2025-04-14:novan:sop-gate:DaNe3Ai9` |
+
+Default gate: `SOP_GATE_MODEL=indobert`. Dataset: 159 contoh (72 SOP positif, 87 negatif).
+
+### Evaluasi LLM RAG — Hasil Aktual (Sistem Produksi)
+
+Evaluasi ulang dengan model yang tersedia di produksi (`gpt-4.1-mini-2025-04-14`):
+
+| Metrik | GPT-4.1-mini | Claude Haiku 4.5 |
+|--------|-------------|-----------------|
+| Accuracy | 0.6667 | 0.6667 |
+| Macro F1 | 0.6667 | 0.6667 |
+| Recall NON_COMPLIANT | **1.000** ✅ | **1.000** ✅ |
+| F1 NON_COMPLIANT | 1.000 | 1.000 |
+| F1 PARTIALLY_COMPLIANT | 0.000 | 0.000 |
+| Avg Latency | **~14.0 detik** | ~30.4 detik |
+
+Kedua model mencapai target Recall NON_COMPLIANT ≥ 0.90. GPT-4.1-mini 2× lebih cepat.
+
+### Frontend Fix — Login Page Sidebar
+
+Masalah: `DashboardLayout` membungkus semua halaman termasuk `/login`.
+
+Fix: Next.js route groups:
+- `app/(auth)/login/` → tanpa sidebar (layout passthrough)
+- `app/(dashboard)/` → semua halaman dashboard dengan DashboardLayout
+
+### Testing Documentation Page (`/testing`)
+
+Halaman advanced-only menampilkan golden dataset 12 klausul:
+- Tabel interaktif: ID, klausa (expandable), label GT, prediksi, status (✓/✗)
+- Export CSV
+- Data dari `GET /api/v1/evaluation/golden-dataset`
+
+### Key Files (Phase 12)
+
+| File | Keterangan |
+|------|-----------|
+| `backend/app/core/auth.py` | JWT + bcrypt direct, `get_current_user`, `require_advanced` |
+| `backend/app/db.py` | `UserRow` + `seed_users()` |
+| `backend/app/api/v1/auth.py` | POST /login, GET /me, POST /logout |
+| `backend/app/api/v1/evaluation.py` | GET /evaluation/golden-dataset |
+| `src/classifier/sop_gate.py` | Abstract SOPGate + 3 implementasi |
+| `src/classifier/train_indobert.py` | HuggingFace Trainer fine-tune |
+| `src/classifier/train_gpt_finetune.py` | OpenAI Fine-tuning API |
+| `src/classifier/evaluate_gates.py` | Perbandingan 3 gate + MLflow |
+| `frontend/app/(auth)/login/` | Login page tanpa sidebar |
+| `frontend/app/(dashboard)/` | Route group semua halaman dashboard |
+
+---
+
+*Last updated: 2026-04-30*

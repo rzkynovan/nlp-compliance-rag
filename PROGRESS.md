@@ -813,16 +813,16 @@ Token: JWT (HS256), TTL 8 jam, stored di httpOnly cookie + Zustand store
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `backend/app/core/auth.py` | ⬜ | JWT encode/decode, `get_current_user` dependency, `require_advanced` dependency |
-| `backend/app/models/user.py` | ⬜ | Pydantic + SQLAlchemy: `id`, `username`, `hashed_password`, `role` (basic/advanced) |
-| `backend/app/api/v1/auth.py` | ⬜ | `POST /login` (verify creds, return JWT), `GET /me`, `POST /logout` |
-| `backend/app/db.py` | ⬜ | Tambah `UserRow` SQLAlchemy model + seed function (buat user dari env vars saat startup) |
-| `backend/app/main.py` | ⬜ | Panggil `seed_users()` di lifespan, include `auth_router` |
-| `backend/app/api/v1/audit.py` | ⬜ | Tambah `Depends(get_current_user)` — semua user boleh audit |
-| `backend/app/api/v1/experiments.py` | ⬜ | Tambah `Depends(require_advanced)` — advanced only |
-| `backend/app/api/v1/usage.py` | ⬜ | Tambah `Depends(require_advanced)` — advanced only |
-| `backend/requirements.txt` | ⬜ | Tambah `python-jose[cryptography]>=3.3.0`, `passlib[bcrypt]>=1.7.4` |
-| `docker/.env.example` | ⬜ | Tambah `JWT_SECRET_KEY`, `BASIC_USER_PASSWORD`, `ADVANCED_USER_PASSWORD` |
+| `backend/app/core/auth.py` | ✅ | JWT encode/decode, `get_current_user` dependency, `require_advanced` dependency |
+| `backend/app/models/user.py` | ✅ | Pydantic: `UserResponse`, `TokenData`, `TokenResponse` |
+| `backend/app/api/v1/auth.py` | ✅ | `POST /login` (verify creds, return JWT), `GET /me`, `POST /logout` |
+| `backend/app/db.py` | ✅ | `UserRow` SQLAlchemy model + `seed_users()` dari env vars saat startup |
+| `backend/app/main.py` | ✅ | `seed_users()` di lifespan, include `auth_router` |
+| `backend/app/api/v1/audit.py` | ✅ | `Depends(get_current_user)` pada semua endpoint |
+| `backend/app/api/v1/experiments.py` | ✅ | Router-level `Depends(require_advanced)` |
+| `backend/app/api/v1/usage.py` | ✅ | Router-level `Depends(require_advanced)` |
+| `backend/requirements.txt` | ✅ | `python-jose[cryptography]`, `bcrypt>=4.0.0` (passlib dihapus) |
+| `docker/.env.example` | ✅ | `JWT_SECRET_KEY`, `BASIC_USER_PASSWORD`, `ADVANCED_USER_PASSWORD` |
 
 **Seed users:** Saat startup, backend otomatis buat 2 user dari env vars:
 ```
@@ -835,14 +835,15 @@ Tidak ada registrasi — sistem audit internal, bukan SaaS publik.
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `frontend/app/login/page.tsx` | ⬜ | Halaman login: form username+password, submit ke `/api/v1/auth/login` |
-| `frontend/middleware.ts` | ⬜ | Next.js middleware: redirect unauthenticated ke `/login`, redirect basic user dari rute advanced |
-| `frontend/lib/stores/auth-store.ts` | ⬜ | Zustand: `{ user, token, role, login(), logout() }` |
-| `frontend/lib/api/client.ts` | ⬜ | Tambah `Authorization: Bearer <token>` header ke semua request |
-| `frontend/components/layout/Sidebar.tsx` | ⬜ | Render nav items berdasarkan role: basic → hanya Audit+History; advanced → semua |
-| `frontend/app/page.tsx` (dashboard) | ⬜ | Basic: tampilkan stat cards sederhana (total audit, patuh, tidak patuh). Advanced: tambah cost, latency, link ke MLflow |
-| `frontend/app/experiments/page.tsx` | ⬜ | Guard: redirect basic user ke `/audit` |
-| `frontend/app/settings/page.tsx` | ⬜ | Guard: redirect basic user ke `/audit` |
+| `frontend/app/(auth)/login/page.tsx` | ✅ | Login page tanpa sidebar (route group `(auth)`) |
+| `frontend/middleware.ts` | ✅ | Route protection: unauthenticated→/login, basic→/audit jika akses advanced |
+| `frontend/lib/stores/auth-store.ts` | ✅ | Zustand + cookie sync untuk Next.js middleware |
+| `frontend/lib/api/client.ts` | ✅ | `Authorization: Bearer <token>` + `loginApi`, `getMeApi`, `logoutApi` |
+| `frontend/components/layout/Sidebar.tsx` | ✅ | Nav filtered by role; logout button; username/role display |
+| `frontend/app/(dashboard)/page.tsx` | ✅ | Dashboard dengan stat cards, quick audit form |
+| `frontend/app/(dashboard)/experiments/page.tsx` | ✅ | Guard redirect basic → /audit |
+| `frontend/app/(dashboard)/settings/page.tsx` | ✅ | Guard redirect basic → /audit |
+| Route group restructure | ✅ | `(auth)/` = login tanpa sidebar; `(dashboard)/` = semua halaman dengan DashboardLayout |
 
 #### Tabel Akses per Role
 
@@ -868,9 +869,8 @@ Dokumen menampilkan: klausa SOP → kesalahan yang dirancang → hasil RAG → a
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `frontend/app/testing/page.tsx` | ⬜ | Tabel interaktif: ID, Klausa SOP, Label GT, Penjelasan Kesalahan, Prediksi Sistem, Status (✓/✗) |
-| `backend/app/api/v1/evaluation.py` | ⬜ | `GET /evaluation/golden-dataset` — return 12 klausul + ground truth + hasil run terakhir dari MLflow/JSON |
-| `frontend/app/testing/page.tsx` | ⬜ | Tombol "Export CSV" dan "Export PDF" untuk lampiran skripsi |
+| `frontend/app/(dashboard)/testing/page.tsx` | ✅ | Tabel interaktif golden dataset, expandable clause, export CSV |
+| `backend/app/api/v1/evaluation.py` | ✅ | `GET /evaluation/golden-dataset` — 12 klausul + ground truth + prediksi |
 
 **Format tabel:**
 
@@ -939,23 +939,22 @@ Khusus: **Precision kelas "bukan SOP" ≥ 0.95** (hindari false reject klausa SO
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `src/classifier/build_dataset.py` | ⬜ | Kumpulkan + label 600 contoh, simpan `data/classifier/dataset.csv` |
-| `src/classifier/train_indobert.py` | ⬜ | Fine-tune IndoBERT (HuggingFace Trainer), simpan model ke `data/classifier/indobert_gate/` |
-| `src/classifier/train_gpt_finetune.py` | ⬜ | Upload JSONL ke OpenAI Fine-tuning API, polling job status, simpan `fine_tuned_model_id` |
-| `src/classifier/sop_gate.py` | ⬜ | Abstrak `SOPGate` dengan 3 implementasi: `RuleBasedGate`, `IndoBERTGate`, `GPTFineTunedGate` |
-| `src/classifier/evaluate_gates.py` | ⬜ | Evaluasi ketiga gate pada test set → tabel perbandingan + log ke MLflow |
-| `notebooks/gate_classifier_comparison.ipynb` | ⬜ | Eksplorasi: distribusi data, confusion matrix per gate, feature importance IndoBERT |
-| `data/classifier/` | ⬜ | `dataset.csv`, `indobert_gate/`, `gpt_finetune_job_id.txt` |
+| `src/classifier/build_dataset.py` | ✅ | 159 contoh (72 SOP positif, 87 negatif), simpan `data/classifier/dataset.csv` |
+| `src/classifier/train_indobert.py` | ✅ | Fine-tune IndoBERT (HuggingFace Trainer, 3 epoch), simpan ke `data/classifier/indobert_gate/` |
+| `src/classifier/train_gpt_finetune.py` | ✅ | Upload JSONL ke OpenAI Fine-tuning API, model `ft:gpt-4.1-mini-2025-04-14:novan:sop-gate:DaNe3Ai9` |
+| `src/classifier/sop_gate.py` | ✅ | Abstract `SOPGate` + `RuleBasedGate` + `IndoBERTGate` + `GPTFineTunedGate` + `load_gate()` |
+| `src/classifier/evaluate_gates.py` | ✅ | Evaluasi 3 gate: RuleBased=0.917, IndoBERT=1.000, GPT Fine-tuned=1.000 |
+| `data/classifier/` | ✅ | `dataset.csv`, `indobert_gate/` (model files), `indobert_metrics.json` |
 
 #### Integrasi ke RAG Pipeline
 
 | File | Status | Keterangan |
 |------|--------|-----------|
-| `backend/app/services/rag_service.py` | ⬜ | Load gate terpilih (config via env `SOP_GATE_MODEL=indobert/gpt/rule`), jalankan sebelum `audit_clause_async` |
-| `backend/app/models/audit.py` | ⬜ | Tambah `is_sop_clause: bool`, `gate_confidence: float`, `gate_model: str` di `AuditResponse` |
-| `backend/app/api/v1/audit.py` | ⬜ | Sertakan field gate di response; jika `is_sop=False` return early tanpa panggil LLM |
-| `backend/requirements.txt` | ⬜ | Tambah `transformers>=4.40.0`, `torch>=2.0.0` (untuk IndoBERT inference) |
-| `docker/.env.example` | ⬜ | Tambah `SOP_GATE_MODEL=indobert` (default: model terbaik dari ablation) |
+| `backend/app/services/rag_service.py` | ✅ | `_get_gate()`, `_run_gate()`, `_build_not_sop_response()` — gate dijalankan sebelum RAG |
+| `backend/app/models/audit.py` | ✅ | `is_sop_clause: bool`, `gate_confidence: float`, `gate_model: str` di `AuditResponse` |
+| `backend/app/api/v1/audit.py` | ✅ | Field gate di response; early return jika `is_sop_clause=False` |
+| `backend/requirements.txt` | ✅ | `transformers>=4.46.0`, `torch>=2.0.0`, `accelerate>=1.1.0` |
+| `docker/.env.example` | ✅ | `SOP_GATE_MODEL=indobert`, `GPT_FINETUNED_MODEL_ID` |
 
 #### Output Akademis
 
@@ -1045,4 +1044,4 @@ Minggu 3:  Update skripsi dengan tambahan komponen (classifier + auth flow)
 ---
 
 *Generated: 2025-04-05*
-*Last updated: 2026-04-30*
+*Last updated: 2026-04-30 (Phase 12 selesai)*
