@@ -17,6 +17,8 @@ from app.models.audit import (
 )
 from app.services.rag_service import get_rag_service
 from app.db import get_db, _to_row, _from_row, AuditHistoryRow
+from app.core.auth import get_current_user
+from app.models.user import UserResponse
 
 router = APIRouter(prefix="/audit", tags=["audit"])
 
@@ -36,6 +38,7 @@ def _map_status(status: str) -> ComplianceStatus:
         "NOT_ADDRESSED": ComplianceStatus.NOT_ADDRESSED,
         "UNCLEAR": ComplianceStatus.UNCLEAR,
         "NEEDS_HUMAN_REVIEW": ComplianceStatus.NEEDS_REVIEW,
+        "NOT_SOP_CLAUSE": ComplianceStatus.NOT_ADDRESSED,
     }
     return status_mapping.get(normalized, ComplianceStatus.UNCLEAR)
 
@@ -124,7 +127,7 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
 
 
 @router.post("/analyze", response_model=AuditResponse)
-async def analyze_sop(request: AuditRequest):
+async def analyze_sop(request: AuditRequest, current_user: UserResponse = Depends(get_current_user)):
     start_time = time.time()
     request_id = str(uuid.uuid4())
     
@@ -166,7 +169,10 @@ async def analyze_sop(request: AuditRequest):
             recommendations=result.get("recommendations", []),
             latency_ms=result.get("latency_ms", latency_ms),
             model_used=result.get("model_used", "gpt-5.4-mini"),
-            tokens_used=0
+            tokens_used=0,
+            is_sop_clause=result.get("is_sop_clause", True),
+            gate_confidence=result.get("gate_confidence", 1.0),
+            gate_model=result.get("gate_model", "rule_based"),
         )
         
         # Persist to PostgreSQL
@@ -190,7 +196,7 @@ async def analyze_sop(request: AuditRequest):
 
 
 @router.post("/batch", response_model=BatchAuditResponse)
-async def batch_analyze(request: BatchAuditRequest, background_tasks: BackgroundTasks):
+async def batch_analyze(request: BatchAuditRequest, background_tasks: BackgroundTasks, current_user: UserResponse = Depends(get_current_user)):
     results = []
     total_tokens = 0
     status_counts = {}
@@ -217,7 +223,7 @@ async def batch_analyze(request: BatchAuditRequest, background_tasks: Background
 
 
 @router.get("/history/stats")
-async def get_audit_history_stats():
+async def get_audit_history_stats(current_user: UserResponse = Depends(get_current_user)):
     """Aggregate stats across ALL audit records — not paginated."""
     from app.db import get_session_factory
     factory = get_session_factory()
@@ -249,6 +255,7 @@ async def get_audit_history(
     limit: int = 20,
     search: str = "",
     status: str = "",
+    current_user: UserResponse = Depends(get_current_user),
 ):
     from app.db import get_session_factory
     factory = get_session_factory()
@@ -271,7 +278,7 @@ async def get_audit_history(
 
 
 @router.get("/{request_id}", response_model=AuditResponse)
-async def get_audit_detail(request_id: str):
+async def get_audit_detail(request_id: str, current_user: UserResponse = Depends(get_current_user)):
     from app.db import get_session_factory
     factory = get_session_factory()
     db = factory()
@@ -524,6 +531,7 @@ def _split_into_clauses(text: str, min_length: int = 80) -> List[str]:
 async def upload_document(
     file: UploadFile = File(...),
     use_llamaparse_cache: bool = True,
+    current_user: UserResponse = Depends(get_current_user),
 ):
     """
     Extract text from an uploaded PDF, TXT, or MD document.

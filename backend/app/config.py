@@ -43,9 +43,22 @@ class Settings(BaseSettings):
     RATE_LIMIT_REQUESTS_PER_MINUTE: int = 10
     RATE_LIMIT_TOKENS_PER_MINUTE: int = 100000
 
-    # CORS: list allowed origins — stored as raw string, parsed via validator
-    # Accepts: JSON array '["http://a","http://b"]' OR comma-separated "http://a,http://b"
+    # CORS
     ALLOWED_ORIGINS: str = Field(default="http://localhost:3000")
+
+    # Auth
+    JWT_SECRET_KEY: str = Field(default="dev-secret-change-in-production", env="JWT_SECRET_KEY")
+    JWT_ALGORITHM: str = Field(default="HS256", env="JWT_ALGORITHM")
+    JWT_EXPIRE_HOURS: int = Field(default=8, env="JWT_EXPIRE_HOURS")
+    BASIC_USERNAME: str = Field(default="user", env="BASIC_USERNAME")
+    BASIC_USER_PASSWORD: str = Field(default="user123", env="BASIC_USER_PASSWORD")
+    ADVANCED_USERNAME: str = Field(default="admin", env="ADVANCED_USERNAME")
+    ADVANCED_USER_PASSWORD: str = Field(default="admin123", env="ADVANCED_USER_PASSWORD")
+
+    # SOP Gate Classifier
+    SOP_GATE_MODEL: str = Field(default="rule_based", env="SOP_GATE_MODEL")
+    SOP_GATE_THRESHOLD: float = Field(default=0.8, env="SOP_GATE_THRESHOLD")
+    GPT_FINETUNED_MODEL_ID: Optional[str] = Field(default=None, env="GPT_FINETUNED_MODEL_ID")
 
     @property
     def allowed_origins_list(self) -> List[str]:

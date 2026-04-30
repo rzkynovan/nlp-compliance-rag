@@ -115,3 +115,59 @@ const createApiClient = (options?: Options): KyInstance => {
 export const apiClient = createApiClient();
 
 export { queryKeys } from "./query-keys";
+
+// ── Auth API ──────────────────────────────────────────────────────────────────
+
+export interface LoginResponse {
+  access_token: string;
+  token_type: string;
+  role: "basic" | "advanced";
+}
+
+export interface MeResponse {
+  username: string;
+  role: "basic" | "advanced";
+}
+
+export async function loginApi(username: string, password: string): Promise<LoginResponse> {
+  return apiClient.post("auth/login", { json: { username, password } }).json<LoginResponse>();
+}
+
+export async function getMeApi(): Promise<MeResponse> {
+  return apiClient.get("auth/me").json<MeResponse>();
+}
+
+export async function logoutApi(): Promise<void> {
+  await apiClient.post("auth/logout").json();
+}
+
+// ── Evaluation API ────────────────────────────────────────────────────────────
+
+export interface GoldenDatasetItem {
+  clause_id: string;
+  clause: string;
+  category: string;
+  expected_status: string;
+  expected_bi: string;
+  expected_ojk: string;
+  violated_articles: string[];
+  error_description: string;
+  predicted_status?: string;
+  predicted_bi?: string;
+  predicted_ojk?: string;
+  is_correct?: boolean;
+  latency_ms?: number;
+}
+
+export interface GoldenDatasetResponse {
+  total: number;
+  correct?: number;
+  accuracy?: number;
+  has_predictions: boolean;
+  evaluation_file?: string;
+  items: GoldenDatasetItem[];
+}
+
+export async function getGoldenDataset(): Promise<GoldenDatasetResponse> {
+  return apiClient.get("evaluation/golden-dataset").json<GoldenDatasetResponse>();
+}

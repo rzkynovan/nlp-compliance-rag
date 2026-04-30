@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { FlaskConical, ArrowUpDown, Calendar, CheckCircle2, XCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useAuthStore } from "@/lib/stores/auth-store";
 
 interface Experiment {
   run_id: string;
@@ -15,6 +18,14 @@ interface Experiment {
 }
 
 export default function ExperimentsPage() {
+  const router = useRouter();
+  const { role, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (!isAuthenticated) { router.push("/login"); return; }
+    if (role !== "advanced") router.push("/audit");
+  }, [isAuthenticated, role, router]);
+
   const { data: experiments, isLoading, error } = useQuery<Experiment[]>({
     queryKey: ["experiments"],
     queryFn: async () => {

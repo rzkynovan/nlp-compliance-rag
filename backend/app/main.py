@@ -4,7 +4,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from fastapi.exceptions import RequestValidationError
 from app.config import settings
-from app.api.v1 import audit, regulations, health, experiments, usage
+from app.api.v1 import audit, regulations, health, experiments, usage, auth as auth_router, evaluation
 from app.core.exceptions import ComplianceAuditError
 import structlog
 import time
@@ -15,8 +15,9 @@ log = structlog.get_logger()
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    from app.db import init_db
+    from app.db import init_db, seed_users
     init_db()
+    seed_users()
     log.info(f"Starting {settings.PROJECT_NAME} v{settings.VERSION}")
     log.info(f"MLflow Tracking URI: {settings.MLFLOW_TRACKING_URI}")
     log.info(f"LLM Model: {settings.LLM_MODEL}")
@@ -123,10 +124,12 @@ async def add_process_time_header(request: Request, call_next):
 
 # Order matters: specific paths before catch-all path params (/{run_id}, /{document_id})
 app.include_router(health.router, prefix=settings.API_V1_PREFIX, tags=["health"])
+app.include_router(auth_router.router, prefix=settings.API_V1_PREFIX, tags=["auth"])
 app.include_router(audit.router, prefix=settings.API_V1_PREFIX, tags=["audit"])
 app.include_router(usage.router, prefix=settings.API_V1_PREFIX, tags=["usage"])
 app.include_router(regulations.router, prefix=settings.API_V1_PREFIX, tags=["regulations"])
 app.include_router(experiments.router, prefix=settings.API_V1_PREFIX, tags=["experiments"])
+app.include_router(evaluation.router, prefix=settings.API_V1_PREFIX, tags=["evaluation"])
 
 
 if __name__ == "__main__":

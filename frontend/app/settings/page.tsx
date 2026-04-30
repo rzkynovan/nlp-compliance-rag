@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -17,6 +19,14 @@ import { Settings, Database, Bell, Shield, Palette, Save } from "lucide-react";
 import { toast } from "sonner";
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const { role, isAuthenticated } = useAuthStore();
+
+  useEffect(() => {
+    if (!isAuthenticated) { router.push("/login"); return; }
+    if (role !== "advanced") router.push("/audit");
+  }, [isAuthenticated, role, router]);
+
   const [settings, setSettings] = useState({
     enableCache: true,
     enableNotifications: false,

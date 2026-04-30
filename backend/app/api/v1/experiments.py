@@ -1,14 +1,15 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from app.models.experiment import (
     ExperimentRun, ExperimentMetrics, ExperimentParams,
     ExperimentListResponse, ExperimentCreate, ExperimentComparison
 )
 from app.ml.tracking import ExperimentTracker
+from app.core.auth import require_advanced
 import os
 from app.config import settings
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_advanced)])
 
 tracker = ExperimentTracker(tracking_uri=settings.MLFLOW_TRACKING_URI)
 

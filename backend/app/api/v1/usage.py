@@ -1,7 +1,8 @@
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, HTTPException, Depends
 from app.services.audit_service import AuditService
+from app.core.auth import require_advanced
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(require_advanced)])
 
 
 @router.get("/usage")

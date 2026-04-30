@@ -61,6 +61,11 @@ class AuditResponse(BaseModel):
     model_used: str = Field(default="gpt-4o", description="LLM model used")
     tokens_used: int = Field(default=0, description="Total tokens used")
 
+    # SOP Gate fields
+    is_sop_clause: bool = Field(default=True, description="Whether input was classified as SOP clause by gate")
+    gate_confidence: float = Field(default=1.0, description="Gate classifier confidence score")
+    gate_model: str = Field(default="rule_based", description="Gate model used")
+
 
 class AuditHistoryItem(BaseModel):
     request_id: str

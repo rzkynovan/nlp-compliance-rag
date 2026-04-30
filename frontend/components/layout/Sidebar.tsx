@@ -2,7 +2,7 @@
 
 import { motion } from "framer-motion";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   FileSearch,
   History,
@@ -11,22 +11,42 @@ import {
   Home,
   ChevronLeft,
   ChevronRight,
+  ClipboardList,
+  LogOut,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useUIStore } from "@/lib/stores/ui-store";
+import { useAuthStore } from "@/lib/stores/auth-store";
+import { logoutApi } from "@/lib/api/client";
 
-const navItems = [
+const basicNavItems = [
   { href: "/", label: "Dashboard", icon: Home },
   { href: "/audit", label: "Audit", icon: FileSearch },
   { href: "/history", label: "History", icon: History },
+];
+
+const advancedOnlyItems = [
   { href: "/experiments", label: "Experiments", icon: FlaskConical },
+  { href: "/testing", label: "Testing Doc", icon: ClipboardList },
   { href: "/settings", label: "Settings", icon: Settings },
 ];
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const collapsed = useUIStore((s) => s.isSidebarCollapsed);
   const toggleSidebar = useUIStore((s) => s.toggleSidebar);
+  const { role, username, logout } = useAuthStore();
+
+  const navItems = role === "advanced"
+    ? [...basicNavItems, ...advancedOnlyItems]
+    : basicNavItems;
+
+  const handleLogout = async () => {
+    try { await logoutApi(); } catch { /* ignore */ }
+    logout();
+    router.push("/login");
+  };
 
   return (
     <motion.aside
@@ -81,14 +101,30 @@ export function Sidebar() {
         })}
       </nav>
 
-      <div className="p-4 border-t border-slate-700 shrink-0">
+      <div className="p-4 border-t border-slate-700 shrink-0 space-y-3">
+        {!collapsed && username && (
+          <div className="text-xs text-slate-400">
+            <div className="font-medium text-slate-300">{username}</div>
+            <div className="capitalize text-slate-500">{role} user</div>
+          </div>
+        )}
+        <button
+          onClick={handleLogout}
+          title={collapsed ? "Logout" : undefined}
+          className={cn(
+            "flex items-center gap-2 w-full px-3 py-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition-colors text-sm",
+            collapsed && "justify-center"
+          )}
+        >
+          <LogOut size={16} className="shrink-0" />
+          {!collapsed && <span>Logout</span>}
+        </button>
         {!collapsed && (
           <div className="text-xs text-slate-500">
-            <div className="flex items-center gap-2 mb-1">
+            <div className="flex items-center gap-2">
               <div className="w-2 h-2 rounded-full bg-green-500" />
               <span>System Online</span>
             </div>
-            <div>v1.0.0 • MLflow Connected</div>
           </div>
         )}
       </div>

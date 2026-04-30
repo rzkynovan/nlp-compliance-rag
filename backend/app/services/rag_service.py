@@ -64,6 +64,9 @@ class RAGAuditService:
         # Lazy load agents (only when needed)
         self._coordinator = None
         self._chroma_available = None
+
+        # SOP Gate Classifier (lazy loaded)
+        self._gate = None
         
     def _check_chroma_available(self) -> bool:
         """Check if ChromaDB has data."""
@@ -199,6 +202,61 @@ class RAGAuditService:
 
         return None
 
+    def _get_gate(self):
+        if self._gate is None:
+            try:
+                import sys
+                _src = str(Path(self.chroma_path).parent.parent.parent / "src")
+                if _src not in sys.path:
+                    sys.path.insert(0, _src)
+                from classifier.sop_gate import load_gate
+                self._gate = load_gate(
+                    model_type=settings.SOP_GATE_MODEL,
+                    threshold=settings.SOP_GATE_THRESHOLD,
+                )
+                logger.info(f"SOPGate loaded: {self._gate.model_name}")
+            except Exception as e:
+                logger.warning(f"SOPGate load failed, using rule_based fallback: {e}")
+                from classifier.sop_gate import RuleBasedGate
+                self._gate = RuleBasedGate()
+        return self._gate
+
+    def _run_gate(self, clause: str) -> dict:
+        try:
+            gate = self._get_gate()
+            result = gate.predict(clause)
+            return {
+                "is_sop": result.is_sop or result.confidence < settings.SOP_GATE_THRESHOLD,
+                "confidence": result.confidence,
+                "model": result.model,
+            }
+        except Exception as e:
+            logger.warning(f"Gate prediction failed, allowing through: {e}")
+            return {"is_sop": True, "confidence": 0.5, "model": "rule_based"}
+
+    def _build_not_sop_response(self, clause: str, request_id: str, gate_result: dict) -> dict:
+        from app.models.audit import ComplianceStatus
+        return {
+            "final_status": "NOT_SOP_CLAUSE",
+            "overall_confidence": gate_result["confidence"],
+            "risk_score": 0.0,
+            "bi_verdict": None,
+            "ojk_verdict": None,
+            "violations": [],
+            "recommendations": [],
+            "evidence_trail": [],
+            "analysis_mode": "gate_rejected",
+            "retrieval_mode": "none",
+            "is_sop_clause": False,
+            "gate_confidence": gate_result["confidence"],
+            "gate_model": gate_result["model"],
+            "summary": (
+                "Input tidak dikenali sebagai klausa SOP atau T&C layanan keuangan. "
+                "Silakan masukkan klausa dari dokumen SOP, Terms & Conditions, atau "
+                "kebijakan layanan untuk diaudit."
+            ),
+        }
+
     async def analyze_with_rag(
         self,
         clause: str,
@@ -223,6 +281,11 @@ class RAGAuditService:
         import time
         start_time = time.time()
         request_id = clause_id or f"audit-{int(time.time()*1000)}"
+
+        # ── Gate: SOP clause classifier ──────────────────────────
+        gate_result = self._run_gate(clause)
+        if not gate_result["is_sop"]:
+            return self._build_not_sop_response(clause, request_id, gate_result)
 
         # ── Pre-check: greeting / out-of-scope ───────────────────
         scope_result = self._check_query_scope(clause)

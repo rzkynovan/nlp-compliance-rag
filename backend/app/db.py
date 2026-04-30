@@ -8,14 +8,25 @@ from typing import Optional
 
 from sqlalchemy import create_engine, Column, String, Float, DateTime, Text, Boolean
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
+from passlib.context import CryptContext
 
 from app.config import settings
+
+_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 logger = logging.getLogger(__name__)
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class UserRow(Base):
+    __tablename__ = "users"
+
+    username        = Column(String, primary_key=True, index=True)
+    hashed_password = Column(String, nullable=False)
+    role            = Column(String, nullable=False, default="basic")
 
 
 class AuditHistoryRow(Base):
@@ -76,6 +87,36 @@ def init_db():
         logger.info("Database tables initialised.")
     except Exception as e:
         logger.warning(f"Database init failed (will use in-memory fallback): {e}")
+
+
+def seed_users():
+    """
+    Upsert basic and advanced users from env vars.
+    Called once at startup — idempotent (won't duplicate).
+    """
+    try:
+        factory = get_session_factory()
+        db: Session = factory()
+        users_to_seed = [
+            (settings.BASIC_USERNAME, settings.BASIC_USER_PASSWORD, "basic"),
+            (settings.ADVANCED_USERNAME, settings.ADVANCED_USER_PASSWORD, "advanced"),
+        ]
+        for username, password, role in users_to_seed:
+            existing = db.query(UserRow).filter_by(username=username).first()
+            if existing:
+                existing.hashed_password = _pwd_context.hash(password)
+                existing.role = role
+            else:
+                db.add(UserRow(
+                    username=username,
+                    hashed_password=_pwd_context.hash(password),
+                    role=role,
+                ))
+        db.commit()
+        db.close()
+        logger.info(f"Seeded users: {[u[0] for u in users_to_seed]}")
+    except Exception as e:
+        logger.warning(f"seed_users failed: {e}")
 
 
 def get_db() -> Session:

@@ -1,6 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { useAuthStore } from "@/lib/stores/auth-store";
 import { motion, AnimatePresence } from "framer-motion";
 import { toast } from "sonner";
 import {
@@ -22,6 +24,10 @@ interface BatchProgress {
 }
 
 export default function AuditPage() {
+  const router = useRouter();
+  const { isAuthenticated } = useAuthStore();
+  useEffect(() => { if (!isAuthenticated) router.push("/login"); }, [isAuthenticated, router]);
+
   const [mode, setMode] = useState<InputMode>("text");
   const [result, setResult] = useState<AuditResponse | null>(null);
   const [batchResults, setBatchResults] = useState<AuditResponse[]>([]);
