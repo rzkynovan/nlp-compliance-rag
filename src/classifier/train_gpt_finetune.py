@@ -148,7 +148,7 @@ def train(model: str = "gpt-5.4-mini-2026-03-17", seed: int = 42):
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fine-tune GPT untuk SOP Gate Classifier")
-    parser.add_argument("--model", default="gpt-5.4-mini-2026-03-17")
+    parser.add_argument("--model", default="gpt-4.1-mini-2025-04-14")
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()
 
