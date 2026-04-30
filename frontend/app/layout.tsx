@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "./globals.css";
-import { QueryProvider, LenisProvider } from "@/components/providers";
+import { QueryProvider } from "@/components/providers";
 import { Toaster } from "sonner";
 
 const inter = Inter({ subsets: ["latin"] });
@@ -19,12 +19,10 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
-        <LenisProvider>
-          <QueryProvider>
-            {children}
-            <Toaster position="bottom-right" richColors />
-          </QueryProvider>
-        </LenisProvider>
+        <QueryProvider>
+          {children}
+          <Toaster position="bottom-right" richColors />
+        </QueryProvider>
       </body>
     </html>
   );
