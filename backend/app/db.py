@@ -8,11 +8,13 @@ from typing import Optional
 
 from sqlalchemy import create_engine, Column, String, Float, DateTime, Text, Boolean
 from sqlalchemy.orm import DeclarativeBase, sessionmaker, Session
-from passlib.context import CryptContext
+import bcrypt as _bcrypt_lib
 
 from app.config import settings
 
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+
+def _hash_pw(password: str) -> str:
+    return _bcrypt_lib.hashpw(password.encode("utf-8"), _bcrypt_lib.gensalt()).decode("utf-8")
 
 logger = logging.getLogger(__name__)
 
@@ -104,12 +106,12 @@ def seed_users():
         for username, password, role in users_to_seed:
             existing = db.query(UserRow).filter_by(username=username).first()
             if existing:
-                existing.hashed_password = _pwd_context.hash(password)
+                existing.hashed_password = _hash_pw(password)
                 existing.role = role
             else:
                 db.add(UserRow(
                     username=username,
-                    hashed_password=_pwd_context.hash(password),
+                    hashed_password=_hash_pw(password),
                     role=role,
                 ))
         db.commit()
