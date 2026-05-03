@@ -13,7 +13,7 @@ class ExperimentStatus(str, Enum):
 
 class ExperimentParams(BaseModel):
     embedding_model: str = "text-embedding-3-large"
-    llm_model: str = "gpt-4o"
+    llm_model: str = "gpt-5.4-mini"
     temperature: float = Field(default=0.1, ge=0.0, le=1.0)
     top_k: int = Field(default=5, ge=1, le=20)
     chunking_strategy: str = "hierarchical"

@@ -40,7 +40,7 @@ Settings.embed_model = OpenAIEmbedding(
     api_key=OPENAI_API_KEY,
 )
 Settings.llm = OpenAI(
-    model="gpt-4o",
+    model=os.getenv("LLM_MODEL", "gpt-5.4-mini"),
     api_key=OPENAI_API_KEY,
     temperature=0.1,
 )

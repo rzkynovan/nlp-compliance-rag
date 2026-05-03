@@ -200,7 +200,7 @@ def _from_row(row: AuditHistoryRow, response_class, verdict_class, evidence_clas
         overall_confidence  = row.overall_confidence,
         risk_score          = row.risk_score,
         latency_ms          = row.latency_ms,
-        model_used          = row.model_used or "gpt-4o-mini",
+        model_used          = row.model_used or "gpt-5.4-mini",
         tokens_used         = 0,
         from_cache          = row.from_cache or False,
         analysis_mode       = row.analysis_mode,

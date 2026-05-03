@@ -58,7 +58,7 @@ class AuditResponse(BaseModel):
     recommendations: List[str] = Field(default_factory=list, description="Recommendations")
     
     latency_ms: float = Field(..., description="Processing time in milliseconds")
-    model_used: str = Field(default="gpt-4o", description="LLM model used")
+    model_used: str = Field(default="gpt-5.4-mini", description="LLM model used")
     tokens_used: int = Field(default=0, description="Total tokens used")
 
     # SOP Gate fields

@@ -28,7 +28,7 @@ class Settings(BaseSettings):
     CHROMADB_COLLECTION_OJK: str = "ojk_regulations"
 
     EMBEDDING_MODEL: str = "text-embedding-3-large"
-    LLM_MODEL: str = "gpt-4o-mini"
+    LLM_MODEL: str = "gpt-5.4-mini"
     LLM_TEMPERATURE: float = 0.1
     RETRIEVAL_TOP_K: int = 5
 
@@ -72,6 +72,7 @@ class Settings(BaseSettings):
 MODEL_COSTS = {
     "gpt-4o": {"input": 2.50, "output": 10.00},
     "gpt-4o-mini": {"input": 0.15, "output": 0.60},
+    "gpt-5.4-mini": {"input": 0.075, "output": 0.30},
     "text-embedding-3-large": {"input": 0.13, "output": 0.0},
     "text-embedding-3-small": {"input": 0.02, "output": 0.0},
 }
