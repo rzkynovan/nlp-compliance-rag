@@ -7,7 +7,7 @@ Input: data/classifier/dataset.csv
 Output: data/classifier/indobert_gate/ (model + tokenizer)
 
 Usage:
-    python src/classifier/train_indobert.py [--epochs 3] [--batch 16]
+    python src/classifier/train_indobert.py [--epochs 1] [--batch 8]
 
 Requirements:
     pip install transformers torch scikit-learn pandas
@@ -35,7 +35,7 @@ def load_data():
     return df["text"].tolist(), df["label"].tolist()
 
 
-def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 42):
+def train(epochs: int = 1, batch_size: int = 8, lr: float = 2e-5, seed: int = 42):
     try:
         from transformers import (
             AutoTokenizer,
@@ -175,8 +175,8 @@ def train(epochs: int = 3, batch_size: int = 16, lr: float = 2e-5, seed: int = 4
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Fine-tune IndoBERT untuk SOP Gate Classifier")
-    parser.add_argument("--epochs", type=int, default=3)
-    parser.add_argument("--batch", type=int, default=16)
+    parser.add_argument("--epochs", type=int, default=1)
+    parser.add_argument("--batch", type=int, default=8)
     parser.add_argument("--lr", type=float, default=2e-5)
     parser.add_argument("--seed", type=int, default=42)
     args = parser.parse_args()

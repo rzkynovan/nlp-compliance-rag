@@ -3,9 +3,9 @@
 ## Project Overview
 
 **Nama Proyek:** Multi-Agent RAG for Compliance Audit
-**Teknologi:** FastAPI + Next.js + ChromaDB + BM25 + MLflow + Docker
-**Status:** Phase 10 — LLM Upgrade, PostgreSQL Persistence & Bug Fixes (April 2026)
-**Last Updated:** 2026-04-28
+**Teknologi:** FastAPI + Next.js + ChromaDB + BM25 + MLflow + Docker + IndoBERT
+**Status:** Phase 13 — Audit Dokumen & Sinkronisasi (Mei 2026)
+**Last Updated:** 2026-05-06
 
 ---
 
@@ -314,34 +314,43 @@ src/
 └── evaluation.py              # Metrics calculation
 ```
 
-### Agent Architecture
+### Agent Architecture (4 Agen Terspesialisasi)
 
 ```
+                ┌──────────────────────────────────────┐
+                │   SOP Gate Classifier (IndoBERT)     │
+                │     Pre-filter sebelum RAG           │
+                └─────────────────┬────────────────────┘
+                                  │ SOP valid
+                                  ▼
 ┌─────────────────────────────────────────────────────────────┐
-│                      Coordinator Agent                       │
-│                    (coordinator.py)                          │
+│                    Coordinator Agent                         │
+│                   (coordinator.py)                           │
+│                Orkestrasi paralel BI + OJK                   │
 │                                                              │
-│  ┌──────────────────┐          ┌──────────────────┐       │
-│  │   BI Specialist   │          │  OJK Specialist   │       │
-│  │ (bi_specialist.py)│          │(ojk_specialist.py)│       │
-│  │                   │          │                   │       │
-│  │  - ChromaDB BI    │          │  - ChromaDB OJK   │       │
-│  │  - RAG Retrieval  │          │  - RAG Retrieval  │       │
-│  │  - LLM Analysis   │          │  - LLM Analysis   │       │
-│  └────────┬─────────┘          └────────┬─────────┘       │
-│           │                              │                  │
-│           └──────────────┬───────────────┘                  │
-│                          │                                  │
-│                          ▼                                  │
-│              ┌───────────────────────┐                       │
-│              │   Conflict Resolver   │                       │
-│              │(conflict_resolver.py) │                       │
-│              │                       │                       │
-│              │ - Reg. Hierarchy      │                       │
-│              │ - Priority Rules      │                       │
-│              │ - Final Verdict       │                       │
-│              └───────────────────────┘                       │
-└─────────────────────────────────────────────────────────────┘
+│  ┌──────────────────┐          ┌──────────────────┐         │
+│  │   BI Specialist   │          │  OJK Specialist   │         │
+│  │ (bi_specialist.py)│          │(ojk_specialist.py)│         │
+│  │                   │          │                   │         │
+│  │  - ChromaDB BI    │          │  - ChromaDB OJK   │         │
+│  │  - HybridRetriever│          │  - HybridRetriever│         │
+│  │  - LLM Analysis   │          │  - LLM Analysis   │         │
+│  └────────┬─────────┘          └────────┬─────────┘         │
+│           │                              │                   │
+│           └──────────────┬───────────────┘                   │
+│                          ▼                                   │
+└──────────────────────────┼───────────────────────────────────┘
+                           │
+                           ▼
+              ┌───────────────────────────┐
+              │  ConflictResolverAgent    │
+              │ (conflict_resolver.py)    │
+              │                           │
+              │ - Reg. Hierarchy          │
+              │   (UU > PP > PBI/POJK)    │
+              │ - Priority Rules          │
+              │ - Final Verdict (6 kelas) │
+              └───────────────────────────┘
 ```
 
 ### Key Files Explained
@@ -642,7 +651,7 @@ python -m pytest tests/ -v
 | `tests/test_audit_api.py` | FastAPI endpoints via TestClient |
 | `tests/test_rag_service.py` | RAGAuditService with mocked OpenAI |
 
-**Result:** 175 tests, 175 passed ✅
+**Result:** 165 tests, 165 passed ✅
 
 ### Manual Testing
 
@@ -754,7 +763,9 @@ docker-compose logs -f backend
 │                               ↓                                      │
 │         app/services/rag_service.py  ←── Cache (24h) + Cost Tracker │
 │                               ↓                                      │
-│              src/agents/coordinator.py                               │
+│         src/classifier/sop_gate.py (Phase 12) — IndoBERT pre-filter │
+│                               ↓ (jika SOP valid)                     │
+│              src/agents/coordinator.py — orkestrasi paralel         │
 │                ├── bi_specialist.py  ← HybridRetriever (Phase 7)    │
 │                ├── ojk_specialist.py ← HybridRetriever (Phase 7)    │
 │                └── conflict_resolver.py → final verdict (6 kelas)   │
@@ -777,17 +788,15 @@ docker-compose logs -f backend
 
 ## 📚 Key Concepts
 
-### Multi-Agent RAG Flow
+### Multi-Agent RAG Flow (7 Langkah)
 
-1. **Request** → API receives clause (text input / hasil upload dokumen)
-2. **Check Cache** → Return cached result if exists (24h TTL)
+1. **SOP Gate** → `SOPGate` (IndoBERT/RuleBased/GPT) validasi input adalah klausa SOP. Jika bukan SOP, return `NOT_SOP_CLAUSE` tanpa memanggil RAG.
+2. **Request & Cache** → API receives clause; check 24h TTL cache
 3. **Check Budget** → Reject if over daily limit
 4. **Query Analysis** → `QueryAnalyzer` deteksi intent (nomor pasal/kode regulasi?)
 5. **Retrieve** → `HybridRetriever`: BM25+Dense jika specific, Dense-only jika semantik
-6. **Analyze** → `BISpecialistAgent` + `OJKSpecialistAgent` berjalan paralel
-7. **Resolve** → `ConflictResolverAgent` gabungkan verdik → 6-class output
-8. **Cache Result** → Store for 24 hours
-9. **Return** → Response dengan `retrieval_mode`, `analysis_mode`, evidence trail
+6. **Specialist Analysis** → `CoordinatorAgent` orkestrasi paralel `BISpecialistAgent` + `OJKSpecialistAgent`
+7. **Conflict Resolution & Output** → `ConflictResolverAgent` gabungkan verdik via hierarki regulasi → 6-class output dengan evidence trail
 
 ### Cost Optimization
 
@@ -808,7 +817,7 @@ docker-compose logs -f backend
 | ChromaDB BI vectors | 1,590 |
 | ChromaDB OJK vectors | 1,031 |
 | BM25 BI index | 1,590 chunks |
-| Unit tests | 175/175 ✅ |
+| Unit tests | 165/165 ✅ |
 | E2E tests | 28/29 ✅ |
 
 ---
@@ -1065,4 +1074,46 @@ Halaman advanced-only menampilkan golden dataset 12 klausul:
 
 ---
 
-*Last updated: 2026-04-30*
+---
+
+## Phase 13: Audit Dokumen & Sinkronisasi (2026-05-03 → 2026-05-06)
+
+Audit menyeluruh ketidaksesuaian antara implementasi kode (server + lokal), `proposal_its.tex`, dan `skripsi_ta.tex`.
+
+### Perubahan Kode
+
+| File | Perubahan | Commit |
+|------|-----------|--------|
+| `backend/app/config.py` | `LLM_MODEL` default `gpt-4o-mini` → `gpt-5.4-mini` + tambah pricing |  `b420864` |
+| `backend/app/models/audit.py` | `model_used` Field default `gpt-4o` → `gpt-5.4-mini` | `b420864` |
+| `backend/app/models/experiment.py` | `llm_model` default `gpt-4o` → `gpt-5.4-mini` | `b420864` |
+| `backend/app/db.py` | Fallback `gpt-4o-mini` → `gpt-5.4-mini` | `b420864` |
+| `src/audit.py` | Hardcode `gpt-4o` → `os.getenv("LLM_MODEL", "gpt-5.4-mini")` | `b420864` |
+| `src/classifier/train_indobert.py` | Argparse default `--epochs 3 --batch 16` → `1 8` (sesuai metrics aktual) | (pending) |
+| `.env` + `backend/.env` | `LLM_MODEL=gpt-5.4-mini` | (lokal) |
+
+### Audit Findings — Status Akhir
+
+Total 11 temuan (6 KRITIS + 5 MINOR + 4 SARAN), semua KRITIS dan MINOR ✅ Fixed:
+
+- **K-01..K-06** (KRITIS) — Model LLM, GPT-4o ablation, "enam langkah", BAB III count, IndoBERT epoch, GPT abstract baseline
+- **M-01..M-05** (MINOR) — Train/val/test split, SOP Gate diagram, IndoBERT embedding, unit test count, Macro F1 inkonsistensi
+- **S-03, S-04** (SARAN) — ConflictResolverAgent diagram, MRR=0 limitasi metodologi
+
+Detail lengkap di [PROGRESS.md](./PROGRESS.md#phase-13-audit-dokumen--sinkronisasi-kode-2026-05-03).
+
+### Hasil Evaluasi Final (Setelah Checklist Prompting)
+
+| Metrik | GPT-5.4-mini | Claude Haiku 4.5 |
+|--------|-------------|-----------------|
+| Accuracy | **0.750** ✅ | 0.667 |
+| Macro F1 | **0.774** ✅ | 0.600 |
+| Recall NON_COMPLIANT | **1.000** ✅ | **1.000** ✅ |
+| F1 PARTIALLY_COMPLIANT | **0.400** | 0.000 (tidak responsif checklist) |
+| Avg Latency | **9.573 s** | 29.098 s |
+
+GPT-5.4-mini direkomendasikan sebagai model utama: unggul akurasi, responsif terhadap instruksi *checklist*, 3× lebih cepat.
+
+---
+
+*Last updated: 2026-05-06*

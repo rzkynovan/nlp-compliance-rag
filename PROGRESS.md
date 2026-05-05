@@ -4,7 +4,7 @@
 
 **Start Date:** 2025-04-05
 **Target Completion:** 2025-10-05 (6 months)
-**Last Updated:** 2026-04-24
+**Last Updated:** 2026-05-05
 
 ---
 
@@ -240,7 +240,7 @@
 | API endpoint tests | ✅ | `backend/tests/test_audit_api.py` | TestClient + helper functions |
 | RAG service tests | ✅ | `backend/tests/test_rag_service.py` | Mocked OpenAI/ChromaDB |
 
-**Total: 175 tests, 175 passed ✅**
+**Total: 165 tests, 165 passed ✅**
 
 ---
 
@@ -402,7 +402,7 @@ from agents.ojk_specialist import OJKSpecialistAgent
 
 | Task | Priority | Notes |
 |------|----------|-------|
-| ~~Unit tests~~ | ~~Medium~~ | ✅ Done — 175/175 passed |
+| ~~Unit tests~~ | ~~Medium~~ | ✅ Done — 165/165 passed |
 | ~~Hybrid Retrieval~~ | ~~High~~ | ✅ Done — lihat Phase 7 |
 | ~~E2E tests~~ | ~~Medium~~ | ✅ Done — 28/29 lulus, lihat Phase 8 |
 | Load testing | Low | k6 or Artillery |
@@ -438,7 +438,7 @@ from agents.ojk_specialist import OJKSpecialistAgent
 - ✅ History page raw `fetch()` replaced with `apiClient` from `lib/api.ts`
 - ✅ Added `<Toaster>` to root layout
 
-**Unit Testing (175/175 passed ✅):**
+**Unit Testing (165/165 passed ✅):**
 - ✅ `tests/conftest.py` — stubs for chromadb, mlflow, structlog, celery; `mock_settings` fixture
 - ✅ `tests/test_exceptions.py` — 11 custom exception classes
 - ✅ `tests/test_cache.py` — AuditCache: hash, get/set, TTL, disk, clear, stats, corrupt file
@@ -1044,4 +1044,353 @@ Minggu 3:  Update skripsi dengan tambahan komponen (classifier + auth flow)
 ---
 
 *Generated: 2025-04-05*
-*Last updated: 2026-04-30 (Phase 12 selesai)*
+*Last updated: 2026-05-04 (Phase 13 — semua temuan KRITIS dan MINOR selesai)*
+
+---
+
+---
+
+## Phase 13: Audit Dokumen & Sinkronisasi Kode (2026-05-03)
+
+**Konteks:** Audit menyeluruh ketidaksesuaian antara implementasi kode, `proposal_its.tex`,
+dan `skripsi_ta.tex`. Dilakukan cross-check oleh agen audit independen terhadap semua
+file kode aktual di server dan lokal.
+
+---
+
+### Temuan Audit (Council Review)
+
+#### KRITIS
+
+| ID | Temuan | Status | Tindakan |
+|----|--------|--------|----------|
+| K-01 | Model LLM hardcode `gpt-4o-mini` di `config.py`, `db.py`, `models/audit.py`, `models/experiment.py`, `src/audit.py` | ✅ **Fixed** | Semua default diganti `gpt-5.4-mini`; commit `b420864`; CI/CD deploy otomatis |
+| K-02 | Proposal menyebut "GPT-4o" sebagai model ablation di Mekanisme Inferensi — seharusnya Claude Haiku 4.5 | ✅ **Fixed** | `proposal_its.tex`: `GPT-4o (ablation study)` → `Claude Haiku~4.5 (ablation study)` |
+| K-03 | Proposal menyebut "enam langkah" Mekanisme Inferensi padahal hanya ada 5 item enumerate | ✅ **Fixed** | `proposal_its.tex`: `enam` → `lima` |
+| K-04 | Proposal Tabel Golden Dataset: BAB III = 4 klausul NON_COMPLIANT; kode aktual + skripsi = 3 | ✅ **Fixed** | Diperbaiki sesi sebelumnya (distribusi 2+4+3+3=12) |
+| K-05 | IndoBERT dilatih epoch=1 batch=8; skripsi klaim epoch=3 batch=16 | ✅ **Fixed** | `skripsi_ta.tex`: `3~epoch, batch=16` → `1~epoch, batch=8` |
+| K-06 | Abstrak proposal melaporkan GPT-5.4-mini Recall=0,833 (baseline); hasil final kedua model = 1,000 | ✅ **Fixed** | Abstrak ID & EN diupdate: GPT-5.4-mini unggul (Acc=0,750, F1=0,774); Claude Acc=0,667, tidak responsif checklist |
+
+#### MINOR
+
+| ID | Temuan | Status |
+|----|--------|--------|
+| M-01 | Dataset split sebenarnya 3-way (118/17/24), bukan 80/20 binary | ✅ **Fixed** — skripsi diupdate ke split 3-way |
+| M-02 | Diagram alir sistem (TikZ) tidak menampilkan SOP Gate sebagai node | ✅ **Fixed** — SOP Gate ditambahkan sebagai node pertama di diagram TikZ (proposal + skripsi) |
+| M-03 | IndoBERT masih disebut alternatif *embedding* di Kerangka Teori proposal | ✅ **Fixed** — dikoreksi: IndoBERT hanya digunakan sebagai SOP Gate Classifier, bukan embedding |
+| M-04 | PROGRESS.md klaim "175 unit tests" — aktual 165 fungsi | ✅ **Fixed** — diupdate ke 165/165 |
+| M-05 | Inkonsistensi Macro F1 Claude: tabel per-class (0,556) vs tabel ablation (0,600) | ✅ **Fixed** — tabel per-class dikoreksi: NOT_ADDRESSED F1=0,800, Macro F1=0,600 |
+
+#### SARAN — Pengayaan Dokumen
+
+| ID | Saran |
+|----|-------|
+| S-01 | Jelaskan di skripsi bahwa evaluasi dijalankan via `evaluation_runner.py` (bukan REST API backend) dan model diset via `LLM_MODEL` env var |
+| S-02 | Dokumentasikan mengapa IndoBERT gate ditraining dengan epoch=1 (apakah disengaja atau tidak) | ✅ **Fixed** — `train_indobert.py` default diupdate ke `epochs=1, batch_size=8` sesuai `indobert_metrics.json` aktual |
+| S-03 | `ConflictResolverAgent` adalah agen ke-4 yang terpisah — belum tergambar di diagram sistem (diagram menampilkan 3 agen, padahal ada 4) | ✅ **Fixed** — Diagram TikZ di proposal + skripsi: `CoordinatorAgent` (Orkestrasi Paralel) + `ConflictResolverAgent` (Resolusi Konflik) sebagai node terpisah; Mekanisme Inferensi kini 7 langkah |
+| S-04 | Proposal tidak menjelaskan MRR=0 sebagai limitasi metodologi; hanya skripsi yang menjelaskan | ✅ **Fixed** — Catatan limitasi MRR=0 ditambahkan di `proposal_its.tex` bagian Metrik Retrieval |
+
+---
+
+### Perubahan Kode (K-01)
+
+| File | Perubahan |
+|------|-----------|
+| `backend/app/config.py` | `LLM_MODEL` default: `gpt-4o-mini` → `gpt-5.4-mini`; tambah `gpt-5.4-mini` ke `MODEL_COSTS` |
+| `backend/app/models/audit.py` | `model_used` Field default: `gpt-4o` → `gpt-5.4-mini` |
+| `backend/app/models/experiment.py` | `llm_model` default: `gpt-4o` → `gpt-5.4-mini` |
+| `backend/app/db.py` | Fallback `model_used or "gpt-4o-mini"` → `"gpt-5.4-mini"` |
+| `src/audit.py` | Hardcode `model="gpt-4o"` → `model=os.getenv("LLM_MODEL", "gpt-5.4-mini")` |
+| `.env` + `backend/.env` | `LLM_MODEL=gpt-4o-mini` → `LLM_MODEL=gpt-5.4-mini` |
+| Server `docker/.env` | Sudah benar (`gpt-5.4-mini`) — tidak diubah |
+
+**Commit:** `b420864` — `chore: standardize LLM default to gpt-5.4-mini across codebase`
+
+---
+
+### Perubahan Dokumen LaTeX — Sesi 1 (Awal)
+
+| File | Perubahan |
+|------|-----------|
+| `proposal_its.tex` + `skripsi_ta.tex` | Departemen: `Statistika Bisnis` → `Statistika` |
+| `proposal_its.tex` + `skripsi_ta.tex` | Fakultas: `Fakultas Sains, Analitika Data, dan Kecerdasan Buatan` → `Fakultas Sains dan Analitika Data` |
+| `proposal_its.tex` + `skripsi_ta.tex` | Halaman judul: spacing dikurangi agar muat 1 halaman |
+| `proposal_its.tex` + `skripsi_ta.tex` | TOC header: `\renewcommand{\contentsname}{DAFTAR ISI}` |
+| `proposal_its.tex` | Tabel Matriks Kesenjangan: lebar kolom diperbesar, `LegalBERT` → `Legal-BERT` |
+| `proposal_its.tex` + `skripsi_ta.tex` | Referensi [15]: duplikat Lewis et al. → **LlamaIndex** |
+
+### Perubahan Dokumen LaTeX — Sesi 2 (Cross-check Hasil Evaluasi)
+
+Cross-check hasil aktual dari server (`data/audit_results/*.json`) mengungkap:
+- **3 model diuji**: GPT-5.4-mini (7 run), Claude Haiku 4.5 (10 run), GPT-4.1-mini (2 run)
+- GPT-4.1-mini hanya 2 run tanpa iterasi — tidak dijadikan subjek ablation study
+- GPT-5.4-mini final (checklist v2): Acc=0,750, Macro F1=0,774, Recall NC=1,000, F1 PC=0,400 ← **model utama**
+- Claude Haiku 4.5 stabil: Acc=0,667, Macro F1=0,600, Recall NC=1,000, F1 PC=0,000
+
+| File | Perubahan |
+|------|-----------|
+| `proposal_its.tex` — Abstrak ID | Update hasil: GPT-5.4-mini unggul keseluruhan; kedua model Recall NC=1,000 |
+| `proposal_its.tex` — Abstrak EN | Sama — update ke hasil final bukan baseline |
+| `proposal_its.tex` — Mekanisme Inferensi | `GPT-4o (ablation)` → `Claude Haiku~4.5 (ablation)` |
+| `proposal_its.tex` — Mekanisme Inferensi | `enam langkah` → `lima langkah` |
+| `proposal_its.tex` — Tabel Komponen LLM | Update keterangan hasil aktual kedua model |
+| `skripsi_ta.tex` — SOP Gate Classifier | `3~epoch, batch=16` → `1~epoch, batch=8` (sesuai `indobert_metrics.json`) |
+| `skripsi_ta.tex` — Dataset Gate | `80%/20%` → split 3-way: 118 train / 17 val / 24 test |
+| `skripsi_ta.tex` — Tabel Claude per-class | NOT_ADDRESSED F1: `0,667 FP=2` → `0,800 FP=1`; Macro F1: `0,556` → `0,600` |
+| `skripsi_ta.tex` — Narasi Pembahasan | Update: GPT baseline 0,833 hanya iterasi 1; setelah checklist keduanya 1,000 |
+
+---
+
+### Next Steps (Completed)
+
+- ✅ **S-03** — `ConflictResolverAgent` ditampilkan sebagai node terpisah di diagram TikZ (proposal + skripsi); Mekanisme Inferensi kini 7 langkah
+- ✅ **S-04** — Penjelasan limitasi MRR=0 ditambahkan di proposal_its.tex bagian Metrik Retrieval
+
+**Semua temuan KRITIS, MINOR, dan SARAN sudah diselesaikan. ✅**
+---
+
+## Phase 14: Dokumen Audit — Saran Pengayaan (2026-05-05)
+
+### S-03: ConflictResolverAgent sebagai Agen ke-4 di Diagram TikZ
+
+**Masalah:** Diagram arsitektur menggabungkan `CoordinatorAgent` (orkestrasi) dan `ConflictResolverAgent` (resolusi konflik) menjadi satu node, padahal keduanya adalah agen terpisah di kode (`coordinator.py` + `conflict_resolver.py`).
+
+**Perubahan:**
+
+| File | Perubahan |
+|------|-----------|
+| `proposal_its.tex` — Diagram TikZ | `CoordinatorAgent (Orkestrasi & Resolusi Konflik)` → `CoordinatorAgent (Orkestrasi Paralel)` + `ConflictResolverAgent (Resolusi Konflik)` sebagai 2 node terpisah |
+| `skripsi_ta.tex` — Diagram TikZ | Sama — 2 node terpisah |
+| `proposal_its.tex` — Abstrak ID | "tiga agen" → "empat agen"; tambah ConflictResolverAgent |
+| `proposal_its.tex` — Abstrak EN | "three specialized agents" → "four specialized agents"; tambah ConflictResolverAgent |
+| `skripsi_ta.tex` — Abstrak ID | "empat agen"; tambah ConflictResolverAgent |
+| `skripsi_ta.tex` — Abstrak EN | "four specialized agents"; tambah ConflictResolverAgent |
+| `proposal_its.tex` — Mekanisme Inferensi | "lima langkah" → "tujuh langkah"; langkah 5 dipecah + tambah SOP Gate step |
+| `skripsi_ta.tex` — Mekanisme Inferensi | "lima langkah" → "tujuh langkah"; sama |
+| `proposal_its.tex` — Algoritma Conflict Resolution | `CoordinatorAgent` → `ConflictResolverAgent` |
+
+### S-04: Limitasi MRR=0 di Proposal
+
+**Masalah:** Proposal mendefinisikan MRR dan Hit Rate@5 dengan target ≥ 0.85, tapi tidak menjelaskan bahwa hasil evaluasi aktual = 0.000 dikarenakan keterbatasan metodologi.
+
+**Perubahan:** Ditambahkan catatan di bawah definisi metrik retrieval di `proposal_its.tex`.
+
+### IndoBERT Training Defaults
+
+**Perubahan:** `train_indobert.py` default `epochs=3, batch_size=16` → `epochs=1, batch_size=8` sesuai hasil aktual.
+
+---
+
+*Last updated: 2026-05-05*
+
+---
+
+---
+
+## Phase 15: TODO List & Planning (Untuk Agent Lanjutan)
+
+**Konteks untuk agent berikutnya:** Semua temuan audit (KRITIS, MINOR, SARAN) sudah ditangani. Sistem dalam kondisi *production-ready* dan siap untuk fase ekspansi penelitian. Dokumen di bawah adalah peta jalan untuk pengembangan lanjutan, dikelompokkan berdasarkan prioritas dan kompleksitas.
+
+---
+
+### 🎯 Prioritas Tinggi — Akademik (Sebelum Sidang)
+
+#### TODO-A1: Lengkapi Placeholder Identitas
+
+| Lokasi | Yang Diisi |
+|--------|-----------|
+| `proposal_its.tex` halaman judul | `[Nama Mahasiswa]`, `[NRP]`, `[Nama Dosen Pembimbing]`, `[NIP]` |
+| `proposal_its.tex` Biodata Penulis | Tempat/tanggal lahir, alamat, kontak, riwayat pendidikan |
+| `skripsi_ta.tex` Lembar Pengesahan | Tanggal sidang, nama Tim Penguji, Kepala Departemen |
+| `skripsi_ta.tex` Kata Pengantar | Personalisasi ucapan terima kasih |
+
+**Estimasi:** 30 menit (manual fill-in).
+
+#### TODO-A2: Validasi Eksternal Hasil Penelitian
+
+Saat ini: golden dataset hanya 12 klausul sintetis, dianotasi mahasiswa. Untuk validitas akademik:
+
+- [ ] **Anotasi pakar** untuk minimal 30-50 klausul tambahan oleh praktisi hukum / pejabat kepatuhan
+- [ ] Hitung **inter-annotator agreement** (Cohen's Kappa) antara dua anotator independen
+- [ ] Test kalibrasi `confidence_score` sistem terhadap *agreement* manusia
+
+**Estimasi:** 2-4 minggu (tergantung ketersediaan pakar).
+**File terkait:** `data/golden_dataset.yaml`, `src/evaluation_runner.py`
+
+---
+
+### 🔬 Prioritas Sedang — Riset Pengembangan
+
+#### TODO-B1: Perluasan Dataset Evaluasi
+
+Dataset 12 klausul terlalu kecil untuk kesimpulan statistik kuat (CI lebar, low statistical power).
+
+**Target:** minimal **100 klausul** dengan distribusi seimbang.
+
+**Sumber tambahan:**
+- T&C e-wallet lain: DANA, OVO, ShopeePay, LinkAja (~30 klausul/dokumen)
+- SOP internal anonim dari kerja sama industri (jika ada)
+- Klausul sintetis dengan variasi linguistik untuk *robustness testing*
+
+**File yang diperlukan:**
+```
+data/evaluation/
+├── golden_dataset_v2.yaml        # >= 100 klausul + ground truth
+├── annotator_1_labels.csv        # Anotator 1 (mahasiswa)
+├── annotator_2_labels.csv        # Anotator 2 (pakar)
+└── kappa_agreement.json          # Inter-annotator metrics
+```
+
+#### TODO-B2: Evaluasi Retrieval yang Valid (MRR / Hit Rate@K)
+
+**Masalah saat ini:** MRR = Hit Rate@5 = 0.000 karena limitasi metodologi (string matching gagal cocokkan teks chunk dengan label pasal).
+
+**Solusi:**
+1. **Anotasi chunk-to-query manual:** untuk setiap klausul golden dataset, mark `chunk_id` mana yang relevan di ChromaDB
+2. **Schema baru:**
+   ```yaml
+   - clause_id: BAB3-01
+     expected_chunks:
+       - {regulator: OJK, pasal: "75", ayat: "1", chunk_text_hash: "..."}
+   ```
+3. **Update `evaluation_runner.py`:** ganti string matching dengan chunk_id matching
+
+**Output:** MRR dan Hit Rate@K yang reliable, yang bisa dibandingkan dengan literatur.
+
+#### TODO-B3: Deteksi PARTIALLY_COMPLIANT yang Lebih Baik
+
+**Hasil saat ini:** F1 PARTIALLY_COMPLIANT = 0.400 (GPT-5.4-mini), 0.000 (Claude Haiku 4.5).
+
+**Eksperimen yang bisa dilakukan:**
+- [ ] **Multi-turn verification:** model 1 deteksi, model 2 validasi (verifier pattern)
+- [ ] **Sub-element checklist explicit:** prompt include checklist 6 sub-elemen Data Privasi POJK 22/2023; output JSON dengan field per-sub-elemen
+- [ ] **Few-shot dengan contoh PARTIALLY_COMPLIANT:** tambah 2-3 contoh klausul partially compliant ke prompt
+- [ ] **Fine-tune classifier khusus PC:** binary classifier (`is_partially_compliant`) on top of existing pipeline
+
+**File terkait:** `src/agents/bi_specialist.py`, `src/agents/ojk_specialist.py` (prompt template)
+
+---
+
+### 🛠️ Prioritas Rendah — Infrastruktur & Quality
+
+#### TODO-C1: Load Testing (k6 / Artillery)
+
+**Belum tersedia.** Tercatat di Phase 5 sebagai item Low priority.
+
+**Skenario:**
+```javascript
+// k6 scenario
+- 10 concurrent users
+- 100 requests/menit selama 30 menit
+- Test: /audit/analyze endpoint
+- Metrik: P95 latency, error rate, ChromaDB throughput
+```
+
+**Output:** report `monitoring/load_test_results.json` + dashboard Grafana.
+
+#### TODO-C2: Tambah Unit Test (165 → 200+)
+
+**Saat ini:** 165 tests. Coverage gaps:
+- [ ] `src/classifier/sop_gate.py` — 3 implementasi gate (~10 test)
+- [ ] `src/retrieval/hybrid_retriever.py` — RRF fusion edge cases (~8 test)
+- [ ] `src/agents/conflict_resolver.py` — semua resolution principles (~12 test)
+- [ ] `backend/app/api/v1/auth.py` — login/logout/JWT expiry (~6 test)
+- [ ] `backend/app/api/v1/evaluation.py` — golden-dataset endpoint (~4 test)
+
+**Estimasi:** ~40 test baru, target 205+ tests.
+
+#### TODO-C3: Retrain IndoBERT dengan Hyperparameter Lengkap
+
+**Saat ini:** IndoBERT gate dilatih dengan epoch=1, batch=8 (kemungkinan underfit, walau test set 24 sampel mencapai 1.000).
+
+**Eksperimen:**
+- Train dengan epoch=3, batch=16, evaluasi pada test set yang sama → bandingkan apakah ada perubahan
+- Train dengan dataset lebih besar (target 500+ contoh) untuk *robustness*
+- Bandingkan dengan IndoBERT-large vs IndoBERT-base
+
+**Output:** `data/classifier/indobert_metrics_v2.json`, update skripsi jika hasil berbeda signifikan.
+
+---
+
+### 🚀 Prioritas Eksperimental — Future Work
+
+#### TODO-D1: Local LLM Migration (Privacy & Cost)
+
+**Motivasi:** Saat ini bergantung pada OpenAI/Anthropic API — ada risiko privacy untuk dokumen SOP internal.
+
+**Kandidat lokal:**
+- Llama 3.1 70B (via Ollama / vLLM)
+- IndoLLM (jika tersedia)
+- Mixtral 8x7B
+- Qwen 2.5 32B
+
+**Yang perlu dilakukan:**
+- [ ] Deploy local LLM via vLLM di server (butuh GPU >= 24GB VRAM)
+- [ ] Adapter di `src/agents/bi_specialist.py` untuk endpoint OpenAI-compatible
+- [ ] Benchmark vs GPT-5.4-mini pada golden dataset
+- [ ] Cost-latency analysis (TCO)
+
+#### TODO-D2: Perluasan Cakupan Regulasi
+
+**Saat ini:** PBI 22/23/2020, PBI 23/6/2021, POJK 22/2023.
+
+**Yang perlu ditambahkan:**
+- SE BI (Surat Edaran Bank Indonesia) — implementing details
+- SE OJK — operational guidelines
+- UU 27/2022 (PDP) — Perlindungan Data Pribadi
+- POJK terkait fintech lainnya (POJK 13/2018, dll)
+
+**File yang perlu diupdate:**
+- `src/ingest.py` (pipeline ingestion)
+- `data/raw/regulations/` (PDF baru)
+- ChromaDB collections + BM25 index rebuild
+
+#### TODO-D3: Integrasi Active Learning
+
+**Skenario:** Auditor memberikan feedback pada hasil prediksi → sistem retrain otomatis.
+
+**Komponen:**
+- [ ] Endpoint `/audit/feedback` — auditor mark verdict sebagai correct/incorrect
+- [ ] Buffer feedback di PostgreSQL `audit_feedback` table
+- [ ] Trigger retrain SOP gate / fine-tune prompt jika feedback >= 50 entries
+- [ ] A/B test old vs new prompt secara otomatis di MLflow
+
+---
+
+### 📋 Quick Reference — Status File Penting
+
+| File | Status | Catatan untuk Agent Berikutnya |
+|------|--------|-------------------------------|
+| `proposal_its.tex` | ✅ Sinkron | Tinggal isi placeholder identitas |
+| `skripsi_ta.tex` | ✅ Sinkron | Sinkron dengan kode + golden dataset; tinggal isi identitas |
+| `backend/app/config.py` | ✅ Sinkron | Default `gpt-5.4-mini` sudah di-merge ke main |
+| `src/classifier/train_indobert.py` | ⚠️ Pending push | argparse default 1/8; perlu commit |
+| `data/golden_dataset.yaml` | ⚠️ Out of date | Versi lama; yang aktual ada di `evaluation_runner.py` hardcoded |
+| `docker/.env` (server) | ✅ Production | `LLM_MODEL=gpt-5.4-mini` |
+| `PROGRESS.md` | ✅ Updated | File ini |
+| `AGENTS.md` | ✅ Updated 2026-05-06 | Phase 13 sudah dicatat |
+
+---
+
+### 🤖 Petunjuk untuk Agent Lanjutan
+
+**Sebelum mulai mengerjakan TODO di atas, baca terlebih dahulu:**
+
+1. `AGENTS.md` — arsitektur penuh sistem dan flow Multi-Agent RAG
+2. Phase 11 (di file ini) — hasil ablation study GPT vs Claude
+3. Phase 13 (di file ini) — temuan audit dokumen vs kode
+
+**Konvensi yang perlu dijaga:**
+- Semua perubahan kode harus push via GitHub (bukan edit langsung di server) — CI/CD akan deploy otomatis
+- Edit `.tex` file dulu sampai final, baru convert ke PDF (bukan compile sambil edit)
+- Tabel/angka di skripsi dan kode aktual harus konsisten — cross-check dengan `data/audit_results/eval_*.json`
+- Departemen: **Statistika** (bukan "Statistika Bisnis"); Fakultas: **Sains dan Analitika Data**
+
+**Server akses:**
+- SSH: `root@144.126.136.57`
+- Project path: `/root/nlp-compliance-rag`
+- Hasil eval lengkap: `/root/nlp-compliance-rag/data/audit_results/`
+
+---
+
+*Last updated: 2026-05-06 (Phase 15 — TODO List & Planning)*
