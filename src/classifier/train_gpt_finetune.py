@@ -1,5 +1,5 @@
 """
-train_gpt_finetune.py — Fine-tune GPT-5.4-mini untuk SOP Gate Classifier.
+train_gpt_finetune.py — Fine-tune GPT-4.1-mini untuk SOP Gate Classifier (Tabel 3.10 proposal).
 
 Upload training data ke OpenAI Fine-tuning API, poll status, dan simpan
 model ID ke data/classifier/gpt_finetuned_model_id.txt.
@@ -8,7 +8,7 @@ Format training: JSONL dengan chat format (system + user + assistant).
 Label: "SOP" atau "BUKAN_SOP"
 
 Usage:
-    python src/classifier/train_gpt_finetune.py [--model gpt-5.4-mini-2026-03-17]
+    python src/classifier/train_gpt_finetune.py [--model gpt-4.1-mini-2025-04-14]
 
 Requirements:
     pip install openai pandas scikit-learn
@@ -22,7 +22,9 @@ import time
 from pathlib import Path
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from classifier.data_split import split_80_10_10  # noqa: E402
 
 DATA_PATH    = Path(__file__).resolve().parent.parent.parent / "data" / "classifier" / "dataset.csv"
 JSONL_TRAIN  = Path(__file__).resolve().parent.parent.parent / "data" / "classifier" / "gpt_train.jsonl"
@@ -56,7 +58,7 @@ def build_jsonl(texts, labels, path: Path):
     print(f"JSONL tersimpan: {path} ({sum(1 for _ in open(path))} records)")
 
 
-def train(model: str = "gpt-5.4-mini-2026-03-17", seed: int = 42):
+def train(model: str = "gpt-4.1-mini-2025-04-14", seed: int = 42):
     try:
         from openai import OpenAI
     except ImportError:
@@ -73,10 +75,10 @@ def train(model: str = "gpt-5.4-mini-2026-03-17", seed: int = 42):
     # Load & split dataset
     df = pd.read_csv(DATA_PATH)
     texts, labels = df["text"].tolist(), df["label"].tolist()
-    X_train, X_val, y_train, y_val = train_test_split(
-        texts, labels, test_size=0.15, stratify=labels, random_state=seed
-    )
-    print(f"Training: {len(X_train)}, Validation: {len(X_val)}")
+    # Split 80/10/10 (Subbab 3.1.2) — partisi uji TIDAK dikirim ke OpenAI;
+    # validation file hanya berisi partisi validasi.
+    X_train, X_val, _X_test, y_train, y_val, _y_test = split_80_10_10(texts, labels, seed=seed)
+    print(f"Training: {len(X_train)}, Validation: {len(X_val)} (test {len(_X_test)} disimpan untuk evaluate_gates.py)")
 
     # Build JSONL
     build_jsonl(X_train, y_train, JSONL_TRAIN)

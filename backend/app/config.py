@@ -55,9 +55,11 @@ class Settings(BaseSettings):
     ADVANCED_USERNAME: str = Field(default="admin", env="ADVANCED_USERNAME")
     ADVANCED_USER_PASSWORD: str = Field(default="admin123", env="ADVANCED_USER_PASSWORD")
 
-    # SOP Gate Classifier
-    SOP_GATE_MODEL: str = Field(default="rule_based", env="SOP_GATE_MODEL")
-    SOP_GATE_THRESHOLD: float = Field(default=0.8, env="SOP_GATE_THRESHOLD")
+    # Gate Classifier Regulasi Perusahaan — default IndoBERT (Tabel 3.11 proposal);
+    # otomatis fallback ke rule_based jika model belum dilatih.
+    # delta(q) = 1[P(klausul | q) >= SOP_GATE_THRESHOLD] (Persamaan 2.17, titik potong 0,5)
+    SOP_GATE_MODEL: str = Field(default="indobert", env="SOP_GATE_MODEL")
+    SOP_GATE_THRESHOLD: float = Field(default=0.5, env="SOP_GATE_THRESHOLD")
     GPT_FINETUNED_MODEL_ID: Optional[str] = Field(default=None, env="GPT_FINETUNED_MODEL_ID")
 
     @property

@@ -7,7 +7,7 @@ Digunakan sebagai pre-filter sebelum RAG pipeline:
   - GPTFineTunedGate: fine-tuned gpt-5.4-mini via OpenAI API
 
 Interface:
-    gate = load_gate(model_type="indobert", threshold=0.8)
+    gate = load_gate(model_type="indobert", threshold=0.5)
     result = gate.predict("klausa SOP disini")
     # result.is_sop → bool
     # result.confidence → float
@@ -210,7 +210,7 @@ class GPTFineTunedGate(BaseSOPGate):
 
 # ── Factory ───────────────────────────────────────────────────────────────────
 
-def load_gate(model_type: str = "rule_based", threshold: float = 0.8) -> BaseSOPGate:
+def load_gate(model_type: str = "indobert", threshold: float = 0.5) -> BaseSOPGate:
     """
     Load the appropriate gate based on model_type config.
     Falls back to RuleBasedGate if requested model not available.

@@ -1394,3 +1394,17 @@ data/evaluation/
 ---
 
 *Last updated: 2026-05-06 (Phase 15 — TODO List & Planning)*
+
+---
+
+## Phase 16: Sinkronisasi Kode ↔ Proposal Final (2026-09-25)
+
+Proposal TA final sudah dikumpulkan. Gap proposal ↔ implementasi dianalisis menyeluruh:
+- **19 perbaikan kode** yang menyelaraskan implementasi ke proposal (hierarchical chunking, weighted RRF, paralelisme agen, Φ/π resolver, gate δ(q), split 80/10/10, evidence trail, fix bug MRR/Hit Rate = 0, dll.)
+- **27 revisi teks** untuk laporan Semhas (termasuk 3 kesalahan faktual proposal: judul PBI 23/6/PBI/2021, jumlah BAB, deskripsi Pasal 160)
+- **Runbook** menjalankan ulang di server: re-ingest, retrain gate, evaluasi & ablation
+
+➡️ Semua detail dan status: **[`SEMHAS_TRACKER.md`](./SEMHAS_TRACKER.md)**. Angka hasil Phase 9–13 tidak valid lagi sampai runbook selesai.
+
+*Last updated: 2026-09-25*
+

@@ -94,6 +94,31 @@ class HybridRetriever:
         return fused[:top_k]
 
     # ------------------------------------------------------------------
+    def retrieve_weighted(
+        self,
+        query: str,
+        alpha: float,
+        top_k: int = 5,
+    ) -> List[Dict]:
+        """
+        Weighted RRF sesuai Persamaan 3.2 proposal — dense dan BM25 SELALU
+        difusikan; alpha (Persamaan 3.1) hanya mengatur bobot keduanya.
+
+            RRF(r) = alpha / (k + rank_bm25(r)) + (1 - alpha) / (k + rank_dense(r))
+
+        Tambahan key 'relevance_score' = RRF(r) * (k + 1), dinormalisasi ke
+        (0, 1] (nilai 1 bila chunk berperingkat 1 di kedua daftar).
+        """
+        fetch_k = top_k * 3
+        dense_results  = self._dense_retrieve(query, fetch_k)
+        sparse_results = self.bm25.retrieve(query, top_k=fetch_k)
+        fused = self._rrf_fusion(dense_results, sparse_results, alpha=alpha)[:top_k]
+        for item in fused:
+            item['relevance_score'] = round(min(1.0, item['score'] * (_RRF_K + 1)), 4)
+            item['alpha'] = alpha
+        return fused
+
+    # ------------------------------------------------------------------
     def _node_to_dict(self, node: RetrievedNode) -> Dict:
         """Konversi RetrievedNode BM25 ke format dict standar."""
         return {

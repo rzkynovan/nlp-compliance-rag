@@ -1,141 +1,140 @@
-# Golden Dataset untuk Evaluasi Multi-Agent Compliance Auditor
-# Berisi klausa dengan expected label yang sudah ditentukan
-# Format: clause_id, text, expected_status, expected_bi_violations, expected_ojk_violations
-
-goldendataset:
-  metadata:
-    name: "SOP Dummy E-Wallet Golden Dataset"
-    version: "1.0"
-    description: "Dataset sintetis untuk evaluasi sistem audit kepatuhan"
-    created: "2026-04-04"
-  
-  samples:
-    # KLAUSA COMPLIANT - Seharusnya deteksi PATUH
-    - id: "COMPLIANT-01"
-      text: "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi."
-      expected_status: "COMPLIANT"
-      expected_bi_status: "COMPLIANT"
-      expected_ojk_status: "COMPLIANT"
-      category: "PRIVACY"
-      notes: "Klausa ini sudah sesuai dengan POJK 22/2023 Pasal 23 ayat 2 tentang persetujuan konsumen"
-    
-    - id: "COMPLIANT-02"
-      text: "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupun at-rest."
-      expected_status: "COMPLIANT"
-      expected_bi_status: "COMPLIANT"
-      expected_ojk_status: "COMPLIANT"
-      category: "SECURITY"
-      notes: "Enkripsi sudah menjadi standar keamanan yang diwajibkan"
-    
-    - id: "COMPLIANT-03"
-      text: "Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas Data Pribadi mereka kapan saja melalui aplikasi."
-      expected_status: "COMPLIANT"
-      expected_bi_status: "COMPLIANT"
-      expected_ojk_status: "COMPLIANT"
-      category: "PRIVACY"
-      notes: "Hak penghapusan data sesuai dengan POJK 22/2023"
-    
-    # KLAUSA NON-COMPLIANT - Seharusnya deteksi PELANGGARAN
-    - id: "NONCOMPLIANT-01"
-      text: "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaikan masalah nasabah."
-      expected_status: "NON_COMPLIANT"
-      expected_bi_status: "NOT_ADDRESSED"
-      expected_ojk_status: "NON_COMPLIANT"
-      expected_violations:
-        - regulator: "OJK"
-          article: "Pasal 75"
-          issue: "SLA penyelesaian pengaduan harus maksimal 20 hari kerja"
-          required: "20 hari kerja"
-          actual: "60 hari kerja"
-      category: "COMPLAINT"
-      notes: "Pelanggaran berat POJK - melebihi batas SLA 3x lipat"
-    
-    - id: "NONCOMPLIANT-02"
-      text: "Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo maksimal hingga Rp 10.000.000 (Sepuluh Juta Rupiah)."
-      expected_status: "NON_COMPLIANT"
-      expected_bi_status: "NON_COMPLIANT"
-      expected_ojk_status: "NOT_ADDRESSED"
-      expected_violations:
-        - regulator: "BI"
-          article: "Pasal 160"
-          issue: "Batas saldo maksimal akun unregistered melebihi ketentuan"
-          required: "Rp 2.000.000"
-          actual: "Rp 10.000.000"
-      category: "LIMITS"
-      notes: "Pelanggaran PBI - batas saldo unregistered 5x lipat dari ketentuan"
-    
-    - id: "NONCOMPLIANT-03"
-      text: "Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk mendorong pertumbuhan GTV perusahaan."
-      expected_status: "NON_COMPLIANT"
-      expected_bi_status: "NON_COMPLIANT"
-      expected_ojk_status: "NON_COMPLIANT"
-      expected_violations:
-        - regulator: "BI"
-          article: "Pasal 160"
-          issue: "Tidak ada batas transaksi masuk bulanan"
-          required: "Rp 20.000.000"
-          actual: "Tidak dibatasi"
-        - regulator: "OJK"
-          article: "Pasal 28"
-          issue: "Perlu batasan untuk perlindungan konsumen"
-          required: "Terdapat batasan"
-          actual: "Tidak ada batasan"
-      category: "LIMITS"
-      notes: "Pelanggaran ganda - BI dan OJK"
-    
-    - id: "NONCOMPLIANT-04"
-      text: "Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin hingga Jumat (09:00 - 15:00 WIB). Keluhan yang masuk di luar jam tersebut akan diabaikan."
-      expected_status: "NON_COMPLIANT"
-      expected_bi_status: "NOT_ADDRESSED"
-      expected_ojk_status: "NON_COMPLIANT"
-      expected_violations:
-        - regulator: "OJK"
-          article: "Pasal 73"
-          issue: "Layanan pengaduan harus tersedia dengan SLA yang jelas"
-          required: "Layanan pengaduan responsif"
-          actual: "Dibatasi jam operasional dan diabaikan di luar jam"
-      category: "COMPLAINT"
-      notes: "Pelanggaran POJK - pembatasan pengaduan konsumen"
-    
-    - id: "NONCOMPLIANT-05"
-      text: "Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan akunnya selama 7 hari tanpa pemberitahuan sebelumnya."
-      expected_status: "NON_COMPLIANT"
-      expected_bi_status: "NOT_ADDRESSED"
-      expected_ojk_status: "NON_COMPLIANT"
-      expected_violations:
-        - regulator: "OJK"
-          article: "Pasal 44"
-          issue: "Klausula baku yang merugikan konsumen"
-          required: "Tidak boleh ada klausula yang merugikan konsumen secara sepihak"
-          actual: "Pembekuan akun tanpa pemberitahuan"
-      category: "CONSUMER_RIGHTS"
-      notes: "Klausula baku yang dilarang - merugikan konsumen"
-    
-    # KLAUSA AMBIGU / NEEDS_REVIEW
-    - id: "AMBIGUOUS-01"
-      text: "Perusahaan berhak mengubah syarat dan ketentuan sewaktu-waktu tanpa pemberitahuan terlebih dahulu."
-      expected_status: "NEEDS_REVIEW"
-      expected_bi_status: "NOT_ADDRESSED"
-      expected_ojk_status: "NON_COMPLIANT"
-      category: "TERMS"
-      notes: "Perlu review lebih lanjut - potensi klausula baku"
-
-confusion_matrix_expected:
-  description: "Expected confusion matrix for golden dataset"
-  classes: ["COMPLIANT", "NON_COMPLIANT", "NOT_ADDRESSED", "NEEDS_REVIEW"]
-  
-evaluation_criteria:
-  primary_metrics:
-    - "Precision for NON_COMPLIANT class"
-    - "Recall for NON_COMPLIANT class"
-    - "F1-Score for NON_COMPLIANT class"
-  
-  importance_weights:
-    NON_COMPLIANT: 2.0
-    COMPLIANT: 1.0
-    NEEDS_REVIEW: 1.0
-    NOT_ADDRESSED: 1.0
-  
-  critical_findings:
-    - "False Negative (NON_COMPLIANT predicted as COMPLIANT) = HIGH RISK"
-    - "False Positive (COMPLIANT predicted as NON_COMPLIANT) = LOW RISK"
+# Golden Dataset — Regulasi Perusahaan Dummy E-Wallet "NusantaraPay"
+# SUMBER TUNGGAL (single source of truth) untuk:
+#   - src/evaluation_runner.py            (evaluasi sistem)
+#   - backend/app/api/v1/evaluation.py    (GET /evaluation/golden-dataset)
+# Proposal Subbab 3.1.4 & Tabel 3.4. Label "Netral" pada Tabel 3.4 = NOT_ADDRESSED.
+# violated_articles juga berfungsi sebagai qrels (anotasi relevansi tingkat pasal)
+# untuk MRR / Hit Rate@K (Subbab 3.5.6).
+metadata:
+  name: Regulasi Perusahaan Dummy E-Wallet NusantaraPay
+  version: '2.0'
+  n_samples: 12
+  label_distribution:
+    NOT_ADDRESSED: 2
+    PARTIALLY_COMPLIANT: 4
+    NON_COMPLIANT: 6
+samples:
+- clause_id: BAB1-01
+  category: GENERAL
+  clause: SOP ini mengatur standar operasional layanan uang elektronik "NusantaraPay" (selanjutnya disebut "Perusahaan").
+  expected_status: NOT_ADDRESSED
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: NOT_ADDRESSED
+  violated_articles: []
+  error_description: Klausa netral — tidak mengatur aspek yang diatur regulasi BI/OJK secara spesifik.
+- clause_id: BAB1-02
+  category: GENERAL
+  clause: SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan.
+  expected_status: NOT_ADDRESSED
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: NOT_ADDRESSED
+  violated_articles: []
+  error_description: Klausa administratif internal — di luar cakupan regulasi BI/OJK.
+- clause_id: BAB2-01
+  category: PRIVACY
+  clause: Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari Nasabah
+    sebelum mengumpulkan dan memproses Data Pribadi. Sebelum persetujuan diberikan, Perusahaan wajib menjelaskan
+    secara tertulis dan/atau lisan mengenai tujuan pengumpulan data, jenis data yang dikumpulkan, serta konsekuensi
+    dari persetujuan Nasabah terkait dengan pemberian data dan/atau informasi Nasabah kepada Perusahaan.
+  expected_status: PARTIALLY_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: PARTIALLY_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 23 Ayat 2
+  error_description: Mencakup sub-elemen (A) consent dan (B) tujuan, namun tidak mencakup (C) standar keamanan,
+    (D) hak akses/koreksi, (E) right to erasure, dan (F) larangan penjualan data.
+- clause_id: BAB2-02
+  category: SECURITY
+  clause: Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupun
+    at-rest.
+  expected_status: PARTIALLY_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: PARTIALLY_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 23 Ayat 2
+  error_description: Hanya mencakup sub-elemen (C) standar keamanan teknis — tidak mencakup (A) consent, (B) tujuan,
+    (D) hak akses/koreksi, (E) right to erasure, (F) larangan penjualan.
+- clause_id: BAB2-03
+  category: PRIVACY
+  clause: Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas Data Pribadi mereka kapan saja
+    melalui aplikasi, dan Perusahaan wajib memprosesnya selambat-lambatnya 3x24 jam.
+  expected_status: PARTIALLY_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: PARTIALLY_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 23 Ayat 2
+  error_description: Hanya mencakup sub-elemen (E) right to erasure — tidak mencakup (A) consent, (B) tujuan, (C)
+    keamanan, (D) hak akses/koreksi, (F) larangan penjualan.
+- clause_id: BAB2-04
+  category: PRIVACY
+  clause: Data Pribadi Nasabah tidak akan pernah dijual kepada pihak ketiga mana pun tanpa izin eksplisit yang terpisah.
+  expected_status: PARTIALLY_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: PARTIALLY_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 23 Ayat 2
+  error_description: Hanya mencakup sub-elemen (F) larangan penjualan — tidak mencakup (A) consent, (B) tujuan,
+    (C) keamanan, (D) hak akses/koreksi, (E) right to erasure.
+- clause_id: BAB3-01
+  category: COMPLAINT
+  clause: Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin hingga
+    Jumat (10:00 - 15:00 WIB). Keluhan yang masuk di luar jam tersebut akan diabaikan.
+  expected_status: NON_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: NON_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 69 Ayat 3
+  error_description: Layanan pengaduan hanya 5 jam/hari (10:00–15:00) dan ditolak di luar jam tersebut. POJK Pasal
+    69 Ayat 3 mewajibkan ketersediaan layanan pengaduan yang memadai.
+- clause_id: BAB3-02
+  category: COMPLAINT
+  clause: Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaikan
+    masalah nasabah dan memberikan kompensasi (jika ada).
+  expected_status: NON_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: NON_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 75 Ayat 1
+  error_description: 'SLA 60 hari kerja jauh melebihi batas maksimal POJK: 20 hari kerja (dengan perpanjangan 10
+    hari dalam kondisi tertentu).'
+- clause_id: BAB3-03
+  category: CONSUMER_RIGHTS
+  clause: Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan sementara akunnya
+    selama 7 hari tanpa pemberitahuan sebelumnya untuk "investigasi keamanan".
+  expected_status: NON_COMPLIANT
+  expected_bi: NOT_ADDRESSED
+  expected_ojk: NON_COMPLIANT
+  violated_articles:
+  - POJK No. 22/2023 Pasal 46 Ayat 2
+  error_description: Pembekuan akun otomatis tanpa pemberitahuan berdasarkan rating — klausula sepihak yang merugikan
+    konsumen, melanggar Pasal 46 Ayat 2 POJK 22/2023.
+- clause_id: BAB4-01
+  category: LIMITS
+  clause: 'Akun Unverified (Belum KYC): Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo maksimal
+    hingga Rp 10.000.000 (Sepuluh Juta Rupiah).'
+  expected_status: NON_COMPLIANT
+  expected_bi: NON_COMPLIANT
+  expected_ojk: NOT_ADDRESSED
+  violated_articles:
+  - PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1
+  error_description: 'Batas saldo unverified Rp 10.000.000 melebihi batas maksimal PBI: Rp 2.000.000.'
+- clause_id: BAB4-02
+  category: LIMITS
+  clause: 'Akun Verified (Sudah KYC): Nasabah yang sudah diverifikasi identitasnya dapat menyimpan saldo maksimal
+    Rp 500.000.000 (Lima Ratus Juta Rupiah).'
+  expected_status: NON_COMPLIANT
+  expected_bi: NON_COMPLIANT
+  expected_ojk: NOT_ADDRESSED
+  violated_articles:
+  - PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1
+  error_description: 'Batas saldo verified Rp 500.000.000 melebihi batas maksimal PBI: Rp 10.000.000.'
+- clause_id: BAB4-03
+  category: LIMITS
+  clause: Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk mendorong
+    pertumbuhan Gross Transaction Value (GTV) perusahaan.
+  expected_status: NON_COMPLIANT
+  expected_bi: NON_COMPLIANT
+  expected_ojk: NOT_ADDRESSED
+  violated_articles:
+  - PBI No. 23/6/PBI/2021 Pasal 160 Ayat 2
+  error_description: Tidak ada batasan transaksi masuk — melanggar PBI yang menetapkan batas Rp 20.000.000/bulan.

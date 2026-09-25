@@ -65,6 +65,12 @@ class AuditResponse(BaseModel):
     is_sop_clause: bool = Field(default=True, description="Whether input was classified as SOP clause by gate")
     gate_confidence: float = Field(default=1.0, description="Gate classifier confidence score")
     gate_model: str = Field(default="rule_based", description="Gate model used")
+    gate_decision: str = Field(default="REGULATION_CLAUSE_VALID", description="REGULATION_CLAUSE_VALID | NOT_REGULATION_CLAUSE")
+
+    # Struktur output Subbab 3.3.3 proposal
+    evidence_trail: List[dict] = Field(default_factory=list, description="Rujukan pasal Top-K (regulator, dokumen, pasal, relevance_score)")
+    analysis_mode: Optional[str] = Field(None, description="multi_agent_rag | llm_only | gate_rejected | noise_filtered | unclear_text | ...")
+    retrieval_mode: Optional[str] = Field(None, description="hybrid | dense | none")
 
 
 class AuditHistoryItem(BaseModel):

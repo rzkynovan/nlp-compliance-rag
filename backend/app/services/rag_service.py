@@ -132,9 +132,31 @@ class RAGAuditService:
             Dict respons jika query adalah greeting/out-of-scope, None jika valid.
         """
         try:
-            from retrieval.query_analyzer import QueryAnalyzer, QueryType, is_noise_clause
+            from retrieval.query_analyzer import (
+                QueryAnalyzer, QueryType, is_noise_clause, is_garbled_text,
+            )
             qa = QueryAnalyzer()
             intent = qa.analyze(clause)
+
+            # Teks rusak/tidak terbaca → UNCLEAR (Tabel 3.6: "teks tidak jelas atau tidak lengkap")
+            if is_garbled_text(clause):
+                return {
+                    "final_status": "UNCLEAR",
+                    "overall_confidence": 1.0,
+                    "risk_score": 0.0,
+                    "bi_verdict": None,
+                    "ojk_verdict": None,
+                    "violations": [],
+                    "recommendations": [],
+                    "evidence_trail": [],
+                    "analysis_mode": "unclear_text",
+                    "retrieval_mode": "none",
+                    "summary": (
+                        "Teks klausa rusak atau tidak dapat dibaca (misalnya karakter "
+                        "ter-spacing hasil ekstraksi PDF) sehingga tidak dapat diklasifikasikan."
+                    ),
+                    "query_type": "unclear",
+                }
 
             # Klausul header/disclaimer/cover page — skip audit
             if is_noise_clause(clause):
@@ -222,12 +244,19 @@ class RAGAuditService:
         return self._gate
 
     def _run_gate(self, clause: str) -> dict:
+        """
+        Gate Classifier Regulasi Perusahaan — Persamaan 2.17 proposal:
+            delta(q) = 1[g_hat(q) >= threshold]   (threshold default 0,5)
+        dengan g_hat(q) = probabilitas kelas "klausul regulasi perusahaan".
+        """
         try:
             gate = self._get_gate()
             result = gate.predict(clause)
+            p_clause = result.confidence if result.is_sop else 1.0 - result.confidence
             return {
-                "is_sop": result.is_sop or result.confidence < settings.SOP_GATE_THRESHOLD,
+                "is_sop": p_clause >= settings.SOP_GATE_THRESHOLD,
                 "confidence": result.confidence,
+                "p_clause": round(p_clause, 4),
                 "model": result.model,
             }
         except Exception as e:
@@ -237,7 +266,7 @@ class RAGAuditService:
     def _build_not_sop_response(self, clause: str, request_id: str, gate_result: dict) -> dict:
         from app.models.audit import ComplianceStatus
         return {
-            "final_status": "NOT_SOP_CLAUSE",
+            "final_status": "NOT_REGULATION_CLAUSE",
             "overall_confidence": gate_result["confidence"],
             "risk_score": 0.0,
             "bi_verdict": None,
@@ -249,6 +278,7 @@ class RAGAuditService:
             "retrieval_mode": "none",
             "is_sop_clause": False,
             "gate_confidence": gate_result["confidence"],
+            "gate_decision": "NOT_REGULATION_CLAUSE",
             "gate_model": gate_result["model"],
             "summary": (
                 "Input tidak dikenali sebagai klausa SOP atau T&C layanan keuangan. "
@@ -368,15 +398,14 @@ class RAGAuditService:
         result["from_cache"] = False
 
         # Deteksi mode retrieval dari artikel yang dikembalikan agent
-        _sources = set()
-        for key in ("bi_verdict", "ojk_verdict"):
-            v = result.get(key)
-            if isinstance(v, dict):
-                src = v.get("retrieval_source", "dense")
-                _sources.add(src)
-            elif hasattr(v, "retrieved_context"):
-                _sources.add("dense")
-        result["retrieval_mode"] = "hybrid" if "hybrid" in _sources or "bm25" in _sources else "dense"
+        if "retrieval_mode" not in result:
+            _sources = {
+                v.get("retrieval_mode", "dense")
+                for v in (result.get("bi_verdict"), result.get("ojk_verdict"))
+                if isinstance(v, dict)
+            }
+            result["retrieval_mode"] = "hybrid" if "hybrid" in _sources else "dense"
+        result.setdefault("gate_decision", "REGULATION_CLAUSE_VALID")
         
         # Cache the result
         if use_cache and settings.ENABLE_CACHE:
@@ -416,8 +445,8 @@ class RAGAuditService:
             "final_status": result.final_verdict.final_status if result.final_verdict else "UNCLEAR",
             "overall_confidence": result.final_verdict.overall_confidence if result.final_verdict else 0.5,
             "risk_score": self._calculate_risk_score(result),
-            "bi_verdict": result.bi_verdict if regulator in ["all", "BI"] else None,
-            "ojk_verdict": result.ojk_verdict if regulator in ["all", "OJK"] else None,
+            "bi_verdict": result.bi_verdict or None,
+            "ojk_verdict": result.ojk_verdict or None,
             "violations": self._extract_violations(result),
             "recommendations": result.final_verdict.recommendations if result.final_verdict else [],
             "evidence_trail": self._build_evidence_trail(result),
@@ -446,8 +475,9 @@ class RAGAuditService:
                     "role": "system",
                     "content": """Anda adalah asisten audit kepatuhan regulasi untuk sistem pembayaran digital di Indonesia.
                     Anda memiliki pengetahuan tentang regulasi BI dan OJK terkait e-wallet, termasuk:
-                    - PBI No. 23/6/2021 tentang Penyelenggaraan Aktvitas Pembayaran
-                    - POJK No. 22/POJK.05/2023 tentang Penyelenggaraan Aktivitas Jasa Keuangan Digital
+                    - PBI No. 22/23/PBI/2020 tentang Sistem Pembayaran
+                    - PBI No. 23/6/PBI/2021 tentang Penyedia Jasa Pembayaran
+                    - POJK No. 22 Tahun 2023 tentang Pelindungan Konsumen dan Masyarakat di Sektor Jasa Keuangan
                     
                     Berikan analisis yang akurat berdasarkan pengetahuan regulasi Anda."""
                 },
@@ -578,19 +608,12 @@ RESPON DALAM FORMAT JSON:
         }
     
     def _calculate_risk_score(self, result) -> str:
-        """Calculate risk score from audit result."""
+        """
+        Risk score kategorikal (LOW/MEDIUM/HIGH/CRITICAL) — satu sumber:
+        ConflictResolverAgent._calculate_risk (Subbab 3.2.4: agregat heuristik).
+        """
         if result.final_verdict:
-            violations = len(result.final_verdict.regulatory_conflicts)
-            status = result.final_verdict.final_status
-            
-            if status == "NON_COMPLIANT" or violations >= 2:
-                return "HIGH"
-            elif status == "PARTIALLY_COMPLIANT" or violations == 1:
-                return "MEDIUM"
-            elif status == "UNCLEAR":
-                return "MEDIUM"
-            else:
-                return "LOW"
+            return result.final_verdict.risk_score
         return "LOW"
     
     def _extract_violations(self, result) -> List[str]:
@@ -602,25 +625,24 @@ RESPON DALAM FORMAT JSON:
         return violations
     
     def _build_evidence_trail(self, result) -> List[Dict]:
-        """Build evidence trail from audit result."""
+        """
+        Evidence trail (Subbab 3.3.3): rujukan chunk pasal regulasi Top-K yang
+        menjadi dasar verdik, beserta posisi hierarki dan relevance_score.
+        """
         evidence = []
-        
-        if result.bi_verdict:
-            evidence.append({
-                "agent": "BI_SPECIALIST",
-                "status": result.bi_verdict.get("verdict", "UNKNOWN"),
-                "confidence": result.bi_verdict.get("confidence_score", 0),
-                "reasoning": result.bi_verdict.get("reasoning_trace", "")[:200]
-            })
-        
-        if result.ojk_verdict:
-            evidence.append({
-                "agent": "OJK_SPECIALIST",
-                "status": result.ojk_verdict.get("verdict", "UNKNOWN"),
-                "confidence": result.ojk_verdict.get("confidence_score", 0),
-                "reasoning": result.ojk_verdict.get("reasoning_trace", "")[:200]
-            })
-        
+        for verdict in (result.bi_verdict, result.ojk_verdict):
+            if not verdict:
+                continue
+            for e in verdict.get("evidence", []) or []:
+                evidence.append({
+                    "agent":           verdict.get("agent_id", ""),
+                    "regulator":       e.get("regulator", ""),
+                    "document":        e.get("regulation", ""),
+                    "bab":             e.get("bab", ""),
+                    "pasal":           e.get("article", ""),
+                    "relevance_score": e.get("relevance_score", 0.0),
+                    "rank":            e.get("rank"),
+                })
         return evidence
 
 

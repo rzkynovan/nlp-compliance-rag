@@ -5,6 +5,8 @@ Mendefinisikan interface standar untuk semua agent specialist
 yang akan mewarisi class ini.
 """
 
+import os
+import re
 from abc import ABC, abstractmethod
 from typing import Dict, List, Optional
 from pydantic import BaseModel
@@ -12,10 +14,29 @@ from enum import Enum
 
 
 class ComplianceStatus(str, Enum):
+    """Enam kelas kepatuhan (Tabel 3.6 proposal)."""
     COMPLIANT = "COMPLIANT"
     NON_COMPLIANT = "NON_COMPLIANT"
-    NOT_ADDRESSED = "NOT_ADDRESSED"
+    PARTIALLY_COMPLIANT = "PARTIALLY_COMPLIANT"
     NEEDS_REVIEW = "NEEDS_REVIEW"
+    NOT_ADDRESSED = "NOT_ADDRESSED"
+    UNCLEAR = "UNCLEAR"
+
+
+VALID_STATUSES = {s.value for s in ComplianceStatus}
+
+# Bobot sparse boost alpha (Persamaan 3.1 proposal)
+SPARSE_BOOST_SPECIFIC = 0.7   # klausul menyebut identifikasi regulasi (PBI/POJK/Pasal)
+SPARSE_BOOST_SEMANTIC = 0.3   # klausul konseptual
+
+# Strategi retrieval untuk ablation (env RETRIEVAL_STRATEGY):
+#   query_aware (default, proposal Pers. 3.1–3.2) | rrf_equal (alpha=0,5) | dense (tanpa BM25)
+RETRIEVAL_STRATEGIES = ("query_aware", "rrf_equal", "dense")
+
+
+def retrieval_strategy() -> str:
+    value = os.getenv("RETRIEVAL_STRATEGY", "query_aware").strip().lower()
+    return value if value in RETRIEVAL_STRATEGIES else "query_aware"
 
 
 class RiskLevel(str, Enum):
@@ -32,6 +53,9 @@ class ViolatedArticle(BaseModel):
     required_value: Optional[str] = None
     actual_value: Optional[str] = None
     context: Optional[str] = None
+    # True jika pasal yang dikutip LLM ada di Top-K chunk hasil retrieval
+    # (evidence trail ⊆ Top-K(R, q), Subbab 3.2.4). None = tidak dapat diperiksa.
+    grounded: Optional[bool] = None
 
 
 class AgentVerdict(BaseModel):
@@ -48,6 +72,10 @@ class AgentVerdict(BaseModel):
     checklist_topic: Optional[str] = None
     checklist_covered: List[str] = []
     missing_elements: List[str] = []
+    # Evidence trail — chunk Top-K beserta posisi hierarki & relevance_score (Subbab 3.3.3)
+    evidence: List[Dict] = []
+    retrieval_mode: str = "dense"            # "hybrid" (RRF berbobot) | "dense" (tanpa BM25 index)
+    sparse_boost: Optional[float] = None     # alpha yang dipakai (Persamaan 3.1)
 
 
 class BaseAgent(ABC):
@@ -75,14 +103,100 @@ class BaseAgent(ABC):
         """
         pass
     
-    @abstractmethod
+    def select_sparse_boost(self, query: str) -> float:
+        """Persamaan 3.1: alpha = 0,7 jika ada identifikasi regulasi, 0,3 jika tidak."""
+        if retrieval_strategy() == "rrf_equal":
+            return 0.5
+        if self.query_analyzer is not None and self.query_analyzer.analyze(query).is_specific:
+            return SPARSE_BOOST_SPECIFIC
+        return SPARSE_BOOST_SEMANTIC
+
     def retrieve_relevant_articles(self, query: str, top_k: int = 5) -> List[Dict]:
         """
-        Retrieve top-k most relevant articles from vector database.
-        Jika hybrid_retriever tersedia, gunakan RRF fusion (dense + BM25).
-        Mengembalikan list of dicts dengan: content, metadata, score.
+        Retrieve Top-K(R_regulator, q).
+
+        Jika BM25 index tersedia → weighted RRF (Persamaan 3.2) SELALU dijalankan,
+        dengan alpha dari select_sparse_boost(). Jika tidak → dense-only.
+        Mengembalikan list of dicts: content, metadata, score, relevance_score,
+        retrieval_source ("hybrid" | "dense"), found_in, alpha.
         """
-        pass
+        if self.index is None:
+            return []
+
+        if self.hybrid_retriever is not None and retrieval_strategy() != "dense":
+            alpha = self.select_sparse_boost(query)
+            results = self.hybrid_retriever.retrieve_weighted(query, alpha=alpha, top_k=top_k)
+            return [
+                {
+                    "content":          r["content"],
+                    "metadata":         r["metadata"],
+                    "score":            r["score"],
+                    "relevance_score":  r.get("relevance_score", 0.0),
+                    "retrieval_source": "hybrid",
+                    "found_in":         r.get("source", "hybrid"),
+                    "alpha":            alpha,
+                }
+                for r in results
+            ]
+
+        retriever = self.index.as_retriever(similarity_top_k=top_k)
+        nodes = retriever.retrieve(query)
+        results = []
+        for node in nodes:
+            score = float(node.score) if getattr(node, "score", None) is not None else 0.0
+            results.append({
+                "content":          node.get_content(),
+                "metadata":         node.metadata,
+                "score":            score,
+                "relevance_score":  round(max(0.0, min(1.0, score)), 4),
+                "retrieval_source": "dense",
+                "found_in":         "dense",
+                "alpha":            None,
+            })
+        return results
+
+    @staticmethod
+    def build_evidence(articles: List[Dict], snippet_chars: int = 400) -> List[Dict]:
+        """Bangun evidence trail dari chunk Top-K (struktur Subbab 3.3.3)."""
+        evidence = []
+        for rank, a in enumerate(articles, start=1):
+            md = a.get("metadata", {}) or {}
+            pasal = md.get("pasal") or (f"Pasal {md['pasal_number']}" if md.get("pasal_number") else "")
+            ayat = md.get("ayat") or (f"Ayat {md['ayat_number']}" if md.get("ayat_number") else "")
+            evidence.append({
+                "rank":            rank,
+                "regulator":       md.get("regulation_type") or md.get("regulator", ""),
+                "regulation":      md.get("document") or md.get("regulation_code", ""),
+                "bab":             md.get("bab", ""),
+                "bagian":          md.get("bagian", ""),
+                "article":         " ".join(x for x in (pasal, ayat) if x),
+                "pasal_number":    str(md.get("pasal_number", "") or ""),
+                "article_text":    (a.get("content") or "")[:snippet_chars],
+                "relevance_score": float(a.get("relevance_score", 0.0) or 0.0),
+                "found_in":        a.get("found_in", a.get("retrieval_source", "")),
+            })
+        return evidence
+
+    @staticmethod
+    def verify_citations(violations: List["ViolatedArticle"], evidence: List[Dict]) -> List["ViolatedArticle"]:
+        """
+        Tandai setiap pelanggaran: apakah nomor pasal yang dikutip LLM ada di
+        Top-K chunk hasil retrieval. Pasal yang tidak ada → grounded=False
+        (indikasi halusinasi sitasi).
+        """
+        retrieved = {e["pasal_number"] for e in evidence if e.get("pasal_number")}
+        for v in violations:
+            m = re.search(r"Pasal\s+(\d+[A-Z]?)", v.article or "", re.IGNORECASE)
+            if not m or not retrieved:
+                v.grounded = None
+            else:
+                v.grounded = m.group(1) in retrieved
+        return violations
+
+    @staticmethod
+    def normalize_status(status) -> str:
+        s = str(status or "").upper().replace("-", "_").strip()
+        return s if s in VALID_STATUSES else "NEEDS_REVIEW"
     
     @abstractmethod
     def analyze(self, clause: str, context: Optional[Dict] = None) -> AgentVerdict:

@@ -21,6 +21,7 @@ Usage:
 import os
 import sys
 import json
+import re
 import time
 import argparse
 import yaml
@@ -34,158 +35,16 @@ _SRC  = _ROOT / "src"
 if str(_SRC) not in sys.path:
     sys.path.insert(0, str(_SRC))
 
-# ── Ground truth dari SOP Dummy + POJK/PBI labels ────────────────────────────
-# Derived dari SOP_Dummy_EWallet_Palsu.md + proposal Lampiran A
-GROUND_TRUTH = [
-    {
-        "clause_id": "BAB1-01",
-        "clause": (
-            "SOP ini mengatur standar operasional layanan uang elektronik "
-            "\"NusantaraPay\" (selanjutnya disebut \"Perusahaan\")."
-        ),
-        "expected_status": "NOT_ADDRESSED",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "NOT_ADDRESSED",
-        "category": "GENERAL",
-        "violated_articles": [],
-    },
-    {
-        "clause_id": "BAB1-02",
-        "clause": "SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan.",
-        "expected_status": "NOT_ADDRESSED",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "NOT_ADDRESSED",
-        "category": "GENERAL",
-        "violated_articles": [],
-    },
-    {
-        "clause_id": "BAB2-01",
-        "clause": (
-            "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik "
-            "(explicit consent) dari Nasabah sebelum mengumpulkan dan memproses Data Pribadi. "
-            "Sebelum persetujuan diberikan, Perusahaan wajib menjelaskan secara tertulis "
-            "dan/atau lisan mengenai tujuan pengumpulan data, jenis data yang dikumpulkan, "
-            "serta konsekuensi dari persetujuan Nasabah terkait dengan pemberian data "
-            "dan/atau informasi Nasabah kepada Perusahaan."
-        ),
-        "expected_status": "PARTIALLY_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "PARTIALLY_COMPLIANT",
-        "category": "PRIVACY",
-        "violated_articles": ["POJK No. 22/2023 Pasal 23 Ayat 2"],
-    },
-    {
-        "clause_id": "BAB2-02",
-        "clause": (
-            "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 "
-            "baik saat in-transit maupun at-rest."
-        ),
-        "expected_status": "PARTIALLY_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "PARTIALLY_COMPLIANT",
-        "category": "SECURITY",
-        "violated_articles": ["POJK No. 22/2023 Pasal 23 Ayat 2"],
-    },
-    {
-        "clause_id": "BAB2-03",
-        "clause": (
-            "Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas "
-            "Data Pribadi mereka kapan saja melalui aplikasi, dan Perusahaan wajib "
-            "memprosesnya selambat-lambatnya 3x24 jam."
-        ),
-        "expected_status": "PARTIALLY_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "PARTIALLY_COMPLIANT",
-        "category": "PRIVACY",
-        "violated_articles": ["POJK No. 22/2023 Pasal 23 Ayat 2"],
-    },
-    {
-        "clause_id": "BAB2-04",
-        "clause": (
-            "Data Pribadi Nasabah tidak akan pernah dijual kepada pihak ketiga mana pun "
-            "tanpa izin eksplisit yang terpisah."
-        ),
-        "expected_status": "PARTIALLY_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "PARTIALLY_COMPLIANT",
-        "category": "PRIVACY",
-        "violated_articles": ["POJK No. 22/2023 Pasal 23 Ayat 2"],
-    },
-    {
-        "clause_id": "BAB3-01",
-        "clause": (
-            "Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam "
-            "operasional kerja, Senin hingga Jumat (10:00 - 15:00 WIB). Keluhan yang masuk "
-            "di luar jam tersebut akan diabaikan."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "NON_COMPLIANT",
-        "category": "COMPLAINT",
-        "violated_articles": ["POJK No. 22/2023 Pasal 69 Ayat 3"],
-    },
-    {
-        "clause_id": "BAB3-02",
-        "clause": (
-            "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan "
-            "diterima untuk menyelesaikan masalah nasabah dan memberikan kompensasi (jika ada)."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "NON_COMPLIANT",
-        "category": "COMPLAINT",
-        "violated_articles": ["POJK No. 22/2023 Pasal 75 Ayat 1"],
-    },
-    {
-        "clause_id": "BAB3-03",
-        "clause": (
-            "Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan "
-            "dibekukan sementara akunnya selama 7 hari tanpa pemberitahuan sebelumnya "
-            "untuk \"investigasi keamanan\"."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NOT_ADDRESSED",
-        "expected_ojk": "NON_COMPLIANT",
-        "category": "CONSUMER_RIGHTS",
-        "violated_articles": ["POJK No. 22/2023 Pasal 46 Ayat 2"],
-    },
-    {
-        "clause_id": "BAB4-01",
-        "clause": (
-            "Akun Unverified (Belum KYC): Nasabah yang belum mengunggah KTP (Unregistered) "
-            "dapat menyimpan saldo maksimal hingga Rp 10.000.000 (Sepuluh Juta Rupiah)."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NON_COMPLIANT",
-        "expected_ojk": "NOT_ADDRESSED",
-        "category": "LIMITS",
-        "violated_articles": ["PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"],
-    },
-    {
-        "clause_id": "BAB4-02",
-        "clause": (
-            "Akun Verified (Sudah KYC): Nasabah yang sudah diverifikasi identitasnya "
-            "dapat menyimpan saldo maksimal Rp 500.000.000 (Lima Ratus Juta Rupiah)."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NON_COMPLIANT",
-        "expected_ojk": "NOT_ADDRESSED",
-        "category": "LIMITS",
-        "violated_articles": ["PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"],
-    },
-    {
-        "clause_id": "BAB4-03",
-        "clause": (
-            "Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna "
-            "tidak dibatasi untuk mendorong pertumbuhan Gross Transaction Value (GTV) perusahaan."
-        ),
-        "expected_status": "NON_COMPLIANT",
-        "expected_bi":  "NON_COMPLIANT",
-        "expected_ojk": "NOT_ADDRESSED",
-        "category": "LIMITS",
-        "violated_articles": ["PBI No. 23/6/PBI/2021 Pasal 160 Ayat 2"],
-    },
-]
+# ── Ground truth: sumber tunggal data/golden_dataset.yaml ─────────────────────
+GOLDEN_PATH = _ROOT / "data" / "golden_dataset.yaml"
+
+
+def load_golden_dataset(path: Path = GOLDEN_PATH) -> List[Dict]:
+    with open(path, encoding="utf-8") as f:
+        return yaml.safe_load(f)["samples"]
+
+
+GROUND_TRUTH = load_golden_dataset()
 
 
 # ── Normalisasi status ────────────────────────────────────────────────────────
@@ -205,19 +64,49 @@ def _normalize(status: str) -> str:
 
 # ── Metrik ────────────────────────────────────────────────────────────────────
 
-def compute_metrics(results: List[Dict]) -> Dict:
+SIX_CLASSES = [
+    "COMPLIANT", "NON_COMPLIANT", "PARTIALLY_COMPLIANT",
+    "NEEDS_REVIEW", "NOT_ADDRESSED", "UNCLEAR",
+]
+
+
+def _normalize6(status: str) -> str:
+    """Normalisasi tanpa peleburan kelas — enam kelas Tabel 3.6."""
+    s = str(status).upper().replace("-", "_").strip()
+    return s if s in SIX_CLASSES else "UNCLEAR"
+
+
+def wilson_ci(successes: int, n: int, z: float = 1.96) -> Tuple[float, float]:
+    """Interval kepercayaan Wilson 95% untuk proporsi (accuracy / recall)."""
+    if n == 0:
+        return (0.0, 0.0)
+    p = successes / n
+    denom = 1 + z * z / n
+    centre = (p + z * z / (2 * n)) / denom
+    half = z * ((p * (1 - p) / n + z * z / (4 * n * n)) ** 0.5) / denom
+    return (round(max(0.0, centre - half), 4), round(min(1.0, centre + half), 4))
+
+
+def compute_metrics(
+    results: List[Dict],
+    classes: List[str] = None,
+    pred_key: str = "predicted_norm",
+    exp_key: str = "expected_norm",
+) -> Dict:
     """
     Hitung Precision, Recall, F1 per kelas + Macro + detail per klausa.
-    Kelas positif utama: NON_COMPLIANT (termasuk PARTIALLY_COMPLIANT sebagai partial TP).
+    Default: skema 4 kelas lama (NEEDS_REVIEW→NON_COMPLIANT, UNCLEAR→NOT_ADDRESSED)
+    agar sebanding dengan hasil sebelumnya. Untuk 6 kelas proposal gunakan
+    classes=SIX_CLASSES, pred_key="predicted_6", exp_key="expected_6".
     """
-    classes = ["COMPLIANT", "NON_COMPLIANT", "PARTIALLY_COMPLIANT", "NOT_ADDRESSED"]
+    classes = classes or ["COMPLIANT", "NON_COMPLIANT", "PARTIALLY_COMPLIANT", "NOT_ADDRESSED"]
     tp = {c: 0 for c in classes}
     fp = {c: 0 for c in classes}
     fn = {c: 0 for c in classes}
 
     for r in results:
-        pred = r["predicted_norm"]
-        exp  = r["expected_norm"]
+        pred = r[pred_key]
+        exp  = r[exp_key]
         for c in classes:
             if pred == c and exp == c:
                 tp[c] += 1
@@ -241,18 +130,20 @@ def compute_metrics(results: List[Dict]) -> Dict:
     macro_f = sum(per_class[c]["f1"]        for c in active) / len(active) if active else 0
 
     # Accuracy
-    correct = sum(1 for r in results if r["predicted_norm"] == r["expected_norm"])
+    correct = sum(1 for r in results if r[pred_key] == r[exp_key])
     accuracy = correct / len(results) if results else 0
 
     # NON_COMPLIANT detection: treat PARTIALLY_COMPLIANT pred as partial
     # TP_nc = predicted NON_COMPLIANT or PARTIALLY_COMPLIANT when expected is NON_COMPLIANT
-    nc_expected = [r for r in results if r["expected_norm"] == "NON_COMPLIANT"]
+    nc_expected = [r for r in results if r[exp_key] == "NON_COMPLIANT"]
     nc_detected = sum(1 for r in nc_expected
-                      if r["predicted_norm"] in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT"))
+                      if r[pred_key] in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT"))
     recall_nc_broad = nc_detected / len(nc_expected) if nc_expected else 0
 
     return {
+        "classes": classes,
         "accuracy": round(accuracy, 4),
+        "accuracy_ci95_wilson": wilson_ci(correct, len(results)),
         "macro_precision": round(macro_p, 4),
         "macro_recall":    round(macro_r, 4),
         "macro_f1":        round(macro_f, 4),
@@ -264,45 +155,187 @@ def compute_metrics(results: List[Dict]) -> Dict:
     }
 
 
+_QREL_RE = re.compile(
+    r"(?P<reg>PBI|POJK)\D*?(?P<num>\d+(?:/\d+)?)(?:/PBI)?(?:/(?P<year>\d{4}))?.*?Pasal\s+(?P<pasal>\d+[A-Z]?)",
+    re.IGNORECASE,
+)
+
+
+def parse_qrel(article: str) -> Dict:
+    """
+    "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1" → {"agent": "BI", "reg_num": "23/6", "pasal": "160"}
+    "POJK No. 22/2023 Pasal 23 Ayat 2"        → {"agent": "OJK", "reg_num": "22", "pasal": "23"}
+    """
+    m = _QREL_RE.search(article or "")
+    if not m:
+        return {}
+    reg = m.group("reg").upper()
+    num = m.group("num")
+    if reg == "POJK":
+        num = num.split("/")[0]
+    return {"agent": "BI" if reg == "PBI" else "OJK", "reg_num": num, "pasal": m.group("pasal")}
+
+
+def _is_relevant(evidence: Dict, qrel: Dict) -> bool:
+    if str(evidence.get("pasal_number", "")) != qrel["pasal"]:
+        return False
+    regulation = str(evidence.get("regulation", "")).replace(" ", "")
+    # Jika metadata regulasi kosong (ingest lama), cukup cocokkan nomor pasal
+    return not regulation or qrel["reg_num"] in regulation
+
+
 def compute_mrr_hitrate(results: List[Dict], k_values: List[int] = [3, 5]) -> Dict:
     """
-    MRR dan HitRate@K berdasarkan apakah artikel yang benar muncul
-    di retrieved_articles setiap klausa.
+    MRR (Persamaan 2.32) dan Hit Rate@K (Persamaan 2.33) berbasis qrels tingkat
+    pasal: violated_articles golden dataset dianotasi manual sebagai pasal
+    relevan. Relevansi dicek dari METADATA chunk (pasal_number + kode regulasi)
+    pada Top-K milik agen regulator yang bersangkutan, bukan string matching teks.
+    Klausul tanpa qrels (NOT_ADDRESSED) tidak diikutkan.
     """
-    mrr_scores = []
+    rr_scores = []
     hit_at_k = {k: 0 for k in k_values}
+    per_clause = []
 
     for r in results:
-        expected_articles = r.get("expected_violated_articles", [])
-        retrieved = r.get("retrieved_articles", [])
-
-        if not expected_articles:
+        qrels = [q for q in (parse_qrel(a) for a in r.get("expected_violated_articles", [])) if q]
+        if not qrels:
             continue
 
-        # Cari rank pertama artikel yang relevan
         rank = None
-        for i, art in enumerate(retrieved, start=1):
-            for exp_art in expected_articles:
-                # Fuzzy match: cek substring pasal number
-                if any(token in art for token in exp_art.split() if len(token) > 3):
-                    rank = i
+        for q in qrels:
+            evidence = r.get("evidence_bi" if q["agent"] == "BI" else "evidence_ojk", [])
+            for e in evidence:
+                if _is_relevant(e, q):
+                    if rank is None or e["rank"] < rank:
+                        rank = e["rank"]
                     break
-            if rank:
-                break
 
-        if rank:
-            mrr_scores.append(1.0 / rank)
-            for k in k_values:
-                if rank <= k:
-                    hit_at_k[k] += 1
-        else:
-            mrr_scores.append(0.0)
+        rr = 1.0 / rank if rank else 0.0
+        rr_scores.append(rr)
+        for k in k_values:
+            if rank and rank <= k:
+                hit_at_k[k] += 1
+        per_clause.append({"clause_id": r["clause_id"], "first_relevant_rank": rank, "rr": round(rr, 4)})
 
-    n = len(mrr_scores)
-    mrr = sum(mrr_scores) / n if n > 0 else 0.0
+    n = len(rr_scores)
+    mrr = sum(rr_scores) / n if n > 0 else 0.0
     hit_rates = {f"hit_rate_at_{k}": round(hit_at_k[k] / n, 4) if n > 0 else 0.0
                  for k in k_values}
-    return {"mrr": round(mrr, 4), **hit_rates, "evaluated_clauses": n}
+    return {"mrr": round(mrr, 4), **hit_rates, "evaluated_clauses": n, "per_clause": per_clause}
+
+
+def compute_citation_grounding(results: List[Dict]) -> Dict:
+    """Proporsi pasal yang dikutip LLM di violations yang ada di Top-K (evidence trail)."""
+    grounded = checked = 0
+    for r in results:
+        for g in r.get("citation_grounded", []):
+            if g is None:
+                continue
+            checked += 1
+            grounded += int(bool(g))
+    return {
+        "citation_grounding_rate": round(grounded / checked, 4) if checked else None,
+        "citations_checked": checked,
+    }
+
+
+def check_retrieval_ready(coordinator) -> Dict:
+    """
+    Evaluasi RAG wajib berjalan dengan basis pengetahuan terisi. Jika index
+    ChromaDB gagal dimuat, agen akan diam-diam mengembalikan NOT_ADDRESSED
+    tanpa retrieval — hasil semacam itu bukan evaluasi RAG, jadi hentikan.
+    """
+    from agents.base_agent import retrieval_strategy
+    setup = {"strategy": retrieval_strategy()}
+    for agent in (coordinator.bi_agent, coordinator.ojk_agent):
+        if agent.index is None:
+            raise RuntimeError(
+                f"[{agent.name}] Vector store '{agent.collection_name}' tidak termuat — "
+                "jalankan src/ingest.py terlebih dahulu. Evaluasi dihentikan."
+            )
+        setup[agent.name] = "hybrid" if agent.hybrid_retriever is not None else "dense"
+        if agent.hybrid_retriever is None:
+            print(f"  ⚠ [{agent.name}] BM25 index tidak ditemukan — retrieval dense-only")
+    return setup
+
+
+def _verdict_status(verdict) -> str:
+    """AuditResult.bi_verdict/ojk_verdict berupa dict (model_dump)."""
+    if not verdict:
+        return "UNCLEAR"
+    if isinstance(verdict, dict):
+        return str(verdict.get("verdict") or verdict.get("status") or "UNCLEAR").upper()
+    return str(getattr(verdict, "verdict", getattr(verdict, "status", "UNCLEAR"))).upper()
+
+
+def _verdict_field(verdict, key: str, default):
+    if isinstance(verdict, dict):
+        return verdict.get(key, default)
+    return getattr(verdict, key, default) if verdict else default
+
+
+def build_result(sample: Dict, audit_result, latency: int) -> Dict:
+    final_verdict = getattr(audit_result, "final_verdict", None)
+    final_status = str(getattr(final_verdict, "final_status", "UNCLEAR")).upper()
+    bi_v, ojk_v = audit_result.bi_verdict, audit_result.ojk_verdict
+
+    grounded = []
+    for v in (bi_v, ojk_v):
+        for art in _verdict_field(v, "violated_articles", []) or []:
+            grounded.append(art.get("grounded") if isinstance(art, dict) else getattr(art, "grounded", None))
+
+    return {
+        "clause_id":      sample["clause_id"],
+        "category":       sample["category"],
+        "clause":         sample["clause"][:100] + "...",
+        "predicted":      final_status,
+        "expected":       sample["expected_status"],
+        "predicted_norm": _normalize(final_status),
+        "expected_norm":  _normalize(sample["expected_status"]),
+        "predicted_6":    _normalize6(final_status),
+        "expected_6":     _normalize6(sample["expected_status"]),
+        "predicted_bi":   _verdict_status(bi_v),
+        "expected_bi":    sample["expected_bi"],
+        "predicted_ojk":  _verdict_status(ojk_v),
+        "expected_ojk":   sample["expected_ojk"],
+        "correct":        _normalize(final_status) == _normalize(sample["expected_status"]),
+        "correct_6":      _normalize6(final_status) == _normalize6(sample["expected_status"]),
+        "latency_ms":     latency,
+        "confidence":     getattr(final_verdict, "overall_confidence", None),
+        "retrieval_mode_bi":  _verdict_field(bi_v, "retrieval_mode", None),
+        "retrieval_mode_ojk": _verdict_field(ojk_v, "retrieval_mode", None),
+        "sparse_boost":   _verdict_field(bi_v, "sparse_boost", None),
+        "expected_violated_articles": sample["violated_articles"],
+        "evidence_bi":    _verdict_field(bi_v, "evidence", []) or [],
+        "evidence_ojk":   _verdict_field(ojk_v, "evidence", []) or [],
+        "citation_grounded": grounded,
+    }
+
+
+def build_error_result(sample: Dict, error: Exception, latency: int) -> Dict:
+    return {
+        "clause_id":      sample["clause_id"],
+        "category":       sample["category"],
+        "clause":         sample["clause"][:100] + "...",
+        "predicted":      "ERROR",
+        "expected":       sample["expected_status"],
+        "predicted_norm": "NOT_ADDRESSED",
+        "expected_norm":  _normalize(sample["expected_status"]),
+        "predicted_6":    "UNCLEAR",
+        "expected_6":     _normalize6(sample["expected_status"]),
+        "predicted_bi":   "ERROR",
+        "expected_bi":    sample["expected_bi"],
+        "predicted_ojk":  "ERROR",
+        "expected_ojk":   sample["expected_ojk"],
+        "correct":        False,
+        "correct_6":      False,
+        "latency_ms":     latency,
+        "expected_violated_articles": sample["violated_articles"],
+        "evidence_bi":    [],
+        "evidence_ojk":   [],
+        "citation_grounded": [],
+        "error": str(error),
+    }
 
 
 # ── Runner utama ──────────────────────────────────────────────────────────────
@@ -332,6 +365,7 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
         api_key=api_key,
         chroma_path=chroma_path
     )
+    retrieval_setup = check_retrieval_ready(coordinator)
 
     results = []
     import asyncio
@@ -343,71 +377,13 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
             audit_result = asyncio.run(coordinator.audit_clause_async(
                 clause=sample["clause"],
                 clause_id=sample["clause_id"],
-                context={"category": sample["category"]}
+                context={"category": sample["category"], "regulator": "all", "top_k": 5}
             ))
             latency = round((time.time() - t0) * 1000)
-
-            # Ambil status akhir
-            final_status = str(getattr(
-                getattr(audit_result, "final_verdict", None), "final_status",
-                getattr(audit_result, "final_status", "UNCLEAR")
-            )).upper()
-
-            bi_status = str(getattr(
-                getattr(audit_result, "bi_verdict", None), "verdict",
-                getattr(getattr(audit_result, "bi_verdict", None), "status", "UNCLEAR")
-            )).upper()
-
-            ojk_status = str(getattr(
-                getattr(audit_result, "ojk_verdict", None), "verdict",
-                getattr(getattr(audit_result, "ojk_verdict", None), "status", "UNCLEAR")
-            )).upper()
-
-            # Kumpulkan retrieved articles dari context
-            retrieved_arts = []
-            for agent_v in [audit_result.bi_verdict, audit_result.ojk_verdict]:
-                if agent_v and hasattr(agent_v, "retrieved_context"):
-                    ctx = agent_v.retrieved_context or ""
-                    retrieved_arts.extend([line.strip() for line in ctx.split("\n")
-                                           if "Pasal" in line or "PBI" in line or "POJK" in line])
-
-            result = {
-                "clause_id":    sample["clause_id"],
-                "category":     sample["category"],
-                "clause":       sample["clause"][:100] + "...",
-                "predicted":    final_status,
-                "expected":     sample["expected_status"],
-                "predicted_norm": _normalize(final_status),
-                "expected_norm":  _normalize(sample["expected_status"]),
-                "predicted_bi":  bi_status,
-                "expected_bi":   sample["expected_bi"],
-                "predicted_ojk": ojk_status,
-                "expected_ojk":  sample["expected_ojk"],
-                "correct":       _normalize(final_status) == _normalize(sample["expected_status"]),
-                "latency_ms":    latency,
-                "expected_violated_articles": sample["violated_articles"],
-                "retrieved_articles": retrieved_arts[:10],
-            }
+            result = build_result(sample, audit_result, latency)
         except Exception as e:
             print(f"  ⚠ Error: {e}")
-            result = {
-                "clause_id":      sample["clause_id"],
-                "category":       sample["category"],
-                "clause":         sample["clause"][:100] + "...",
-                "predicted":      "ERROR",
-                "expected":       sample["expected_status"],
-                "predicted_norm": "NOT_ADDRESSED",
-                "expected_norm":  _normalize(sample["expected_status"]),
-                "predicted_bi":   "ERROR",
-                "expected_bi":    sample["expected_bi"],
-                "predicted_ojk":  "ERROR",
-                "expected_ojk":   sample["expected_ojk"],
-                "correct":        False,
-                "latency_ms":     round((time.time() - t0) * 1000),
-                "expected_violated_articles": sample["violated_articles"],
-                "retrieved_articles": [],
-                "error": str(e),
-            }
+            result = build_error_result(sample, e, round((time.time() - t0) * 1000))
 
         results.append(result)
         status_icon = "✓" if result["correct"] else "✗"
@@ -416,13 +392,17 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
 
     # Hitung metrik
     metrics    = compute_metrics(results)
+    metrics_6  = compute_metrics(results, classes=SIX_CLASSES,
+                                 pred_key="predicted_6", exp_key="expected_6")
     retrieval  = compute_mrr_hitrate(results)
+    grounding  = compute_citation_grounding(results)
     avg_latency = round(sum(r["latency_ms"] for r in results) / len(results))
 
     print(f"\n{'='*60}")
     print(f"  RESULTS — {provider.upper()} / {model}")
     print(f"{'='*60}")
-    print(f"  Accuracy              : {metrics['accuracy']:.4f}")
+    print(f"  Accuracy (4 kelas)    : {metrics['accuracy']:.4f}  CI95 {metrics['accuracy_ci95_wilson']}")
+    print(f"  Accuracy (6 kelas)    : {metrics_6['accuracy']:.4f}  Macro-F1 6 kelas: {metrics_6['macro_f1']:.4f}")
     print(f"  Macro Precision       : {metrics['macro_precision']:.4f}")
     print(f"  Macro Recall          : {metrics['macro_recall']:.4f}")
     print(f"  Macro F1              : {metrics['macro_f1']:.4f}")
@@ -431,6 +411,8 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
     print(f"  MRR                   : {retrieval['mrr']:.4f}")
     print(f"  Hit Rate@3            : {retrieval.get('hit_rate_at_3', 0):.4f}")
     print(f"  Hit Rate@5            : {retrieval.get('hit_rate_at_5', 0):.4f}")
+    print(f"  Citation grounding    : {grounding['citation_grounding_rate']} "
+          f"({grounding['citations_checked']} sitasi diperiksa)")
     print(f"  Avg Latency           : {avg_latency}ms")
     print(f"{'='*60}\n")
 
@@ -442,7 +424,8 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
                   f"(TP={m['tp']} FP={m['fp']} FN={m['fn']})")
 
     # Simpan hasil
-    run_name  = f"{provider}_{model}_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    run_name  = (f"{provider}_{model}_{retrieval_setup['strategy']}_"
+                 f"{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     out_dir   = _ROOT / "data" / "audit_results"
     out_dir.mkdir(parents=True, exist_ok=True)
     out_path  = out_dir / f"eval_{run_name}.json"
@@ -452,8 +435,11 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
         "provider":    provider,
         "model":       model,
         "timestamp":   datetime.now().isoformat(),
+        "retrieval_setup": retrieval_setup,
         "metrics":     metrics,
+        "metrics_6class": metrics_6,
         "retrieval":   retrieval,
+        "citation_grounding": grounding,
         "avg_latency_ms": avg_latency,
         "results":     results,
     }
@@ -482,7 +468,7 @@ def _log_to_mlflow(output: Dict, run_name: str, tracking_uri: str = None):
                 "provider":       output["provider"],
                 "model":          output["model"],
                 "n_samples":      output["metrics"]["total"],
-                "retrieval_mode": os.getenv("RETRIEVAL_MODE", "hybrid"),
+                "retrieval_mode": ",".join(f"{k}={v}" for k, v in output.get("retrieval_setup", {}).items()),
             })
 
             # Metrics — classification
@@ -499,6 +485,12 @@ def _log_to_mlflow(output: Dict, run_name: str, tracking_uri: str = None):
 
             # Metrics — retrieval
             r = output["retrieval"]
+            m6 = output.get("metrics_6class", {})
+            mlflow.log_metrics({
+                "accuracy_6class": m6.get("accuracy", 0),
+                "macro_f1_6class": m6.get("macro_f1", 0),
+                "citation_grounding_rate": output.get("citation_grounding", {}).get("citation_grounding_rate") or 0,
+            })
             mlflow.log_metrics({
                 "mrr":           r["mrr"],
                 "hit_rate_at_3": r.get("hit_rate_at_3", 0),

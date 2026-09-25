@@ -30,6 +30,8 @@ _FILENAME_MAP = {
     'POJK_22':   ('POJK 22/2023',        '2023', 'OJK'),
     'PBI2223':   ('PBI 22/23/PBI/2020',  '2020', 'BI'),
     'PBI236':    ('PBI 23/6/PBI/2021',   '2021', 'BI'),
+    # Nama file aktual di data/raw/: PBI_222320.pdf, PBI_230621.pdf
+    'PBI_230621': ('PBI 23/6/PBI/2021',  '2021', 'BI'),
     'POJK22':    ('POJK 22/2023',        '2023', 'OJK'),
 }
 

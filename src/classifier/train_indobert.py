@@ -19,7 +19,9 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from classifier.data_split import split_80_10_10  # noqa: E402
 from sklearn.metrics import classification_report, accuracy_score, f1_score
 
 DATA_PATH  = Path(__file__).resolve().parent.parent.parent / "data" / "classifier" / "dataset.csv"
@@ -54,12 +56,8 @@ def train(epochs: int = 1, batch_size: int = 8, lr: float = 2e-5, seed: int = 42
     texts, labels = load_data()
     print(f"Total: {len(texts)} contoh | Positif: {sum(labels)} | Negatif: {len(labels)-sum(labels)}")
 
-    X_train, X_test, y_train, y_test = train_test_split(
-        texts, labels, test_size=0.15, stratify=labels, random_state=seed
-    )
-    X_train, X_val, y_train, y_val = train_test_split(
-        X_train, y_train, test_size=0.12, stratify=y_train, random_state=seed
-    )
+    # Split 80/10/10 stratified (Subbab 3.1.2 proposal)
+    X_train, X_val, X_test, y_train, y_val, y_test = split_80_10_10(texts, labels, seed=seed)
     print(f"Split: train={len(X_train)}, val={len(X_val)}, test={len(X_test)}")
 
     print(f"Loading tokenizer: {BASE_MODEL}...")

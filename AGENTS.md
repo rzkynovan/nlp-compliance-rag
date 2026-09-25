@@ -4,8 +4,14 @@
 
 **Nama Proyek:** Multi-Agent RAG for Compliance Audit
 **Teknologi:** FastAPI + Next.js + ChromaDB + BM25 + MLflow + Docker + IndoBERT
-**Status:** Phase 13 — Audit Dokumen & Sinkronisasi (Mei 2026)
-**Last Updated:** 2026-05-06
+**Status:** Phase 16 — Sinkronisasi Kode ↔ Proposal Final (September 2026)
+**Last Updated:** 2026-09-25
+
+> ⚠️ **WAJIB DIBACA AGENT:** [`SEMHAS_TRACKER.md`](./SEMHAS_TRACKER.md) adalah sumber kebenaran
+> untuk status gap proposal final ↔ implementasi, pekerjaan yang harus dijalankan ulang di server,
+> dan revisi yang harus ditulis di laporan Semhas. Proposal TA sudah **final dan dikumpulkan**,
+> jadi jangan mengubah perilaku kode menjauh dari proposal tanpa mencatatnya di tracker.
+> Angka hasil evaluasi Phase 9–13 di bawah **tidak valid lagi** (lihat tracker §4).
 
 ---
 
@@ -651,7 +657,13 @@ python -m pytest tests/ -v
 | `tests/test_audit_api.py` | FastAPI endpoints via TestClient |
 | `tests/test_rag_service.py` | RAGAuditService with mocked OpenAI |
 
-**Result:** 165 tests, 165 passed ✅
+**Result (Phase 12):** 165 tests, 165 passed. Per 2026-09-25 (sebelum Phase 16), 3 test gagal + 15 error karena test lama masih merujuk `audit_history` in-memory (lihat `SEMHAS_TRACKER.md` §6 D1).
+
+### Unit Tests `src/` (Phase 16)
+
+```bash
+python -m pytest src/tests -q      # 77 test: chunker, resolver, retrieval, coordinator, evaluasi
+```
 
 ### Manual Testing
 
@@ -1117,3 +1129,25 @@ GPT-5.4-mini direkomendasikan sebagai model utama: unggul akurasi, responsif ter
 ---
 
 *Last updated: 2026-05-06*
+
+---
+
+## Phase 16: Sinkronisasi Kode ↔ Proposal Final (2026-09-25)
+
+Proposal TA sudah final (Sempro Agustus 2026). Kode diselaraskan ke proposal **tanpa mengubah teks
+proposal**; perbedaan yang dipertahankan dicatat untuk laporan Semhas. Detail lengkap, status per
+item, dan runbook: **[`SEMHAS_TRACKER.md`](./SEMHAS_TRACKER.md)**.
+
+| Area | Perubahan utama |
+|---|---|
+| Chunking | `HierarchicalChunker` (Bab→Bagian→Paragraf→Pasal→Ayat→Huruf) jadi default `ingest.py`; `--chunker markdown` untuk ablation; ChromaDB cosine |
+| Retrieval | Weighted RRF **selalu** aktif (Pers. 3.1–3.2, α 0,3/0,7); `RETRIEVAL_STRATEGY=query_aware\|rrf_equal\|dense` |
+| Agen | Paralel sungguhan (`asyncio.to_thread`); pilihan regulator BI/OJK dihormati; prompt 6 kelas; evidence trail Top-K + verifikasi sitasi |
+| Resolver | Φ dan π formal (Pers. 2.26) |
+| Gate | Default IndoBERT, δ(q) = 1[ĝ ≥ 0,5]; split 80/10/10; status `NOT_REGULATION_CLAUSE` |
+| Evaluasi | Fix bug MRR/Hit Rate = 0; qrels tingkat pasal; metrik 6 kelas; Wilson CI; citation grounding rate; golden dataset sumber tunggal `data/golden_dataset.yaml` |
+
+⚠️ **Wajib dijalankan ulang di server** (re-ingest, retrain gate, evaluasi ulang): lihat tracker §5.
+
+*Last updated: 2026-09-25*
+

@@ -160,6 +160,18 @@ _MIN_SUBSTANTIVE_WORDS = 20
 _GARBLED_SINGLE_CHAR_RATIO = 0.55
 
 
+def is_garbled_text(text: str) -> bool:
+    """
+    True jika teks rusak/ter-spacing ("d a t a m i n e") sehingga tidak dapat
+    dipahami — dipetakan ke kelas UNCLEAR (Tabel 3.6 proposal).
+    """
+    words = text.strip().split()
+    if len(words) < 10:
+        return False
+    single_char_count = sum(1 for w in words if len(w) == 1 and w.isalpha())
+    return single_char_count / len(words) > _GARBLED_SINGLE_CHAR_RATIO
+
+
 def is_noise_clause(text: str) -> bool:
     """
     True jika teks adalah header/disclaimer/cover page, bukan klausa SOP substantif.

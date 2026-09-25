@@ -155,42 +155,6 @@ class OJKSpecialistAgent(BaseAgent):
 
         self.query_analyzer = QueryAnalyzer()
 
-    def retrieve_relevant_articles(self, query: str, top_k: int = 5) -> List[Dict]:
-        """
-        Retrieve top-k articles. Gunakan hybrid (dense + BM25) jika query
-        mengandung identifier spesifik (nomor pasal, kode regulasi).
-        """
-        if self.index is None:
-            return []
-
-        # Analisis intent query
-        if self.query_analyzer and self.hybrid_retriever:
-            intent = self.query_analyzer.analyze(query)
-            if intent.is_specific:
-                results = self.hybrid_retriever.retrieve(query, intent, top_k)
-                return [
-                    {
-                        "content":  r["content"],
-                        "metadata": r["metadata"],
-                        "score":    r["score"],
-                        "retrieval_source": r.get("source", "hybrid"),
-                    }
-                    for r in results
-                ]
-
-        # Fallback: dense only
-        retriever = self.index.as_retriever(similarity_top_k=top_k)
-        nodes = retriever.retrieve(query)
-        return [
-            {
-                "content":  node.get_content(),
-                "metadata": node.metadata,
-                "score":    node.score if hasattr(node, 'score') else 1.0,
-                "retrieval_source": "dense",
-            }
-            for node in nodes
-        ]
-    
     def analyze(self, clause: str, context: Optional[Dict] = None) -> AgentVerdict:
         """
         Main analysis pipeline for OJK regulations.
@@ -199,7 +163,8 @@ class OJKSpecialistAgent(BaseAgent):
         
         search_query = f"{category}: {clause}"
         
-        articles = self.retrieve_relevant_articles(search_query)
+        top_k = int((context or {}).get("top_k") or 5)
+        articles = self.retrieve_relevant_articles(search_query, top_k=top_k)
         
         if not articles:
             return AgentVerdict(
@@ -228,13 +193,16 @@ class OJKSpecialistAgent(BaseAgent):
                 actual_value=v.get("actual"),
                 context=v.get("context")
             ))
+
+        evidence = self.build_evidence(articles)
+        self.verify_citations(violated_articles, evidence)
         
         consumer_impact = self._assess_consumer_impact(clause, parsed)
         
         return AgentVerdict(
             agent_id=self.name,
             regulator=self.regulator,
-            verdict=parsed.get("status", "NEEDS_REVIEW"),
+            verdict=self.normalize_status(parsed.get("status", "NEEDS_REVIEW")),
             confidence_score=parsed.get("confidence", 0.5),
             violated_articles=violated_articles,
             retrieved_context="\n---\n".join([a["content"] for a in articles]),
@@ -244,6 +212,9 @@ class OJKSpecialistAgent(BaseAgent):
             checklist_topic=parsed.get("checklist_topic"),
             checklist_covered=parsed.get("checklist_covered", []),
             missing_elements=parsed.get("missing_elements", []),
+            evidence=evidence,
+            retrieval_mode=articles[0].get("retrieval_source", "dense"),
+            sparse_boost=articles[0].get("alpha"),
         )
     
     # Sub-elemen wajib per topik regulasi — digunakan untuk deteksi PARTIALLY_COMPLIANT
@@ -410,6 +381,8 @@ i) JANGAN laporkan violation karena SOP "tidak mencantumkan" kewajiban internal 
 j) Bedakan "klausa tanggung jawab user" (wajar) dengan "klausula eksonerasi" (dilarang).
 k) Jika status adalah NOT_ADDRESSED: "violations" HARUS [] dan "recommendations" HARUS [].
 l) Rekomendasi HANYA diisi jika ada pelanggaran atau kekurangan KONKRET. Untuk PARTIALLY_COMPLIANT, rekomendasi harus SPESIFIK: sebutkan sub-elemen mana yang perlu ditambahkan.
+m) Gunakan "NEEDS_REVIEW" HANYA jika klausa relevan dengan topik OJK tetapi pasal yang ditemukan tidak cukup untuk memutuskan status (ambigu atau konteks tidak lengkap) sehingga perlu tinjauan auditor manusia. Jangan gunakan NEEDS_REVIEW bila salah satu status lain dapat ditentukan.
+n) Gunakan "UNCLEAR" HANYA jika teks klausa itu sendiri tidak dapat dipahami (terpotong, rusak, atau tidak lengkap) sehingga tidak dapat diklasifikasikan.
 
 PENTING untuk field "violations":
 - "article": gunakan nomor pasal PERSIS seperti tertulis di dokumen (misal: "Pasal 75 Ayat 1")
@@ -419,7 +392,7 @@ PENTING untuk field "violations":
 
 OUTPUT (format JSON wajib, jelaskan dalam Bahasa Indonesia):
 {{
-    "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED",
+    "status": "COMPLIANT/NON_COMPLIANT/PARTIALLY_COMPLIANT/NOT_ADDRESSED/NEEDS_REVIEW/UNCLEAR",
     "confidence": 0.0-1.0,
     "risk_level": "LOW/MEDIUM/HIGH/CRITICAL",
     "checklist_topic": "nama topik checklist yang digunakan (jika ada), atau null",

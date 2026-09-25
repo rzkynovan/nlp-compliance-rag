@@ -86,17 +86,19 @@ class CoordinatorAgent:
         
         return clause
     
-    async def _analyze_with_bi(self, clause: str) -> Dict:
+    async def _analyze_with_bi(self, clause: str, context: Optional[Dict] = None) -> Dict:
         """
-        Run BI agent analysis asynchronously.
+        Run BI agent analysis in a worker thread.
+        analyze() melakukan panggilan LLM/embedding yang sinkron (blocking);
+        tanpa to_thread, asyncio.gather akan menjalankan kedua agen berurutan.
         """
-        return self.bi_agent.analyze(clause).model_dump()
-    
-    async def _analyze_with_ojk(self, clause: str) -> Dict:
-        """
-        Run OJK agent analysis asynchronously.
-        """
-        return self.ojk_agent.analyze(clause).model_dump()
+        verdict = await asyncio.to_thread(self.bi_agent.analyze, clause, context)
+        return verdict.model_dump()
+
+    async def _analyze_with_ojk(self, clause: str, context: Optional[Dict] = None) -> Dict:
+        """Run OJK agent analysis in a worker thread (lihat _analyze_with_bi)."""
+        verdict = await asyncio.to_thread(self.ojk_agent.analyze, clause, context)
+        return verdict.model_dump()
     
     async def audit_clause_async(
         self,
@@ -126,19 +128,28 @@ class CoordinatorAgent:
         result.timestamp = start_time.isoformat()
         
         processed_clause = self.preprocess_clause(clause)
-        
-        bi_task = asyncio.create_task(self._analyze_with_bi(processed_clause))
-        ojk_task = asyncio.create_task(self._analyze_with_ojk(processed_clause))
-        
-        result.bi_verdict, result.ojk_verdict = await asyncio.gather(
-            bi_task, ojk_task
-        )
-        
-        result.final_verdict = self.resolver.resolve(
-            bi_verdict=result.bi_verdict,
-            ojk_verdict=result.ojk_verdict,
-            clause_category=self._determine_category(clause)
-        )
+        context = dict(context or {})
+        regulator = str(context.get("regulator") or "all").upper()
+        agent_context = {"top_k": context.get("top_k", 5)}
+
+        if regulator == "BI":
+            # Step 2 (Subbab 3.5.4): BI Only — hanya BISpecialistAgent dijalankan
+            result.bi_verdict = await self._analyze_with_bi(processed_clause, agent_context)
+            result.final_verdict = self.resolver.resolve_single(result.bi_verdict, "BI")
+        elif regulator == "OJK":
+            result.ojk_verdict = await self._analyze_with_ojk(processed_clause, agent_context)
+            result.final_verdict = self.resolver.resolve_single(result.ojk_verdict, "OJK")
+        else:
+            # BI + OJK: fork paralel kedua specialist agent
+            result.bi_verdict, result.ojk_verdict = await asyncio.gather(
+                self._analyze_with_bi(processed_clause, agent_context),
+                self._analyze_with_ojk(processed_clause, agent_context),
+            )
+            result.final_verdict = self.resolver.resolve(
+                bi_verdict=result.bi_verdict,
+                ojk_verdict=result.ojk_verdict,
+                clause_category=self._determine_category(clause)
+            )
         
         end_time = datetime.now()
         result.execution_time_ms = (end_time - start_time).total_seconds() * 1000

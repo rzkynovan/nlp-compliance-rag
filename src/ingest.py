@@ -47,6 +47,7 @@ from llama_index.core import (
     Document,
 )
 from llama_index.core.node_parser import MarkdownNodeParser
+from llama_index.core.schema import TextNode
 from llama_parse import LlamaParse
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
@@ -57,13 +58,17 @@ import chromadb
 from llama_cache import get_cache, LlamaParseCache
 
 # Import hybrid retrieval modul
-from retrieval.metadata_extractor import extract_regulation_metadata
+from retrieval.metadata_extractor import extract_regulation_metadata, _detect_from_filename
 from retrieval.bm25_retriever import BM25Retriever
+from retrieval.hierarchical_chunker import HierarchicalChunker
 
 BASE_DIR      = Path(__file__).resolve().parent.parent
 RAW_DATA_DIR  = BASE_DIR / "data" / "raw"
-CHROMA_DB_DIR = BASE_DIR / "data" / "processed" / "chroma_db"
-BM25_INDEX_DIR = BASE_DIR / "data" / "processed" / "bm25_index"
+# Bisa diarahkan ke direktori lain (mis. untuk ablation chunking) lewat
+# CHROMADB_PERSIST_DIR — variabel yang sama dibaca backend & evaluation_runner.
+# BM25 index selalu di <parent>/bm25_index, konsisten dengan agents.
+CHROMA_DB_DIR = Path(os.getenv("CHROMADB_PERSIST_DIR", str(BASE_DIR / "data" / "processed" / "chroma_db")))
+BM25_INDEX_DIR = CHROMA_DB_DIR.parent / "bm25_index"
 
 REGULATOR_MAPPING = {
     "PBI": "Bank Indonesia (BI)",
@@ -73,6 +78,12 @@ REGULATOR_MAPPING = {
     "UU": "Undang-Undang (UU)",
     "PDP": "Undang-Undang (UU)",
 }
+
+# Ruang jarak ChromaDB — cosine sesuai Subbab 3.3.2 proposal (default Chroma: L2)
+COLLECTION_METADATA = {"hnsw:space": "cosine"}
+
+# Strategi chunking: "hierarchical" (default, Subbab 3.3.1) | "markdown" (baseline ablation)
+CHUNK_STRATEGIES = ("hierarchical", "markdown")
 
 COLLECTION_NAMES = {
     "Bank Indonesia (BI)": "bi_regulations",
@@ -88,7 +99,7 @@ Settings.embed_model = OpenAIEmbedding(
 )
 
 Settings.llm = OpenAI(
-    model="gpt-4o-mini",  # Changed from gpt-4o for cost optimization
+    model=os.getenv("LLM_MODEL", "gpt-5.4-mini"),  # Tidak dipakai saat ingest (embedding saja)
     api_key=OPENAI_API_KEY,
     temperature=0.1,
 )
@@ -97,7 +108,7 @@ Settings.chunk_size = 1024
 Settings.chunk_overlap = 128
 
 print("Embedding: text-embedding-3-large (konsisten dengan ChromaDB collections)")
-print("LLM: GPT-4o-mini (cost optimized)")
+print(f"LLM: {os.getenv('LLM_MODEL', 'gpt-5.4-mini')} (tidak dipakai saat ingest)")
 
 
 def detect_regulator(filename: str) -> str:
@@ -179,6 +190,10 @@ def parse_pdfs(
                         text=doc_dict["text"],
                         metadata=doc_dict["metadata"]
                     )
+                    # Cache disimpan sebelum metadata ini ditambahkan — isi ulang
+                    # agar chunking per file & kode regulasi tetap benar.
+                    doc.metadata["source_file"] = filename
+                    doc.metadata["regulator"] = regulator
                     if regulator not in documents_by_regulator:
                         documents_by_regulator[regulator] = []
                     documents_by_regulator[regulator].append(doc)
@@ -218,8 +233,51 @@ def parse_pdfs(
     return documents_by_regulator
 
 
-def chunk_documents(documents: List[Document]) -> List:
-    print("\nMelakukan Hierarchical Chunking (berbasis heading Markdown)...")
+def chunk_documents(documents: List[Document], strategy: str = "hierarchical") -> List:
+    if strategy == "hierarchical":
+        return chunk_documents_hierarchical(documents)
+    return chunk_documents_markdown(documents)
+
+
+def chunk_documents_hierarchical(documents: List[Document]) -> List:
+    """
+    Hierarchical chunking Bab → Bagian → Paragraf → Pasal → Ayat → Huruf.
+    Halaman-halaman satu file PDF digabung dulu agar pasal yang terpotong
+    lintas halaman tetap utuh.
+    """
+    print("\nMelakukan Hierarchical Chunking (Bab → Bagian → Pasal → Ayat → Huruf)...")
+
+    pages_by_file: Dict[str, List[Document]] = {}
+    for doc in documents:
+        pages_by_file.setdefault(doc.metadata.get("source_file", ""), []).append(doc)
+
+    chunker = HierarchicalChunker()
+    nodes = []
+    for filename, pages in pages_by_file.items():
+        file_meta = _detect_from_filename(filename)
+        base = {
+            "source_file": filename,
+            "regulator": pages[0].metadata.get("regulator", ""),
+            "document": file_meta.get("regulation_code", ""),
+            **file_meta,
+        }
+        full_text = "\n".join(p.text for p in pages)
+        for chunk in chunker.chunk(full_text, base_metadata=base):
+            node = TextNode(text=chunk["text"], metadata=chunk["metadata"])
+            # Breadcrumb hierarki sudah ada di teks chunk — jangan duplikasi
+            # metadata ke teks embedding/LLM.
+            node.excluded_embed_metadata_keys = list(chunk["metadata"].keys())
+            node.excluded_llm_metadata_keys = list(chunk["metadata"].keys())
+            nodes.append(node)
+        print(f"   [OK] {filename}: {sum(1 for n in nodes if n.metadata.get('source_file') == filename)} chunks")
+
+    print(f"   [OK] Total {len(nodes)} chunks hierarkis")
+    return nodes
+
+
+def chunk_documents_markdown(documents: List[Document]) -> List:
+    """Baseline lama: pemotongan berbasis heading Markdown LlamaParse (untuk ablation)."""
+    print("\nMelakukan Markdown Chunking (berbasis heading Markdown, baseline)...")
 
     node_parser = MarkdownNodeParser()
     nodes = node_parser.get_nodes_from_documents(documents)
@@ -229,6 +287,7 @@ def chunk_documents(documents: List[Document]) -> List:
         filename = node.metadata.get("source_file", "")
         extra = extract_regulation_metadata(node.get_content(), filename)
         node.metadata.update(extra)
+        node.metadata["chunk_strategy"] = "markdown"
 
     print(f"   [OK] Dihasilkan {len(nodes)} chunks (metadata diperkaya)")
 
@@ -245,7 +304,8 @@ def chunk_documents(documents: List[Document]) -> List:
 
 def build_separate_vector_stores(
     documents_by_regulator: Dict[str, List[Document]],
-    force_rebuild: bool = False
+    force_rebuild: bool = False,
+    chunk_strategy: str = "hierarchical",
 ) -> Dict[str, VectorStoreIndex]:
     """
     Build or load existing vector stores.
@@ -284,17 +344,18 @@ def build_separate_vector_stores(
         except Exception:
             pass  # Collection doesn't exist, proceed with ingestion
 
-        nodes = chunk_documents(documents)
+        nodes = chunk_documents(documents, strategy=chunk_strategy)
 
-        collection = db.get_or_create_collection(collection_name)
-        
         # Delete old data if force_rebuild
         if force_rebuild:
             try:
                 db.delete_collection(collection_name)
-                collection = db.get_or_create_collection(collection_name)
             except Exception:
                 pass
+
+        collection = db.get_or_create_collection(
+            collection_name, metadata=COLLECTION_METADATA
+        )
 
         vector_store = ChromaVectorStore(chroma_collection=collection)
         storage_context = StorageContext.from_defaults(vector_store=vector_store)
@@ -371,6 +432,12 @@ def main():
         help="Clear LlamaParse cache before parsing"
     )
     parser.add_argument(
+        "--chunker",
+        choices=CHUNK_STRATEGIES,
+        default="hierarchical",
+        help="Strategi chunking: hierarchical (default, sesuai proposal) atau markdown (baseline ablation)"
+    )
+    parser.add_argument(
         "--cache-stats",
         action="store_true",
         help="Show cache statistics and exit"
@@ -415,9 +482,11 @@ def main():
         print("\nTidak ada dokumen yang berhasil diproses!")
         sys.exit(1)
 
+    print(f"\nStrategi chunking: {args.chunker}")
     indices = build_separate_vector_stores(
-        documents_by_regulator, 
-        force_rebuild=args.force
+        documents_by_regulator,
+        force_rebuild=args.force,
+        chunk_strategy=args.chunker,
     )
 
     print_summary(indices)

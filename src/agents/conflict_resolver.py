@@ -40,21 +40,35 @@ class FinalVerdict(BaseModel):
 class ConflictResolverAgent:
     """
     Menyelesaikan konflik antar-regulator dan menghasilkan verdict final.
-    
-    Prinsip resolusi:
-    1. Hierarki Peraturan: UU > PP > PBI/POJK > SE
-    2. Perlindungan Konsumen: OJK diutamakan untuk hak konsumen
-    3. Stabilitas Moneter: BI diutamakan untuk aspek transaksional
-    4. Standar Ketat: Ambil standar yang lebih ketat jika overlap
+
+    Fungsi resolusi (Persamaan 2.26 proposal):
+
+        c_hat = Phi(v_BI, v_OJK) = v_BI                      jika v_BI == v_OJK
+                                  = argmax_{v in {v_BI, v_OJK}} pi(v)   jika berbeda
+
+    Fungsi prioritas ordinal pi (Subbab 3.5.5):
+      1. Hierarki peraturan UU > PP > PBI/POJK > SE — PBI dan POJK setara,
+         sehingga asas ini tidak membedakan kedua verdik pada korpus penelitian.
+      2. Perlindungan konsumen: OJK diutamakan untuk aspek hak konsumen.
+      3. Stabilitas moneter: BI diutamakan untuk aspek transaksional.
+      4. Standar ketat: jika overlap, terapkan standar yang lebih ketat.
+
+    Prinsip 4 dioperasionalkan sebagai urutan keparahan STATUS_PRIORITY
+    (verdik yang lebih ketat menang). Prinsip 2 dan 3 menentukan regulator
+    utama (primary_regulator) yang pasal & rekomendasinya didahulukan, karena
+    status akhir sudah ditetapkan oleh prinsip 4.
     """
-    
-    HIERARCHY = {
-        "UU": 1,
-        "PP": 2,
-        "PERATURAN_LENGKAP": 3,  
-        "SE": 4  
+
+    # pi(v): semakin besar semakin ketat / berisiko
+    STATUS_PRIORITY = {
+        "NON_COMPLIANT":       6,
+        "PARTIALLY_COMPLIANT": 5,
+        "NEEDS_REVIEW":        4,
+        "COMPLIANT":           3,
+        "NOT_ADDRESSED":       2,
+        "UNCLEAR":             1,
     }
-    
+
     RESOLUTION_PRINCIPLES = {
         "CONSUMER_PROTECTION": {
             "priority": "OJK over BI",
@@ -66,16 +80,48 @@ class ConflictResolverAgent:
             "basis": "BI sebagai otoritas moneter dan sistem pembayaran",
             "applies_to": ["SALDO", "TRANSAKSI", "KYC", "SETTLEMENT"]
         },
-        "STRICHER_STANDARD": {
+        "STRICTER_STANDARD": {
             "priority": "Apply stricter standard",
             "basis": "Principles of regulatory compliance",
             "applies_to": ["ALL"]
         }
     }
-    
+
     def __init__(self):
         self.name = "CONFLICT_RESOLVER"
-    
+
+    @staticmethod
+    def _norm(status) -> str:
+        s = str(status).upper().replace("-", "_").strip() if status else "UNCLEAR"
+        return s if s in ConflictResolverAgent.STATUS_PRIORITY else "NEEDS_REVIEW"
+
+    def validate_verdict(self, verdict: Dict) -> str:
+        """
+        Validasi konsistensi keluaran agen sebelum Phi diterapkan:
+        PARTIALLY_COMPLIANT tanpa pelanggaran DAN tanpa sub-elemen yang hilang
+        tidak didukung bukti → diturunkan ke COMPLIANT.
+        """
+        status = self._norm(verdict.get("verdict"))
+        if status == "PARTIALLY_COMPLIANT" and not verdict.get("violated_articles") \
+                and not verdict.get("missing_elements"):
+            return "COMPLIANT"
+        return status
+
+    def phi(self, v_bi: str, v_ojk: str) -> str:
+        """Persamaan 2.26."""
+        if v_bi == v_ojk:
+            return v_bi
+        return max((v_bi, v_ojk), key=lambda v: self.STATUS_PRIORITY[v])
+
+    @staticmethod
+    def primary_regulator(clause_category: Optional[str]) -> str:
+        """Prinsip 2 & 3: regulator yang pasal/rekomendasinya didahulukan."""
+        if clause_category == "OJK_PRIORITY":
+            return "OJK"
+        if clause_category == "BI_PRIORITY":
+            return "BI"
+        return "BALANCED"
+
     def resolve(
         self,
         bi_verdict: Dict,
@@ -83,63 +129,31 @@ class ConflictResolverAgent:
         clause_category: str = None
     ) -> FinalVerdict:
         """
-        Main conflict resolution logic.
-        
+        Resolusi dua verdik (regulator = BI + OJK).
+
         Args:
             bi_verdict: Verdict dari BI Specialist Agent
             ojk_verdict: Verdict dari OJK Specialist Agent
-            clause_category: Kategori klausa (untuk prioritas regulator)
-        
+            clause_category: "BI_PRIORITY" | "OJK_PRIORITY" | "BALANCED"
+
         Returns:
             FinalVerdict dengan status final dan rekomendasi
         """
-        
-        def _norm(s):
-            return str(s).upper().replace("-", "_").strip() if s else "UNCLEAR"
+        v_bi = self.validate_verdict(bi_verdict)
+        v_ojk = self.validate_verdict(ojk_verdict)
+        final_status = self.phi(v_bi, v_ojk)
 
-        all_statuses = [
-            _norm(bi_verdict.get("verdict")),
-            _norm(ojk_verdict.get("verdict")),
-        ]
-
-        if all(s == "COMPLIANT" for s in all_statuses):
-            final_status = "COMPLIANT"
-        elif "NON_COMPLIANT" in all_statuses:
-            final_status = "NON_COMPLIANT"
-        elif all(s in ("NOT_ADDRESSED", "UNCLEAR") for s in all_statuses):
-            final_status = "NOT_ADDRESSED"
-        elif "COMPLIANT" in all_statuses and all(
-            s in ("COMPLIANT", "NOT_ADDRESSED", "UNCLEAR") for s in all_statuses
-        ):
-            # Satu agen COMPLIANT, agen lain NOT_ADDRESSED/UNCLEAR (bukan domain-nya).
-            # Regulator yang relevan sudah menilai patuh → final COMPLIANT.
-            final_status = "COMPLIANT"
-        elif "PARTIALLY_COMPLIANT" in all_statuses:
-            # Jika satu agen PARTIALLY_COMPLIANT dan agen lain NOT_ADDRESSED,
-            # final tetap PARTIALLY_COMPLIANT hanya jika ada violations konkret.
-            # Jika violations kosong, turunkan ke COMPLIANT (agen salah flag).
-            partial_agent = (
-                bi_verdict if _norm(bi_verdict.get("verdict")) == "PARTIALLY_COMPLIANT"
-                else ojk_verdict
-            )
-            has_real_violations = len(partial_agent.get("violated_articles", [])) > 0
-            final_status = "PARTIALLY_COMPLIANT" if has_real_violations else "COMPLIANT"
-        else:
-            final_status = "NEEDS_REVIEW"
-        
         conflicts = self._detect_conflicts(bi_verdict, ojk_verdict)
-        
-        if conflicts:
-            final_status = self._apply_resolution(conflicts, final_status, clause_category)
-        
+        primary = self.primary_regulator(clause_category)
         confidence = self._calculate_confidence(bi_verdict, ojk_verdict)
-        
-        recommendations = self._generate_recommendations(bi_verdict, ojk_verdict)
-        
+        recommendations = self._generate_recommendations(bi_verdict, ojk_verdict, primary)
         risk_score = self._calculate_risk(bi_verdict, ojk_verdict, conflicts)
-        
         evidence_matrix = self._build_evidence_matrix(bi_verdict, ojk_verdict)
-        
+        evidence_matrix["resolution"] = {
+            "v_bi": v_bi, "v_ojk": v_ojk, "final": final_status,
+            "primary_regulator": primary,
+        }
+
         return FinalVerdict(
             final_status=final_status,
             overall_confidence=confidence,
@@ -150,7 +164,30 @@ class ConflictResolverAgent:
             bi_verdict=bi_verdict,
             ojk_verdict=ojk_verdict
         )
-    
+
+    def resolve_single(self, verdict: Dict, regulator: str) -> FinalVerdict:
+        """
+        Regulator target tunggal (BI Only / OJK Only, Step 2 Subbab 3.5.4):
+        hanya satu verdik sehingga Phi trivial (c_hat = v).
+        """
+        empty: Dict = {}
+        is_bi = regulator.upper() == "BI"
+        bi_verdict = verdict if is_bi else empty
+        ojk_verdict = empty if is_bi else verdict
+        status = self.validate_verdict(verdict)
+        evidence_matrix = self._build_evidence_matrix(bi_verdict, ojk_verdict)
+        evidence_matrix["resolution"] = {"single_regulator": regulator.upper(), "final": status}
+        return FinalVerdict(
+            final_status=status,
+            overall_confidence=round(float(verdict.get("confidence_score", 0.5)), 2),
+            regulatory_conflicts=[],
+            evidence_matrix=evidence_matrix,
+            risk_score=self._calculate_risk(bi_verdict, ojk_verdict, []),
+            recommendations=self._generate_recommendations(bi_verdict, ojk_verdict, regulator.upper()),
+            bi_verdict=bi_verdict or None,
+            ojk_verdict=ojk_verdict or None,
+        )
+
     def _detect_conflicts(self, bi_verdict: Dict, ojk_verdict: Dict) -> List[ConflictedRegulation]:
         """
         Detect conflicts between BI and OJK verdicts.
@@ -194,28 +231,6 @@ class ConflictResolverAgent:
             ))
         
         return conflicts
-    
-    def _apply_resolution(
-        self,
-        conflicts: List[ConflictedRegulation],
-        current_status: str,
-        clause_category: str
-    ) -> str:
-        """
-        Apply resolution principles based on clause category.
-        """
-        if not conflicts:
-            return current_status
-        
-        for conflict in conflicts:
-            if conflict.type == ConflictType.OVERLAP.value:
-                if "OJK mendeteksi pelanggaran" in conflict.description:
-                    return "NON_COMPLIANT"
-            
-            if conflict.type == ConflictType.DIRECT_CONFLICT.value:
-                return "NON_COMPLIANT"
-        
-        return current_status
     
     def _calculate_confidence(self, bi_verdict: Dict, ojk_verdict: Dict) -> float:
         """
@@ -262,7 +277,8 @@ class ConflictResolverAgent:
     def _generate_recommendations(
         self,
         bi_verdict: Dict,
-        ojk_verdict: Dict
+        ojk_verdict: Dict,
+        primary: str = "BALANCED",
     ) -> List[str]:
         """
         Generate actionable recommendations.
@@ -290,7 +306,9 @@ class ConflictResolverAgent:
         for rec in ojk_verdict.get("recommendations", []):
             if rec not in recommendations:
                 recommendations.append(f"[OJK] {rec}")
-        
+
+        if primary == "OJK":
+            recommendations.sort(key=lambda r: 0 if r.startswith("[OJK]") else 1)
         return recommendations
     
     def _build_evidence_matrix(

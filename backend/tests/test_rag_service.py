@@ -157,27 +157,17 @@ class TestCalculateRiskScore:
         svc, _ = _make_service(mock_settings, tmp_path)
         return svc
 
-    def _make_result(self, status: str, num_conflicts: int = 0):
+    # Risk score kini satu sumber: ConflictResolverAgent._calculate_risk
+    # (Subbab 3.2.4 — agregat heuristik). Service hanya meneruskan nilainya.
+    def _make_result(self, risk: str):
         result = MagicMock()
         result.final_verdict = MagicMock()
-        result.final_verdict.final_status = status
-        result.final_verdict.regulatory_conflicts = [MagicMock()] * num_conflicts
+        result.final_verdict.risk_score = risk
         return result
 
-    def test_non_compliant_is_high(self, service):
-        assert service._calculate_risk_score(self._make_result("NON_COMPLIANT")) == "HIGH"
-
-    def test_two_conflicts_is_high(self, service):
-        assert service._calculate_risk_score(self._make_result("COMPLIANT", 2)) == "HIGH"
-
-    def test_partial_with_one_conflict_is_medium(self, service):
-        assert service._calculate_risk_score(self._make_result("PARTIALLY_COMPLIANT", 1)) == "MEDIUM"
-
-    def test_unclear_is_medium(self, service):
-        assert service._calculate_risk_score(self._make_result("UNCLEAR")) == "MEDIUM"
-
-    def test_compliant_no_conflicts_is_low(self, service):
-        assert service._calculate_risk_score(self._make_result("COMPLIANT", 0)) == "LOW"
+    @pytest.mark.parametrize("risk", ["LOW", "MEDIUM", "HIGH", "CRITICAL"])
+    def test_uses_resolver_risk_score(self, service, risk):
+        assert service._calculate_risk_score(self._make_result(risk)) == risk
 
     def test_no_final_verdict_defaults_low(self, service):
         result = MagicMock()

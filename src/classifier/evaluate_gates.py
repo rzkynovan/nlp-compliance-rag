@@ -17,7 +17,6 @@ import sys
 from pathlib import Path
 
 import pandas as pd
-from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
     accuracy_score, precision_score, recall_score,
     f1_score, classification_report,
@@ -26,6 +25,7 @@ from sklearn.metrics import (
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from classifier.sop_gate import RuleBasedGate, IndoBERTGate, GPTFineTunedGate
+from classifier.data_split import split_80_10_10
 
 DATA_PATH    = Path(__file__).resolve().parent.parent.parent / "data" / "classifier" / "dataset.csv"
 RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "classifier" / "gate_evaluation_results.json"
@@ -64,10 +64,8 @@ def run_evaluation(mlflow_uri: str = None):
     df = pd.read_csv(DATA_PATH)
     texts, labels = df["text"].tolist(), df["label"].tolist()
 
-    # Use same seed as training scripts for consistent test set
-    _, X_test, _, y_test = train_test_split(
-        texts, labels, test_size=0.15, stratify=labels, random_state=42
-    )
+    # Partisi uji yang sama dengan skrip training (split 80/10/10, seed 42)
+    _, _, X_test, _, _, y_test = split_80_10_10(texts, labels)
 
     print(f"Test set: {len(X_test)} samples | Positif: {sum(y_test)} | Negatif: {len(y_test)-sum(y_test)}")
 

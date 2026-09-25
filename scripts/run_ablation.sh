@@ -33,7 +33,7 @@ docker-compose -f "$COMPOSE_FILE" exec \
   -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
   -e LLM_PROVIDER=openai \
   -e LLM_MODEL=gpt-5.4-mini \
-  -e RETRIEVAL_MODE=hybrid \
+  -e RETRIEVAL_STRATEGY=query_aware \
   -e MLFLOW_TRACKING_URI=http://mlflow:5000 \
   backend python /app/src/evaluation_runner.py \
     --mlflow-uri http://mlflow:5000
@@ -47,7 +47,7 @@ docker-compose -f "$COMPOSE_FILE" exec \
   -e ANTHROPIC_API_KEY="$ANTHROPIC_API_KEY" \
   -e LLM_PROVIDER=anthropic \
   -e LLM_MODEL=claude-haiku-4-5-20251001 \
-  -e RETRIEVAL_MODE=hybrid \
+  -e RETRIEVAL_STRATEGY=query_aware \
   -e MLFLOW_TRACKING_URI=http://mlflow:5000 \
   backend python /app/src/evaluation_runner.py \
     --mlflow-uri http://mlflow:5000

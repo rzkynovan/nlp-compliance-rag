@@ -24,7 +24,7 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 _SENTINEL = object()  # used by _extract_verdict_data for getattr fallback
 
-RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75}
+RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75, "CRITICAL": 1.0}
 
 
 def _map_status(status: str) -> ComplianceStatus:
@@ -39,6 +39,7 @@ def _map_status(status: str) -> ComplianceStatus:
         "UNCLEAR": ComplianceStatus.UNCLEAR,
         "NEEDS_HUMAN_REVIEW": ComplianceStatus.NEEDS_REVIEW,
         "NOT_SOP_CLAUSE": ComplianceStatus.NOT_ADDRESSED,
+        "NOT_REGULATION_CLAUSE": ComplianceStatus.NOT_ADDRESSED,
     }
     return status_mapping.get(normalized, ComplianceStatus.UNCLEAR)
 
@@ -173,6 +174,10 @@ async def analyze_sop(request: AuditRequest, current_user: UserResponse = Depend
             is_sop_clause=result.get("is_sop_clause", True),
             gate_confidence=result.get("gate_confidence", 1.0),
             gate_model=result.get("gate_model", "rule_based"),
+            gate_decision=result.get("gate_decision", "REGULATION_CLAUSE_VALID"),
+            evidence_trail=result.get("evidence_trail") or [],
+            analysis_mode=result.get("analysis_mode"),
+            retrieval_mode=result.get("retrieval_mode"),
         )
         
         # Persist to PostgreSQL
