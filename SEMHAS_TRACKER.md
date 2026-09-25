@@ -13,6 +13,7 @@
 | **Target berikutnya** | Seminar Hasil (Semhas) & Ujian TA — minggu ke-4 Desember 2026 |
 | **Dibuat** | 2026-09-25 (Phase 16) |
 | **Branch kerja** | `claude/funny-lovelace-lfga0w` |
+| **Versi halaman (artifact)** | https://claude.ai/artifact/Egridfhr6WkQx4XqiDsy3h — salinan baca-saja; **file ini tetap sumber kebenaran**. Jika tracker diubah, publish ulang artifact tersebut. |
 
 ## 0. Aturan main
 
@@ -35,7 +36,7 @@
 |---|---|---|
 | Gap diperbaiki di kode (Phase 16) | 19 | ✅ / 🟡 (perlu run ulang) |
 | Pekerjaan [DATA] di server | 10 langkah (R1–R8, R6b, R6c) | ⏳ lihat [§5 Runbook](#5-runbook--urutan-menjalankan-ulang-di-server) |
-| Revisi teks untuk laporan Semhas | 27 | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
+| Item revisi untuk laporan Semhas | 27 (26 perlu ditulis, S-26 sudah sesuai) | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
 | Utang teknis yang ditemukan | 4 | ⏳ lihat [§6](#6-utang-teknis-di-luar-cakupan-gap) |
 
 ---
