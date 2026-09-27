@@ -30,6 +30,30 @@
 
 ---
 
+## 0.1 Status infrastruktur (per 2026-09-27)
+
+⚠️ **Server cloud lama (`144.126.136.57`) sudah mati** karena tidak diperpanjang. Semua yang hanya ada di server dianggap **hilang**:
+
+| Aset | Status | Dampak / pengganti |
+|---|---|---|
+| ChromaDB + BM25 index (`data/processed/chroma_db`, `bm25_index`) | ❌ hilang | Dibangun ulang lewat R3 (memang wajib karena chunking berubah) |
+| Cache LlamaParse (`data/llama_cache`) | ❌ hilang | R3 butuh parsing ulang ±442 halaman (ada biaya LlamaParse), **atau** ekstraksi PyMuPDF (lihat keputusan X1 di bawah) |
+| Model IndoBERT gate (`data/classifier/indobert_gate/`) | ❌ hilang | Dilatih ulang lewat R4 (memang wajib karena split berubah) |
+| File hasil evaluasi `data/audit_results/eval_*.json` Phase 11–13 | ❌ hilang | Sudah tidak valid (§4); diganti hasil R6 |
+| MLflow runs, riwayat audit PostgreSQL, dashboard Grafana | ❌ hilang | Tidak dibutuhkan untuk Semhas; MLflow opsional (`--no-mlflow`) |
+| Dokumen **T&C GoPay** (sumber 121 klausul) | ❌ tidak ada di repo | Unduh ulang dari situs GoPay untuk R7. **Catat tanggal akses dan versinya**, karena bisa berbeda dari versi April 2026 |
+| Model GPT fine-tuned `ft:gpt-4.1-mini-2025-04-14:novan:sop-gate:DaNe3Ai9` | ✅ masih di akun OpenAI | Bisa dipakai lewat `GPT_FINETUNED_MODEL_ID`; tapi dilatih dengan split lama (bocor ke test set baru), jadi R5 tetap disarankan |
+| PDF regulasi (`data/raw/`), dataset gate, golden dataset, seluruh kode | ✅ ada di repo | — |
+
+**Runbook §5 sekarang dijalankan di laptop** (atau server baru), bukan di server lama.
+
+**Keputusan terbuka X1: ekstraktor PDF untuk re-ingest.**
+- *Opsi A — LlamaParse (perilaku sekarang):* perlu `LLAMA_CLOUD_API_KEY` dan biaya parsing ulang.
+- *Opsi B — PyMuPDF (disarankan):* tambahkan `ingest.py --extractor pymupdf`. Gratis dan lokal, dan **sesuai proposal** (Fase 1 dan Step 3 menyebut PyMuPDF), sehingga S-12 berpindah dari [SEMHAS] ke [KODE]. `HierarchicalChunker` sudah diuji pada teks PyMuPDF dari ketiga PDF: nomor Pasal berurutan tanpa celah (122 / 276 / 125).
+- Status: ⏳ menunggu keputusan mahasiswa.
+
+---
+
 ## 1. Ringkasan cepat
 
 | Kategori | Jumlah | Status |
@@ -136,14 +160,14 @@ Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6
 
 ---
 
-## 5. Runbook — urutan menjalankan ulang di server
+## 5. Runbook — urutan menjalankan ulang (laptop / server baru)
 
-> Jalankan dari host server (repo di `~/nlp-compliance-rag`). Perkiraan biaya embedding re-ingest
-> ±855 chunk × ±300 token ≈ 0,26 jt token × $0,13/1 jt ≈ **< $0,05**. LlamaParse memakai cache (gratis).
+> Server lama sudah mati (§0.1). Jalankan dari root repo di laptop atau server baru; perintah `docker-compose exec … backend` dapat diganti `python src/…` langsung di venv. Perkiraan biaya embedding re-ingest
+> ±855 chunk × ±300 token ≈ 0,26 jt token × $0,13/1 jt ≈ **< $0,05**. Cache LlamaParse ikut hilang, jadi lihat keputusan X1.
 
 | # | Langkah | Perintah | Status |
 |---|---|---|---|
-| R1 | Tarik branch, lalu perbarui `docker/.env` server | `SOP_GATE_MODEL=indobert`, `SOP_GATE_THRESHOLD=0.5`, `RETRIEVAL_STRATEGY=query_aware`. ⚠️ `.env` server kemungkinan masih `rule_based` / `0.8` dan **mengalahkan default kode**. | ⏳ |
+| R1 | Tarik branch, lalu siapkan `docker/.env` baru dari `docker/.env.example` (default sudah `indobert` / `0.5` / `query_aware`) | `SOP_GATE_MODEL=indobert`, `SOP_GATE_THRESHOLD=0.5`, `RETRIEVAL_STRATEGY=query_aware`. Jika memakai `.env` lama, pastikan tidak lagi berisi `rule_based` / `0.8`, karena `.env` mengalahkan default kode. | ⏳ |
 | R2 | Build ulang backend | `cd docker && docker-compose build backend && docker-compose up -d backend` | ⏳ |
 | R3 | **Re-ingest hierarkis + cosine** (backup dulu `data/processed/`) | `cp -r data/processed data/processed_backup_phase13` lalu `docker-compose exec -e LLAMA_CLOUD_API_KEY=$LLAMAPARSE_API_KEY backend python /app/src/ingest.py --force` (default `--chunker hierarchical`). Catat jumlah chunk per collection untuk S-08. | ⏳ |
 | R4 | Latih ulang IndoBERT (split 80/10/10) | `docker-compose exec backend python /app/src/classifier/train_indobert.py` → `data/classifier/indobert_metrics.json` | ⏳ |
@@ -151,7 +175,7 @@ Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6
 | R6 | Evaluasi utama (ablation LLM) | `~/nlp-compliance-rag/scripts/run_ablation.sh` (GPT-5.4-mini vs Claude Haiku 4.5, `query_aware`). Output: `data/audit_results/eval_<provider>_<model>_query_aware_<ts>.json` + MLflow | ⏳ |
 | R6b | Ablation retrieval (GPT-5.4-mini) | `docker-compose exec -e RETRIEVAL_STRATEGY=dense backend python /app/src/evaluation_runner.py` dan ulangi dengan `RETRIEVAL_STRATEGY=rrf_equal` | ⏳ |
 | R6c | Ablation chunking (baseline Markdown) | `docker-compose exec -e CHROMADB_PERSIST_DIR=/app/data/processed_md/chroma_db -e LLAMA_CLOUD_API_KEY=$LLAMAPARSE_API_KEY backend python /app/src/ingest.py --force --chunker markdown`, lalu jalankan `evaluation_runner.py` dengan `CHROMADB_PERSIST_DIR` yang sama | ⏳ |
-| R7 | Audit ulang GoPay T&C (121 klausul) | Upload via UI/`POST /audit/upload` lalu `/audit/batch`; catat `analysis_mode` untuk S-16 | ⏳ |
+| R7 | Audit ulang GoPay T&C (121 klausul) | Unduh ulang PDF T&C GoPay (catat tanggal akses/versi), upload via UI/`POST /audit/upload` lalu `/audit/batch`; catat `analysis_mode` untuk S-16 | ⏳ |
 | R8 | Kalibrasi confidence (S-01) | Dari JSON R6: reliability diagram + ECE (confidence vs `correct_6`) | ⏳ |
 
 Setelah R1–R8 selesai: perbarui §4, isi angka S-08, dan ganti tabel hasil di `AGENTS.md` / `PROGRESS.md`.
@@ -211,3 +235,4 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 |---|---|---|
 | 2026-09-25 | Claude Code (Phase 16) | Analisis gap proposal final ↔ repo. Implementasi 19 perbaikan [KODE] (§2). Menyusun 27 revisi [SEMHAS] (§3) dan runbook [DATA] (§5). Menemukan kesalahan faktual proposal S-23..S-25 dan bug K1 penyebab Hit Rate = 0. |
 | 2026-09-25 | Claude Code (Phase 16, lanjutan) | Sandbox cloud tidak punya API key dan memblokir api.openai.com, huggingface.co, api.cloud.llamaindex.ai; `data/processed/chroma_db` dan `data/llama_cache` tidak ada di repo. Hanya evaluasi gate rule-based yang bisa dijalankan (lihat R5). R3–R8 tetap harus di laptop/server. |
+| 2026-09-27 | Claude Code | Server cloud lama mati. Aset yang hilang dicatat di §0.1; runbook §5 diarahkan ke laptop/server baru; keputusan X1 (LlamaParse vs PyMuPDF) dibuka. |

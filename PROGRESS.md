@@ -1387,6 +1387,7 @@ data/evaluation/
 - Departemen: **Statistika** (bukan "Statistika Bisnis"); Fakultas: **Sains dan Analitika Data**
 
 **Server akses:**
+- ⚠️ Server ini **sudah mati per 2026-09-27** (tidak diperpanjang). Lihat `SEMHAS_TRACKER.md` §0.1.
 - SSH: `root@144.126.136.57`
 - Project path: `/root/nlp-compliance-rag`
 - Hasil eval lengkap: `/root/nlp-compliance-rag/data/audit_results/`
