@@ -434,8 +434,25 @@ async def _extract_pdf_text_llamaparse(content: bytes, filename: str, use_cache:
                 pass
 
 
+def _extract_pdf_text_pymupdf(content: bytes) -> str:
+    """Ekstrak teks PDF dengan PyMuPDF (default, sesuai proposal Step 3; lokal, gratis)."""
+    try:
+        try:
+            import pymupdf
+        except ImportError:
+            import fitz as pymupdf
+    except ImportError:
+        return _extract_pdf_text_pypdf(content)
+    try:
+        with pymupdf.open(stream=content, filetype="pdf") as doc:
+            pages = [page.get_text() for page in doc]
+        return "\n\n".join(p.strip() for p in pages if p.strip())
+    except Exception as e:
+        raise HTTPException(status_code=422, detail=f"Gagal membaca PDF: {str(e)}")
+
+
 def _extract_pdf_text_pypdf(content: bytes) -> str:
-    """Fallback: ekstrak teks PDF menggunakan pypdf (gratis, lokal)."""
+    """Cadangan jika PyMuPDF tidak terpasang: ekstrak teks PDF menggunakan pypdf."""
     try:
         from pypdf import PdfReader
         reader = PdfReader(io.BytesIO(content))
@@ -541,8 +558,9 @@ async def upload_document(
     """
     Extract text from an uploaded PDF, TXT, or MD document.
 
-    - PDF: LlamaParse (jika API key ada) dengan disk cache berbasis SHA-256 konten file.
-           Set use_llamaparse_cache=false untuk memaksa re-parse.
+    - PDF: PyMuPDF (default, sesuai proposal Step 3). LlamaParse dipakai hanya jika
+           PDF_EXTRACTOR=llamaparse dan LLAMA_CLOUD_API_KEY tersedia (disk cache SHA-256;
+           use_llamaparse_cache=false memaksa re-parse).
     - TXT/MD: Python decode langsung.
     """
     if not file.filename:
@@ -564,12 +582,12 @@ async def upload_document(
     parsed_from_cache = False
     if ext == ".pdf":
         from app.config import settings
-        if settings.LLAMA_CLOUD_API_KEY:
+        if settings.PDF_EXTRACTOR.lower() == "llamaparse" and settings.LLAMA_CLOUD_API_KEY:
             text, parsed_from_cache = await _extract_pdf_text_llamaparse(
                 content, file.filename, use_cache=use_llamaparse_cache
             )
         else:
-            text = _extract_pdf_text_pypdf(content)
+            text = _extract_pdf_text_pymupdf(content)
         text = _clean_pdf_text(text)
     else:
         text = content.decode("utf-8", errors="replace")

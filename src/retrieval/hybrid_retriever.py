@@ -13,6 +13,7 @@ Tiga mode retrieval sesuai QueryType:
                  "Apa batas saldo e-wallet?" — tidak ada identifier spesifik
 """
 
+import hashlib
 from typing import Dict, List, Optional, TYPE_CHECKING
 
 from .bm25_retriever import BM25Retriever, RetrievedNode
@@ -166,9 +167,12 @@ class HybridRetriever:
         Dokumen yang tidak muncul di salah satu list mendapat rank = infinity
         sehingga kontribusinya mendekati 0.
         """
-        # Bangun lookup berdasarkan content hash (64 char pertama sebagai key)
+        # Kunci dokumen = hash seluruh isi chunk. Jangan memakai prefiks teks:
+        # chunk hierarkis diawali breadcrumb yang sama panjang ("PBI 23/6/PBI/2021 |
+        # BAB III ... | Bagian ..."), sehingga prefiks bertabrakan antar-pasal dan
+        # skor RRF chunk berbeda ikut terjumlah.
         def doc_key(content: str) -> str:
-            return content[:80].strip()
+            return hashlib.sha1(content.strip().encode("utf-8")).hexdigest()
 
         # Inisialisasi score accumulator
         scores: Dict[str, float] = {}

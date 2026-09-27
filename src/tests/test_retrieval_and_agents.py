@@ -207,3 +207,14 @@ def test_retrieval_strategy_switch(monkeypatch, strategy, source, alpha):
     agent.query_analyzer = QueryAnalyzer()
     [a] = agent.retrieve_relevant_articles("batas saldo akun", top_k=1)
     assert a["retrieval_source"] == source and a["alpha"] == alpha
+
+
+def test_rrf_does_not_merge_chunks_sharing_breadcrumb_prefix():
+    # Regresi: kunci lama = 80 karakter pertama → chunk dengan breadcrumb sama tergabung
+    crumb = "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan | "
+    chunks = [_chunk(p, text=f"{crumb}Pasal {p}\nisi pasal {p}") for p in ("160", "161", "162")]
+    hr = HybridRetriever(_FakeDenseIndex(chunks), _FakeBM25(chunks))
+    out = hr.retrieve_weighted("q", alpha=0.3, top_k=3)
+    assert [r["metadata"]["pasal_number"] for r in out] == ["160", "161", "162"]
+    assert out[0]["relevance_score"] == pytest.approx(1.0)
+    assert all(r["relevance_score"] < 1.0 for r in out[1:])

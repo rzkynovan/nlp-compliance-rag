@@ -2,8 +2,9 @@
 ingest.py — Data Ingestion Pipeline untuk Multi-Agent NLP Compliance Auditor
 ==================================================================================
 Skrip ini membaca file PDF regulasi (PBI dan POJK), mengekstrak teksnya
-menggunakan LlamaParse, melakukan chunking, dan menyimpannya ke ChromaDB
-dengan SEPARATE COLLECTIONS per regulator (BI & OJK).
+(default PyMuPDF, sesuai proposal Fase 1 / Step 3; opsional LlamaParse),
+melakukan chunking, dan menyimpannya ke ChromaDB + BM25 dengan SEPARATE
+COLLECTIONS per regulator (BI & OJK).
 
 Struktur Collections:
 - bi_regulations: Khusus regulasi Bank Indonesia
@@ -13,9 +14,10 @@ Struktur Collections:
 Cara pakai:
     cd nlp-compliance-rag
     source venv/bin/activate
-    python src/ingest.py
-    
-Optimasi Biaya:
+    python src/ingest.py --force                          # PyMuPDF + hierarchical (default)
+    python src/ingest.py --force --extractor llamaparse   # butuh LLAMA_CLOUD_API_KEY
+
+Opsi khusus --extractor llamaparse (optimasi biaya):
     --skip-cache  : Force re-parse semua PDF (bakal kena biaya LlamaParse)
     --clear-cache : Hapus cache lama sebelum parse
 """
@@ -36,9 +38,6 @@ LLAMA_CLOUD_API_KEY = os.getenv("LLAMA_CLOUD_API_KEY")
 if not OPENAI_API_KEY or OPENAI_API_KEY.startswith("sk-proj-xxx"):
     print("OPENAI_API_KEY belum diisi di file .env!")
     sys.exit(1)
-if not LLAMA_CLOUD_API_KEY or LLAMA_CLOUD_API_KEY.startswith("llx-xxx"):
-    print("LLAMA_CLOUD_API_KEY belum diisi di file .env!")
-    sys.exit(1)
 
 from llama_index.core import (
     VectorStoreIndex,
@@ -48,14 +47,10 @@ from llama_index.core import (
 )
 from llama_index.core.node_parser import MarkdownNodeParser
 from llama_index.core.schema import TextNode
-from llama_parse import LlamaParse
 from llama_index.embeddings.openai import OpenAIEmbedding
 from llama_index.llms.openai import OpenAI
 from llama_index.vector_stores.chroma import ChromaVectorStore
 import chromadb
-
-# Import caching module
-from llama_cache import get_cache, LlamaParseCache
 
 # Import hybrid retrieval modul
 from retrieval.metadata_extractor import extract_regulation_metadata, _detect_from_filename
@@ -81,6 +76,9 @@ REGULATOR_MAPPING = {
 
 # Ruang jarak ChromaDB — cosine sesuai Subbab 3.3.2 proposal (default Chroma: L2)
 COLLECTION_METADATA = {"hnsw:space": "cosine"}
+
+# Ekstraktor PDF: "pymupdf" (default, proposal Fase 1 / Step 3) | "llamaparse" (opsional, berbayar)
+PDF_EXTRACTORS = ("pymupdf", "llamaparse")
 
 # Strategi chunking: "hierarchical" (default, Subbab 3.3.1) | "markdown" (baseline ablation)
 CHUNK_STRATEGIES = ("hierarchical", "markdown")
@@ -119,12 +117,60 @@ def detect_regulator(filename: str) -> str:
     return "Unknown"
 
 
+def _list_pdfs() -> List[str]:
+    pdf_files = sorted(glob.glob(str(RAW_DATA_DIR / "*.pdf")))
+    if not pdf_files:
+        print(f"Tidak ada file PDF ditemukan di {RAW_DATA_DIR}")
+        sys.exit(1)
+    print(f"\nDitemukan {len(pdf_files)} file PDF:")
+    for f in pdf_files:
+        print(f"   -> {os.path.basename(f)}")
+    return pdf_files
+
+
+def parse_pdfs_pymupdf() -> Dict[str, List[Document]]:
+    """
+    Ekstraksi teks per halaman dengan PyMuPDF (lokal, tanpa biaya API).
+    Satu Document per halaman; HierarchicalChunker menggabungkan halaman
+    per file sehingga pasal yang terpotong lintas halaman tetap utuh.
+    """
+    from pdf_extractor import extract_pdf_pages
+
+    documents_by_regulator: Dict[str, List[Document]] = {}
+    for pdf_path in _list_pdfs():
+        filename = os.path.basename(pdf_path)
+        regulator = detect_regulator(filename)
+        if regulator == "Unknown":
+            print(f"   Lewati {filename} (regulator tidak terdeteksi)")
+            continue
+
+        pages = extract_pdf_pages(pdf_path)
+        docs = [
+            Document(
+                text=text,
+                metadata={
+                    "source_file": filename,
+                    "regulator": regulator,
+                    "page_number": i + 1,
+                    "extractor": "pymupdf",
+                },
+            )
+            for i, text in enumerate(pages)
+            if text.strip()
+        ]
+        documents_by_regulator.setdefault(regulator, []).extend(docs)
+        print(f"   [PyMuPDF] {filename}: {len(pages)} halaman ({regulator})")
+
+    return documents_by_regulator
+
+
 def parse_pdfs(
     use_cache: bool = True,
     clear_cache: bool = False
 ) -> Dict[str, List[Document]]:
     """
-    Parse PDF files dengan caching untuk optimasi biaya LlamaParse.
+    Parse PDF files via LlamaParse (opsional, --extractor llamaparse)
+    dengan caching untuk optimasi biaya.
     
     Args:
         use_cache: Gunakan cache jika ada (default True)
@@ -133,15 +179,15 @@ def parse_pdfs(
     Returns:
         Dict regulator -> List of Documents
     """
-    pdf_files = glob.glob(str(RAW_DATA_DIR / "*.pdf"))
-
-    if not pdf_files:
-        print(f"Tidak ada file PDF ditemukan di {RAW_DATA_DIR}")
+    if not LLAMA_CLOUD_API_KEY or LLAMA_CLOUD_API_KEY.startswith("llx-xxx"):
+        print("LLAMA_CLOUD_API_KEY belum diisi — wajib untuk --extractor llamaparse.")
+        print("Gunakan --extractor pymupdf (default) untuk ekstraksi lokal tanpa biaya.")
         sys.exit(1)
 
-    print(f"\nDitemukan {len(pdf_files)} file PDF:")
-    for f in pdf_files:
-        print(f"   -> {os.path.basename(f)}")
+    from llama_parse import LlamaParse
+    from llama_cache import get_cache
+
+    pdf_files = _list_pdfs()
 
     # Initialize cache
     cache = get_cache()
@@ -419,17 +465,23 @@ def main():
     parser.add_argument(
         "--force",
         action="store_true",
-        help="Force rebuild all collections (menggunakan LlamaParse API)"
+        help="Force rebuild all collections"
     )
     parser.add_argument(
         "--skip-cache",
         action="store_true",
-        help="Skip LlamaParse cache, re-parse all PDFs"
+        help="[llamaparse] Skip LlamaParse cache, re-parse all PDFs"
     )
     parser.add_argument(
         "--clear-cache",
         action="store_true",
-        help="Clear LlamaParse cache before parsing"
+        help="[llamaparse] Clear LlamaParse cache before parsing"
+    )
+    parser.add_argument(
+        "--extractor",
+        choices=PDF_EXTRACTORS,
+        default="pymupdf",
+        help="Ekstraktor PDF: pymupdf (default, lokal & gratis, sesuai proposal) atau llamaparse (API berbayar)"
     )
     parser.add_argument(
         "--chunker",
@@ -440,7 +492,7 @@ def main():
     parser.add_argument(
         "--cache-stats",
         action="store_true",
-        help="Show cache statistics and exit"
+        help="[llamaparse] Show cache statistics and exit"
     )
     args = parser.parse_args()
     
@@ -450,6 +502,7 @@ def main():
     
     # Show cache stats if requested
     if args.cache_stats:
+        from llama_cache import get_cache
         cache = get_cache()
         stats = cache.get_stats()
         print(f"\nCache Statistics:")
@@ -464,19 +517,24 @@ def main():
     
     if args.force:
         print("\n[MODE: FORCE REBUILD]")
-        print("Semua collection akan di-rebuild dari awal.")
-        print("Ini akan menggunakan quota LlamaParse API Anda!")
+        print("Semua collection akan di-rebuild dari awal (biaya embedding OpenAI).")
         print("-" * 60)
 
-    if args.skip_cache:
-        print("\n[MODE: SKIP CACHE]")
-        print("Cache akan di-skip, semua PDF akan di-parse ulang.")
-        print("-" * 60)
-
-    documents_by_regulator = parse_pdfs(
-        use_cache=not args.skip_cache,
-        clear_cache=args.clear_cache
-    )
+    print(f"\nEkstraktor PDF: {args.extractor}")
+    if args.extractor == "llamaparse":
+        if args.skip_cache:
+            print("\n[MODE: SKIP CACHE]")
+            print("Cache akan di-skip, semua PDF akan di-parse ulang (biaya LlamaParse).")
+            print("-" * 60)
+        documents_by_regulator = parse_pdfs(
+            use_cache=not args.skip_cache,
+            clear_cache=args.clear_cache
+        )
+    else:
+        if args.chunker == "markdown":
+            print("⚠ --chunker markdown mengandalkan heading Markdown dari LlamaParse;")
+            print("  dengan teks PyMuPDF hasilnya praktis satu chunk per halaman.")
+        documents_by_regulator = parse_pdfs_pymupdf()
 
     if not documents_by_regulator:
         print("\nTidak ada dokumen yang berhasil diproses!")

@@ -15,6 +15,8 @@ class Settings(BaseSettings):
     # LlamaParse — hanya diperlukan saat ingestion (src/ingest.py), bukan runtime
     # SDK LlamaParse membaca LLAMA_CLOUD_API_KEY secara default
     LLAMA_CLOUD_API_KEY: Optional[str] = Field(None, env="LLAMA_CLOUD_API_KEY")
+    # Ekstraktor PDF untuk upload dokumen: "pymupdf" (default, proposal Step 3) | "llamaparse"
+    PDF_EXTRACTOR: str = "pymupdf"
 
     DATABASE_URL: Optional[str] = Field(None, env="DATABASE_URL")
     REDIS_URL: str = Field("redis://localhost:6379/0", env="REDIS_URL")

@@ -662,7 +662,7 @@ python -m pytest tests/ -v
 ### Unit Tests `src/` (Phase 16)
 
 ```bash
-python -m pytest src/tests -q      # 77 test: chunker, resolver, retrieval, coordinator, evaluasi
+python -m pytest src/tests -q      # 78 test: chunker, resolver, retrieval, coordinator, evaluasi
 ```
 
 ### Manual Testing
@@ -1140,7 +1140,7 @@ item, dan runbook: **[`SEMHAS_TRACKER.md`](./SEMHAS_TRACKER.md)**.
 
 | Area | Perubahan utama |
 |---|---|
-| Chunking | `HierarchicalChunker` (Bab→Bagian→Paragraf→Pasal→Ayat→Huruf) jadi default `ingest.py`; `--chunker markdown` untuk ablation; ChromaDB cosine |
+| Ekstraksi & chunking | PyMuPDF default (`--extractor pymupdf`, juga untuk upload); `HierarchicalChunker` (Bab→Bagian→Paragraf→Pasal→Ayat→Huruf) default `ingest.py`; `--chunker markdown` + `--extractor llamaparse` untuk ablation; ChromaDB cosine |
 | Retrieval | Weighted RRF **selalu** aktif (Pers. 3.1–3.2, α 0,3/0,7); `RETRIEVAL_STRATEGY=query_aware\|rrf_equal\|dense` |
 | Agen | Paralel sungguhan (`asyncio.to_thread`); pilihan regulator BI/OJK dihormati; prompt 6 kelas; evidence trail Top-K + verifikasi sitasi |
 | Resolver | Φ dan π formal (Pers. 2.26) |

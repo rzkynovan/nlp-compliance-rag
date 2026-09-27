@@ -37,7 +37,7 @@
 | Aset | Status | Dampak / pengganti |
 |---|---|---|
 | ChromaDB + BM25 index (`data/processed/chroma_db`, `bm25_index`) | ❌ hilang | Dibangun ulang lewat R3 (memang wajib karena chunking berubah) |
-| Cache LlamaParse (`data/llama_cache`) | ❌ hilang | R3 butuh parsing ulang ±442 halaman (ada biaya LlamaParse), **atau** ekstraksi PyMuPDF (lihat keputusan X1 di bawah) |
+| Cache LlamaParse (`data/llama_cache`) | ❌ hilang | **Tidak dibutuhkan lagi**: re-ingest memakai PyMuPDF (keputusan X1). Hanya dibutuhkan untuk ablation chunking Markdown (R6c, opsional) |
 | Model IndoBERT gate (`data/classifier/indobert_gate/`) | ❌ hilang | Dilatih ulang lewat R4 (memang wajib karena split berubah) |
 | File hasil evaluasi `data/audit_results/eval_*.json` Phase 11–13 | ❌ hilang | Sudah tidak valid (§4); diganti hasil R6 |
 | MLflow runs, riwayat audit PostgreSQL, dashboard Grafana | ❌ hilang | Tidak dibutuhkan untuk Semhas; MLflow opsional (`--no-mlflow`) |
@@ -47,10 +47,10 @@
 
 **Runbook §5 sekarang dijalankan di laptop** (atau server baru), bukan di server lama.
 
-**Keputusan terbuka X1: ekstraktor PDF untuk re-ingest.**
-- *Opsi A — LlamaParse (perilaku sekarang):* perlu `LLAMA_CLOUD_API_KEY` dan biaya parsing ulang.
-- *Opsi B — PyMuPDF (disarankan):* tambahkan `ingest.py --extractor pymupdf`. Gratis dan lokal, dan **sesuai proposal** (Fase 1 dan Step 3 menyebut PyMuPDF), sehingga S-12 berpindah dari [SEMHAS] ke [KODE]. `HierarchicalChunker` sudah diuji pada teks PyMuPDF dari ketiga PDF: nomor Pasal berurutan tanpa celah (122 / 276 / 125).
-- Status: ⏳ menunggu keputusan mahasiswa.
+**Keputusan X1 (2026-09-27): ekstraktor PDF = PyMuPDF** ✅ diputuskan mahasiswa dan diimplementasikan (item E1 di §2).
+- `ingest.py` memakai PyMuPDF secara default (`--extractor pymupdf`); LlamaParse tetap tersedia lewat `--extractor llamaparse`.
+- Upload dokumen (`POST /audit/upload`) juga memakai PyMuPDF secara default (`PDF_EXTRACTOR=pymupdf`).
+- Sesuai proposal (Fase 1 dan Step 3), sehingga S-12 pindah dari [SEMHAS] ke [KODE]. `LLAMA_CLOUD_API_KEY` tidak lagi wajib (D2 selesai).
 
 ---
 
@@ -58,9 +58,9 @@
 
 | Kategori | Jumlah | Status |
 |---|---|---|
-| Gap diperbaiki di kode (Phase 16) | 19 | ✅ / 🟡 (perlu run ulang) |
+| Gap diperbaiki di kode (Phase 16) | 21 | ✅ / 🟡 (perlu run ulang) |
 | Pekerjaan [DATA] di server | 10 langkah (R1–R8, R6b, R6c) | ⏳ lihat [§5 Runbook](#5-runbook--urutan-menjalankan-ulang-di-server) |
-| Item revisi untuk laporan Semhas | 27 (26 perlu ditulis, S-26 sudah sesuai) | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
+| Item revisi untuk laporan Semhas | 27 (25 perlu ditulis; S-12 sudah diselesaikan di kode, S-26 sudah sesuai) | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
 | Utang teknis yang ditemukan | 4 | ⏳ lihat [§6](#6-utang-teknis-di-luar-cakupan-gap) |
 
 ---
@@ -89,9 +89,11 @@ Semua item di tabel ini **menyelaraskan kode dengan proposal final tanpa menguba
 | **G1** | Tiga versi golden dataset saling bertentangan (YAML 9 sampel basi; runner vs API beda teks BAB2-01). | Subbab 3.1.4, Tabel 3.4 | `data/golden_dataset.yaml` = **sumber tunggal** (12 klausul; teks versi runner yang dipakai evaluasi). Dibaca oleh runner dan `GET /evaluation/golden-dataset`. | `data/golden_dataset.yaml`, `evaluation_runner.py`, `api/v1/evaluation.py` | test | ✅ |
 | **B1** | Ingest: dokumen dari cache LlamaParse kehilangan `source_file`/`regulator` karena cache disimpan sebelum metadata diisi. Chunk dari cache jadi tanpa kode regulasi. | Subbab 3.4.3 | Metadata diisi ulang saat cache hit. | `src/ingest.py` | uji ingest end-to-end (mock embedding) | 🟡 (re-ingest) |
 | **B2** | `PBI_230621.pdf` tidak dikenali mapping nama file, sehingga `regulation_code` kosong. | Tabel 3.1 | Mapping ditambahkan. | `src/retrieval/metadata_extractor.py` | verifikasi 3 file | 🟡 (re-ingest) |
+| **E1** | Ekstraksi PDF memakai LlamaParse (berbayar, butuh API key), bukan PyMuPDF. Cache LlamaParse ikut hilang bersama server. | Gambar 3.4 Fase 1, Subbab 3.5.4 Step 3 | Modul `src/pdf_extractor.py` (PyMuPDF). `ingest.py --extractor pymupdf` jadi default; `--extractor llamaparse` opsional (key hanya diperiksa di mode ini). Upload dokumen: PyMuPDF default (`PDF_EXTRACTOR`), LlamaParse bila `PDF_EXTRACTOR=llamaparse`, pypdf hanya cadangan bila PyMuPDF tidak terpasang. `pymupdf>=1.24.0` ditambahkan ke kedua requirements. | `src/pdf_extractor.py`, `src/ingest.py`, `backend/app/api/v1/audit.py`, `backend/app/config.py`, `requirements.txt`, `backend/requirements.txt`, `docker/.env.example` | **Ingest end-to-end sungguhan** di sandbox (PyMuPDF → chunker → ChromaDB cosine → BM25; embedding mock): BI 556 chunk, OJK 292 chunk, tanpa `LLAMA_CLOUD_API_KEY`. Test upload pada PDF asli. | 🟡 (R3 dengan embedding asli) |
+| **B4** | RRF menggabungkan skor chunk **berbeda** karena kunci dokumen = 80 karakter pertama; breadcrumb hierarki membuat prefiks sama antar-pasal. Ditemukan saat uji ingest end-to-end (3 chunk berbeda sama-sama `relevance_score` 1,0). | Pers. 3.2 | Kunci dokumen = SHA-1 seluruh isi chunk. | `src/retrieval/hybrid_retriever.py` | Test regresi (gagal di kode lama, lulus di kode baru) | ✅ |
 | **B3** | Prompt fallback LLM-only menyebut regulasi yang salah ("POJK 22/POJK.05/2023 … Jasa Keuangan Digital") dan tidak menyebut PBI 22/23/2020. | Batasan Masalah no. 2 | Diganti tiga regulasi korpus dengan judul resmi. | `rag_service.py` | — | ✅ |
 
-**Test:** `python -m pytest src/tests -q` → **77 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 163 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
+**Test:** `python -m pytest src/tests -q` → **78 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 164 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
 
 ---
 
@@ -111,7 +113,7 @@ wajib menjelaskan perbedaan dari proposal beserta alasannya. Kolom "Tulis di Sem
 | S-05 (M1) | Pers. 2.26, Subbab 3.5.5 | π berdasar 4 prinsip | π = urutan keparahan (prinsip 4). Prinsip 1 tidak membedakan PBI dan POJK (setara). Prinsip 2–3 menentukan regulator utama untuk urutan rekomendasi. Ada **validasi pra-Φ** (PARTIALLY tanpa bukti → COMPLIANT). | Tuliskan π eksplisit sebagai tabel ordinal + aturan validasi pra-Φ. | 📝 |
 | S-06 (K4) | Subbab 3.4.7 | α ∈ {0,3; 0,7} ditetapkan | Sesuai proposal, tapi nilai α **tidak dituning**. | Tambahkan hasil ablation `query_aware` vs `rrf_equal` (α = 0,5) vs `dense` sebagai justifikasi empiris. | 📝 |
 | S-07 (K3) | Subbab 3.3.1 | Chunk per Huruf (5 tingkat) | Unit chunk = Pasal; dipecah per kelompok Ayat bila > 1.800 karakter; Huruf disimpan di metadata (`huruf`), bukan chunk terpisah. Bagian Penjelasan ikut di-index (`section=penjelasan`). Tingkat **Paragraf** (ada di PBI/POJK) ikut dicatat. | Jelaskan parameter `max_chars=1800`, alasan tidak memecah per Huruf (huruf kehilangan konteks kalimat induk), perlakuan Penjelasan, dan tingkat Paragraf. | 📝 |
-| S-08 | Tabel 3.2, Subbab 3.4.3 | Estimasi ±962 / ±628 / ±1.031 chunk (N ≈ 2.621) | Chunker hierarkis menghasilkan ±205 / ±358 / ±292 chunk (≈ 855, termasuk Penjelasan). Angka final dari log ingest. | Ganti dengan jumlah aktual setelah re-ingest. | 📝 (setelah R3) |
+| S-08 | Tabel 3.2, Subbab 3.4.3 | Estimasi ±962 / ±628 / ±1.031 chunk (N ≈ 2.621) | Ingest PyMuPDF + chunker hierarkis (uji sandbox 2026-09-27): **BI 556 chunk (PBI 22/23: 198, PBI 23/6: 358), OJK 292 chunk, total 848** (termasuk Penjelasan). Jumlah chunk tidak bergantung pada embedding, jadi angka ini seharusnya sama saat R3. | Ganti Tabel 3.2 dengan 198 / 358 / 292 (N = 848); konfirmasi dari log R3. | 📝 |
 | S-09 (M4) | Tabel 3.3, Subbab 3.1.2 | Positif gate mencakup GoPay T&C & klausul Dummy | Klausul yang **dievaluasi** (12 golden + GoPay) ikut dilatih di gate → gate "sudah melihat" data uji RAG. n uji gate hanya 16. | Nyatakan di Keterbatasan; laporkan **Wilson CI 95%** (1,000 pada n = 16 → batas bawah ≈ 0,81). Opsional: stratified 5-fold CV. | 📝 |
 | S-10 | Tabel 3.4 | BAB III 4 NC (pengaduan), BAB IV 2 NC (saldo & transaksi) | Golden aktual: 3 NC pengaduan/klausula (BAB3-01..03) + 3 NC saldo/transaksi (BAB4-01..03). | Perbaiki tabel komposisi: 2 NA + 4 PC + 3 NC + 3 NC = 12. | 📝 |
 | S-11 | Tabel 3.4 | Label "Netral" | Dipakai sebagai `NOT_ADDRESSED` | Ganti "Netral" → Not Addressed. | 📝 |
@@ -120,8 +122,8 @@ wajib menjelaskan perbedaan dari proposal beserta alasannya. Kolom "Tulis di Sem
 
 | ID | Tertulis di proposal | Realita / keputusan | Alasan dipertahankan | Status |
 |---|---|---|---|---|
-| S-12 | Ekstraksi PDF dengan **PyMuPDF** (Fase 1, Step 3) | **LlamaParse** (markdown, cache SHA-256) + fallback pypdf | Struktur heading/tabel lebih baik untuk chunking; cache menghindari biaya ulang. | 📝 |
-| S-13 | **Elasticsearch** BM25 (Fase 3, Step 9) | `rank_bm25` BM25Okapi in-memory (pickle), k1 = 1,5, b = 0,75 | Korpus ±855 chunk; ES menambah service JVM tanpa manfaat. Tabel 3.11 proposal sendiri menyebut BM25Okapi. | 📝 |
+| S-12 | Ekstraksi PDF dengan **PyMuPDF** (Fase 1, Step 3) | ~~LlamaParse~~ → **sudah PyMuPDF** sejak 2026-09-27 (E1). Tidak perlu revisi; cukup sebut LlamaParse sebagai opsi pembanding di ablation chunking (R6c). | — | ✅ |
+| S-13 | **Elasticsearch** BM25 (Fase 3, Step 9) | `rank_bm25` BM25Okapi in-memory (pickle), k1 = 1,5, b = 0,75 | Korpus 848 chunk; ES menambah service JVM tanpa manfaat. Tabel 3.11 proposal sendiri menyebut BM25Okapi. | 📝 |
 | S-14 | **Weights & Biases** di panel monitoring | Tidak dipakai; MLflow + Prometheus + Grafana | IndoBERT hanya 1 epoch; MLflow cukup untuk eksperimen. | 📝 |
 | S-15 | **LlamaIndex** sebagai orkestrator pipeline multi-agent | LlamaIndex untuk index/retriever/embedding; orkestrasi memakai asyncio (`CoordinatorAgent`) | Lebih transparan dan langsung memetakan Pers. 2.25–2.26. | 📝 |
 | S-16 | — (tidak disebut) | Pre-filter deterministik tahap 2: `is_noise_clause` (header, disclaimer, boilerplate HKI/pilihan hukum/severability) → `NOT_ADDRESSED` tanpa LLM; greeting/out-of-scope → tanpa LLM | Menghemat biaya. **Wajib diungkap:** laporkan berapa klausul GoPay yang dilabeli aturan vs LLM (memengaruhi 99 NOT_ADDRESSED). | 📝 |
@@ -144,6 +146,17 @@ wajib menjelaskan perbedaan dari proposal beserta alasannya. Kolom "Tulis di Sem
 
 ---
 
+## 3.4 Hasil awal dari sandbox (belum hasil final)
+
+Dijalankan 2026-09-27 tanpa API key, pada index hasil ingest PyMuPDF + chunker hierarkis. **Belum boleh dilaporkan sebagai hasil sistem**: dense retrieval memakai embedding mock, jadi hanya komponen sparse yang bermakna.
+
+| Pengujian | Hasil | Catatan |
+|---|---|---|
+| Gate rule-based, split 80/10/10 (n uji 16) | Accuracy 0,875; F1-w 0,875; precision "bukan klausul" 0,889; recall "klausul" 0,857 | Final untuk varian rule-based (tidak butuh API) |
+| **BM25 saja** pada 10 klausul golden yang punya qrels (Top-10 per regulator) | **MRR@10 = 0,520; Hit@3 = 0,60; Hit@5 = 0,70; Hit@10 = 0,70** | Rank pasal relevan: BAB2-01 → 1, BAB2-02 → –, BAB2-03 → –, BAB2-04 → 5, BAB3-01 → 1, BAB3-02 → 2, BAB3-03 → –, BAB4-01 → 1, BAB4-02 → 2, BAB4-03 → 1. Klausul privasi yang sangat singkat (AES-256, right to erasure) dan klausula pembekuan akun (Pasal 46) tidak ditemukan BM25; diharapkan tertolong oleh dense retrieval. Bisa dipakai sebagai baseline "sparse-only" di Bab IV setelah dikonfirmasi ulang di R6. |
+
+---
+
 ## 4. Hasil lama yang TIDAK VALID — wajib dijalankan ulang
 
 Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6, M1, M4:
@@ -163,18 +176,18 @@ Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6
 ## 5. Runbook — urutan menjalankan ulang (laptop / server baru)
 
 > Server lama sudah mati (§0.1). Jalankan dari root repo di laptop atau server baru; perintah `docker-compose exec … backend` dapat diganti `python src/…` langsung di venv. Perkiraan biaya embedding re-ingest
-> ±855 chunk × ±300 token ≈ 0,26 jt token × $0,13/1 jt ≈ **< $0,05**. Cache LlamaParse ikut hilang, jadi lihat keputusan X1.
+> 848 chunk × ±300 token ≈ 0,25 jt token × $0,13/1 jt ≈ **< $0,05**. Ekstraksi PyMuPDF gratis dan tidak butuh `LLAMA_CLOUD_API_KEY`.
 
 | # | Langkah | Perintah | Status |
 |---|---|---|---|
 | R1 | Tarik branch, lalu siapkan `docker/.env` baru dari `docker/.env.example` (default sudah `indobert` / `0.5` / `query_aware`) | `SOP_GATE_MODEL=indobert`, `SOP_GATE_THRESHOLD=0.5`, `RETRIEVAL_STRATEGY=query_aware`. Jika memakai `.env` lama, pastikan tidak lagi berisi `rule_based` / `0.8`, karena `.env` mengalahkan default kode. | ⏳ |
 | R2 | Build ulang backend | `cd docker && docker-compose build backend && docker-compose up -d backend` | ⏳ |
-| R3 | **Re-ingest hierarkis + cosine** (backup dulu `data/processed/`) | `cp -r data/processed data/processed_backup_phase13` lalu `docker-compose exec -e LLAMA_CLOUD_API_KEY=$LLAMAPARSE_API_KEY backend python /app/src/ingest.py --force` (default `--chunker hierarchical`). Catat jumlah chunk per collection untuk S-08. | ⏳ |
+| R3 | **Re-ingest PyMuPDF + hierarkis + cosine** | Lokal: `OPENAI_API_KEY=… python src/ingest.py --force` (default `--extractor pymupdf --chunker hierarchical`). Docker: `docker-compose exec backend python /app/src/ingest.py --force`. Pastikan log menunjukkan BI 556 / OJK 292 (S-08). | ⏳ |
 | R4 | Latih ulang IndoBERT (split 80/10/10) | `docker-compose exec backend python /app/src/classifier/train_indobert.py` → `data/classifier/indobert_metrics.json` | ⏳ |
 | R5 | (Opsional, berbiaya) GPT FT ulang + evaluasi 3 gate. **Rule-based sudah dihitung ulang di sandbox (2026-09-25), split 80/10/10, n uji 16: accuracy 0,875; F1-w 0,875; precision "bukan klausul" 0,889; recall "klausul" 0,857.** Salah 2: 1 klausul GoPay ("GoPay berhak untuk mengubah, menangguhkan…") ditolak, 1 keluhan pengguna ("Saya mau komplain…") diloloskan. | `python /app/src/classifier/train_gpt_finetune.py` lalu `python /app/src/classifier/evaluate_gates.py --mlflow-uri http://mlflow:5000` | ⏳ |
 | R6 | Evaluasi utama (ablation LLM) | `~/nlp-compliance-rag/scripts/run_ablation.sh` (GPT-5.4-mini vs Claude Haiku 4.5, `query_aware`). Output: `data/audit_results/eval_<provider>_<model>_query_aware_<ts>.json` + MLflow | ⏳ |
 | R6b | Ablation retrieval (GPT-5.4-mini) | `docker-compose exec -e RETRIEVAL_STRATEGY=dense backend python /app/src/evaluation_runner.py` dan ulangi dengan `RETRIEVAL_STRATEGY=rrf_equal` | ⏳ |
-| R6c | Ablation chunking (baseline Markdown) | `docker-compose exec -e CHROMADB_PERSIST_DIR=/app/data/processed_md/chroma_db -e LLAMA_CLOUD_API_KEY=$LLAMAPARSE_API_KEY backend python /app/src/ingest.py --force --chunker markdown`, lalu jalankan `evaluation_runner.py` dengan `CHROMADB_PERSIST_DIR` yang sama | ⏳ |
+| R6c | (Opsional, berbayar LlamaParse) Ablation chunking — baseline Markdown | `CHROMADB_PERSIST_DIR=data/processed_md/chroma_db LLAMA_CLOUD_API_KEY=… python src/ingest.py --force --extractor llamaparse --chunker markdown`, lalu `evaluation_runner.py` dengan `CHROMADB_PERSIST_DIR` yang sama. Baseline Markdown butuh heading dari LlamaParse; dengan PyMuPDF hasilnya praktis satu chunk per halaman. | ⏳ |
 | R7 | Audit ulang GoPay T&C (121 klausul) | Unduh ulang PDF T&C GoPay (catat tanggal akses/versi), upload via UI/`POST /audit/upload` lalu `/audit/batch`; catat `analysis_mode` untuk S-16 | ⏳ |
 | R8 | Kalibrasi confidence (S-01) | Dari JSON R6: reliability diagram + ECE (confidence vs `correct_6`) | ⏳ |
 
@@ -187,7 +200,7 @@ Setelah R1–R8 selesai: perbarui §4, isi angka S-08, dan ganti tabel hasil di 
 | ID | Temuan | Dampak | Status |
 |---|---|---|---|
 | D1 | `backend/tests/test_audit_api.py` memakai `audit_mod.audit_history` (sudah diganti PostgreSQL di Phase 10) → 15 error. `TestMapStatus::test_case_sensitive` bertentangan dengan normalisasi case di `_map_status`. `TestAnalyzeWithRag` (budget, cache) gagal karena input uji `"test clause"` sudah dihentikan gate/pre-check scope sebelum mencapai cache/budget. | 3 gagal + 15 error **sudah ada sebelum Phase 16**; klaim "165/165 test lulus" di dokumen tidak berlaku lagi | ⏳ |
-| D2 | `ingest.py` mewajibkan `LLAMA_CLOUD_API_KEY` walau semua PDF sudah di-cache; compose hanya menyediakan `LLAMAPARSE_API_KEY` | Perlu `-e LLAMA_CLOUD_API_KEY=...` saat re-ingest (R3) | ⏳ |
+| D2 | `ingest.py` mewajibkan `LLAMA_CLOUD_API_KEY` walau semua PDF sudah di-cache | Selesai lewat E1: key hanya diperiksa bila `--extractor llamaparse` | ✅ |
 | D3 | Paket `llama-parse` deprecated (peringatan saat import) | Migrasi ke SDK LlamaCloud baru suatu saat | ⏳ |
 | D4 | `Field(..., env=...)` di `config.py` deprecated di Pydantic v2 | Hanya peringatan | ⏳ |
 
@@ -198,7 +211,8 @@ Setelah R1–R8 selesai: perbarui §4, isi angka S-08, dan ganti tabel hasil di 
 ```
 src/retrieval/hierarchical_chunker.py   BARU  — chunker Bab→Bagian→Paragraf→Pasal→Ayat→Huruf
 src/classifier/data_split.py            BARU  — split 80/10/10 bersama
-src/tests/                              BARU  — 77 unit test (chunker, resolver, retrieval, coordinator, evaluasi)
+src/tests/                              BARU  — 78 unit test (chunker, resolver, retrieval, coordinator, evaluasi)
+src/pdf_extractor.py                    BARU  — ekstraksi PDF PyMuPDF (default ingest)
 backend/tests/test_gate_and_output.py   BARU  — gate δ(q), NOT_REGULATION_CLAUSE, evidence trail, risk
 data/golden_dataset.yaml                GANTI — sumber tunggal 12 klausul golden
 src/ingest.py                           chunker hierarkis default, cosine, fix metadata cache, CHROMADB_PERSIST_DIR
@@ -236,3 +250,4 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 | 2026-09-25 | Claude Code (Phase 16) | Analisis gap proposal final ↔ repo. Implementasi 19 perbaikan [KODE] (§2). Menyusun 27 revisi [SEMHAS] (§3) dan runbook [DATA] (§5). Menemukan kesalahan faktual proposal S-23..S-25 dan bug K1 penyebab Hit Rate = 0. |
 | 2026-09-25 | Claude Code (Phase 16, lanjutan) | Sandbox cloud tidak punya API key dan memblokir api.openai.com, huggingface.co, api.cloud.llamaindex.ai; `data/processed/chroma_db` dan `data/llama_cache` tidak ada di repo. Hanya evaluasi gate rule-based yang bisa dijalankan (lihat R5). R3–R8 tetap harus di laptop/server. |
 | 2026-09-27 | Claude Code | Server cloud lama mati. Aset yang hilang dicatat di §0.1; runbook §5 diarahkan ke laptop/server baru; keputusan X1 (LlamaParse vs PyMuPDF) dibuka. |
+| 2026-09-27 | Claude Code | Keputusan X1 = PyMuPDF, diimplementasikan (E1) untuk ingest dan upload. Uji ingest end-to-end di sandbox (848 chunk). Menemukan dan memperbaiki bug B4 (tabrakan kunci RRF). Hasil awal BM25-only dicatat di §3.4. |

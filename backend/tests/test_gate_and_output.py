@@ -72,3 +72,14 @@ def test_evidence_trail_built_from_topk(service):
 def test_risk_score_mapping_includes_critical():
     assert _map_risk_score("CRITICAL") == 1.0
     assert _map_risk_score("LOW") == 0.25
+
+
+def test_upload_pdf_extraction_uses_pymupdf():
+    # Proposal Step 3: ekstraksi PDF unggahan memakai PyMuPDF
+    from pathlib import Path
+    from app.api.v1.audit import _extract_pdf_text_pymupdf
+    from app.config import Settings
+    pdf = Path(__file__).resolve().parents[2] / "data" / "raw" / "PBI_230621.pdf"
+    text = _extract_pdf_text_pymupdf(pdf.read_bytes())
+    assert "PENYEDIA JASA PEMBAYARAN" in text and "Pasal 160" in text
+    assert Settings.model_fields["PDF_EXTRACTOR"].default == "pymupdf"
