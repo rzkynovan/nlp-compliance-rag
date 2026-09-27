@@ -188,6 +188,40 @@ Dijalankan 2026-09-27 tanpa API key, pada index hasil ingest PyMuPDF + chunker h
 
 ---
 
+## 3.6 Status penerapan di laporan (repo `rzkynovan/template-proposal-ta-its`, branch `semhas`)
+
+Revisi §3 sudah **ditulis ke LaTeX** di branch `semhas` (2026-09-27). Proposal final di `main` tidak diubah.
+Hasil yang belum ada ditandai makro `\menunggu{...}` (merah) — **cari `\menunggu` sebelum Semhas** dan isi dari runbook §5.
+
+| Item | Diterapkan di | Catatan |
+|---|---|---|
+| S-01 | Bab 2 (paragraf confidence, Pers. ECE `eq:ece`), Tabel 3.7 | Verbalized confidence p̃; ECE di Bab 4.5 |
+| S-02 | Bab 2 setelah `eq:bce_loss`; Bab 3 subbab gate | Ekuivalensi softmax 2 logit ↔ BCE |
+| S-03, S-21 | Bab 3 Struktur Output | JSON aktual (`final_status`, `overall_confidence`, `evidence_trail{agent,…,rank}`); risk ordinal → numerik |
+| S-04 | Bab 3 setelah Tabel 3.6 | Definisi operasional NEEDS_REVIEW / UNCLEAR + kaidah prioritas NC vs PC |
+| S-05 | Bab 3 Conflict Resolution | Tabel baru `tab:prioritas-pi`; validasi pra-Φ; prinsip domain = regulator utama |
+| S-06 | Bab 3 Query Analyzer | α heuristik + rencana ablation `rrf_equal`/`dense` |
+| S-07, S-24 | Bab 3 Struktur Hierarchical Chunking | Kaidah chunker (Pasal, >1.800 kar., breadcrumb, urutan ayat, Penjelasan); 11 BAB |
+| S-08 | Tabel 3.2, Pipeline Preprocessing | 198/358/292 = 848 |
+| S-09 | Bab 3 dataset gate; Bab 4 Keterbatasan | Split 127/16/16 + kebocoran |
+| S-10, S-11 | Tabel 3.4 + narasi golden | 2 NA / 4 PC / 3+3 NC; qrels |
+| S-12–S-15 | Tabel 3.11, narasi Gambar 3.4, Step 9, panel Monitoring | PyMuPDF, rank_bm25, tanpa Elasticsearch/W&B, LlamaIndex = index/retriever. **Gambar `arsitektur-multi-agent-rag.png` belum diregenerasi** (masih Elasticsearch/W&B; teks sudah menyebut perbedaannya) |
+| S-16–S-19, P1 | Subbab baru `subsec:rancangan-prompt` | Checklist, nilai ambang, kaidah prioritas, pre-filter, NEEDS_REVIEW saat JSON rusak, LLM-only, regulator tunggal |
+| S-22 | Step 9 | 3K kandidat → Top-5 per regulator |
+| S-23, S-25 | Bab 1 batasan 2, Bab 2, Bab 3.1.1, pustaka.bib | Judul PBI; Pasal 160 (1) saldo vs (2) transaksi |
+| S-27 | Bab 3 Evaluasi Kinerja | Catatan string matching diganti qrels, repeat 3, Wilson, citation grounding + accuracy, ECE, deferral rate |
+| S-28 | Bab 4 Keterbatasan | Penyetelan prompt pada golden set |
+| S-20 | — | Tidak ditulis (fitur produksi, bukan kontribusi penelitian) |
+| S-26 | — | Tidak perlu revisi |
+
+**Bab 4 (`konten/4-hasil-pembahasan.tex`)** memakai R6 ×3 GPT-5.4-mini (§3.4). Angka turunan yang dihitung dari JSON R6:
+confusion matrix gabungan NC→NC 15, NC→PC 3, PC→PC 12, NA→NA 6; akurasi gabungan 33/36 (Wilson 0,78–0,97);
+**citation accuracy 12/18 = 0,667** (Wilson 0,44–0,84); grounding 24/24; **ECE = 0,060** (10 bin, semua 36 prediksi di bin 0,9–1,0).
+`\menunggu` tersisa: evaluasi ulang pasca-B7, IndoBERT (R4), GPT FT (R5), dense/rrf_equal (R6b), Claude Haiku ×3 (R6), GoPay (R7), reliability diagram (R8).
+**Bab 5** menjawab RM1–RM3 + saran (X2-A/B, hold-out, anotasi pakar, reranker, dataset gate terpisah).
+
+---
+
 ## 4. Hasil lama yang TIDAK VALID — wajib dijalankan ulang
 
 Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6, M1, M4:
@@ -286,3 +320,4 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 | 2026-09-27 | Claude Code | Run lokal pertama: ingest gagal (B5, path `/app` dari `.env`), train IndoBERT gagal (B6, Keras 3). Keduanya diperbaiki. Evaluasi GPT-5.4-mini berjalan pada index lama (hasil dicatat di §3.4 sebagai non-final). |
 | 2026-09-27 | Claude Code | Run lokal kedua (index baru): retrieval valid (MRR 0,575, Hit@5 0,80) tapi Recall NC 0,333. Akar masalah: konflik aturan prompt → P1. Tambah `--repeat` + diagnostik (V1). Catat S-28 (tuning prompt pada golden set) dan D5 (pyarrow). |
 | 2026-09-27 | Claude Code | Analisis R6 ×3 (§3.4–3.5): Acc 0,917 ± 0,083, Recall NC 0,833 ± 0,167, MRR 0,575, Hit@5 0,80. Kesalahan tersisa = inkonsistensi status LLM (X2 dibuka). Temuan: grounding ≠ sitasi tepat; confidence tidak informatif. Bug chunker B7 diperbaiki (perlu re-ingest). IndoBERT belum dilatih ulang. |
+| 2026-09-27 | Claude Code | Branch `semhas` di repo proposal: revisi §3 diterapkan ke Bab 1–3, Bab 4 (hasil R6) dan Bab 5 disusun, jadwal & file basi dihapus, kompilasi XeLaTeX lokal OK (94 hlm, tanpa referensi tak terdefinisi). Detail §3.6. |
