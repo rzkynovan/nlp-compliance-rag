@@ -144,3 +144,39 @@ def test_metadata_values_are_chroma_compatible():
     for c in chunks:
         for v in c["metadata"].values():
             assert isinstance(v, (str, int, float, bool))
+
+
+def test_wrapped_cross_reference_is_not_a_new_ayat():
+    # Regresi (POJK Pasal 69/75): "...dimaksud pada ayat\n(1) dan/atau ayat (3) dikenai..."
+    text = """BAB I
+UMUM
+Pasal 69
+(1)
+PUJK wajib menyediakan Layanan Pengaduan.
+(2)
+Layanan Pengaduan memiliki ruang lingkup:
+a.
+penerimaan;
+b.
+penanganan.
+(3)
+PUJK wajib menyediakan layanan 24 jam.
+(4)
+PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat
+(1) dan/atau ayat (3) dikenai sanksi administratif berupa:
+a.
+peringatan tertulis;
+b.
+pembatasan kegiatan usaha untuk sebagian atau seluruhnya dengan
+e. baris lanjutan yang bukan huruf baru (lompat dari b)
+"""
+    [p69] = _by_pasal(HierarchicalChunker().chunk(text, BASE), "69")
+    assert p69["metadata"]["ayat"] == "Ayat 1-4"
+    assert p69["metadata"]["huruf"] == "a,b,a,b"
+    assert "pada ayat (1) dan/atau ayat (3) dikenai" in p69["text"]
+
+
+def test_penjelasan_explicit_ayat_may_skip():
+    text = "BAB I\nUMUM\nPasal 5\n(1)\nisi satu.\n(2)\nisi dua.\n(3)\nisi tiga.\nPENJELASAN\nPasal 5\nAyat (1)\nCukup jelas.\nAyat (3)\nYang dimaksud dengan isi tiga adalah contoh.\n"
+    [pj] = _by_pasal(HierarchicalChunker().chunk(text, BASE), "5", section="penjelasan")
+    assert pj["metadata"]["ayat"] == "Ayat 1-3"

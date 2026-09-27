@@ -61,6 +61,38 @@ class _Pasal:
     ayat: List[_Ayat] = field(default_factory=list)
 
 
+def _ayat_int(number: str) -> int:
+    digits = "".join(ch for ch in number if ch.isdigit())
+    return int(digits) if digits else 0
+
+
+def _is_next_ayat(pasal: "_Pasal", number: str, explicit: bool) -> bool:
+    """
+    Baris "(n) ..." adalah penanda ayat hanya bila melanjutkan urutan ayat.
+    Rujukan yang terpotong baris ("...dimaksud pada ayat\n(1) dan/atau ayat (3)")
+    juga diawali "(n)" dan harus diperlakukan sebagai lanjutan kalimat.
+    Penanda eksplisit "Ayat (n)" (bagian Penjelasan) cukup lebih besar dari ayat
+    sebelumnya karena Penjelasan boleh melompati ayat.
+    """
+    numbered = [a for a in pasal.ayat if a.number]
+    n = _ayat_int(number)
+    if not numbered:
+        return n == 1 or explicit
+    prev = numbered[-1].number
+    prev_n = _ayat_int(prev)
+    if number != prev and n == prev_n and number.startswith(str(prev_n)):
+        return True                                   # sisipan, mis. (2a) setelah (2)
+    return n > prev_n if explicit else n == prev_n + 1
+
+
+def _is_next_huruf(ayat: "_Ayat", letter: str) -> bool:
+    """Huruf "a." memulai daftar baru; selain itu harus huruf berikutnya."""
+    if letter == "a" or not ayat.huruf:
+        return letter == "a"
+    prev = ayat.huruf[-1]
+    return len(prev) == 1 and len(letter) == 1 and ord(letter) == ord(prev) + 1
+
+
 def _roman_to_int(roman: str) -> int:
     values = {"I": 1, "V": 5, "X": 10, "L": 50, "C": 100}
     total, prev = 0, 0
@@ -214,14 +246,14 @@ class HierarchicalChunker:
                 continue
 
             m = _AYAT_RE.match(line)
-            if m:
+            if m and _is_next_ayat(current, m.group(1), explicit=line.lower().startswith("ayat")):
                 current.ayat.append(_Ayat(number=m.group(1)))
                 if m.group(2):
                     current.ayat[-1].lines.append(m.group(2))
                 continue
 
             m = _HURUF_RE.match(line)
-            if m:
+            if m and _is_next_huruf(current_ayat(), m.group(1) or m.group(2)):
                 letter = m.group(1) or m.group(2)
                 ayat = current_ayat()
                 ayat.huruf.append(letter)
