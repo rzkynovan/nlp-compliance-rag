@@ -309,6 +309,30 @@ def build_result(sample: Dict, audit_result, latency: int) -> Dict:
         "evidence_bi":    _verdict_field(bi_v, "evidence", []) or [],
         "evidence_ojk":   _verdict_field(ojk_v, "evidence", []) or [],
         "citation_grounded": grounded,
+        # Diagnostik untuk analisis kesalahan (Bab IV)
+        "diagnostics": {
+            "resolution": (getattr(final_verdict, "evidence_matrix", {}) or {}).get("resolution"),
+            "bi":  _agent_diagnostics(bi_v),
+            "ojk": _agent_diagnostics(ojk_v),
+        },
+    }
+
+
+def _agent_diagnostics(verdict) -> Dict:
+    if not verdict:
+        return {}
+    arts = _verdict_field(verdict, "violated_articles", []) or []
+    return {
+        "status":           _verdict_status(verdict),
+        "confidence":       _verdict_field(verdict, "confidence_score", None),
+        "checklist_topic":  _verdict_field(verdict, "checklist_topic", None),
+        "missing_elements": _verdict_field(verdict, "missing_elements", []) or [],
+        "violations": [
+            {"article": a.get("article") if isinstance(a, dict) else getattr(a, "article", ""),
+             "grounded": a.get("grounded") if isinstance(a, dict) else getattr(a, "grounded", None)}
+            for a in arts
+        ],
+        "reasoning": str(_verdict_field(verdict, "reasoning_trace", "") or "")[:800],
     }
 
 
@@ -454,6 +478,39 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
     return output
 
 
+def summarize_repeats(outputs: List[Dict]) -> Dict:
+    """Rata-rata ± SD metrik utama lintas run + klausul yang prediksinya tidak stabil."""
+    import statistics
+    getters = {
+        "accuracy_6class":             lambda o: o["metrics_6class"]["accuracy"],
+        "macro_f1_6class":             lambda o: o["metrics_6class"]["macro_f1"],
+        "recall_non_compliant_strict": lambda o: o["metrics"]["recall_non_compliant_strict"],
+        "f1_non_compliant":            lambda o: o["metrics"]["per_class"]["NON_COMPLIANT"]["f1"],
+        "f1_partially_compliant":      lambda o: o["metrics"]["per_class"]["PARTIALLY_COMPLIANT"]["f1"],
+        "mrr":                         lambda o: o["retrieval"]["mrr"],
+        "hit_rate_at_5":               lambda o: o["retrieval"].get("hit_rate_at_5", 0.0),
+        "avg_latency_ms":              lambda o: o["avg_latency_ms"],
+    }
+    metrics = {}
+    for name, get in getters.items():
+        vals = [float(get(o)) for o in outputs]
+        metrics[name] = {
+            "mean": round(statistics.mean(vals), 4),
+            "sd":   round(statistics.stdev(vals), 4) if len(vals) > 1 else 0.0,
+            "min":  round(min(vals), 4), "max": round(max(vals), 4), "values": vals,
+        }
+    preds: Dict[str, set] = {}
+    for o in outputs:
+        for r in o["results"]:
+            preds.setdefault(r["clause_id"], set()).add(r["predicted_6"])
+    return {
+        "n_runs": len(outputs),
+        "runs": [o["run_name"] for o in outputs],
+        "metrics": metrics,
+        "unstable_clauses": sorted(cid for cid, p in preds.items() if len(p) > 1),
+    }
+
+
 def _log_to_mlflow(output: Dict, run_name: str, tracking_uri: str = None):
     try:
         import mlflow
@@ -529,9 +586,22 @@ if __name__ == "__main__":
                         help="Skip MLflow logging")
     parser.add_argument("--mlflow-uri", default=None,
                         help="MLflow tracking URI (default: $MLFLOW_TRACKING_URI)")
+    parser.add_argument("--repeat", type=int, default=1,
+                        help="Jalankan evaluasi N kali untuk mengukur variasi LLM (laporkan rata-rata ± SD)")
     args = parser.parse_args()
 
-    run_evaluation(
-        use_mlflow=not args.no_mlflow,
-        mlflow_uri=args.mlflow_uri,
-    )
+    outputs = [
+        run_evaluation(use_mlflow=not args.no_mlflow, mlflow_uri=args.mlflow_uri)
+        for _ in range(max(1, args.repeat))
+    ]
+    if len(outputs) > 1:
+        summary = summarize_repeats(outputs)
+        print(f"\n{'='*60}\n  RINGKASAN {len(outputs)} RUN (rata-rata ± SD)\n{'='*60}")
+        for k, v in summary["metrics"].items():
+            print(f"  {k:32s}: {v['mean']:.4f} ± {v['sd']:.4f}  (min {v['min']:.4f}, maks {v['max']:.4f})")
+        print("  Klausul tidak stabil (prediksi berubah antar-run):",
+              ", ".join(summary["unstable_clauses"]) or "-")
+        out_path = _ROOT / "data" / "audit_results" / f"repeat_{outputs[0]['run_name']}_x{len(outputs)}.json"
+        with open(out_path, "w", encoding="utf-8") as f:
+            json.dump(summary, f, ensure_ascii=False, indent=2)
+        print(f"  Ringkasan disimpan: {out_path}")

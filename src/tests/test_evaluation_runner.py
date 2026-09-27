@@ -88,3 +88,27 @@ def test_citation_grounding_rate():
     rows = [{"citation_grounded": [True, False, None]}, {"citation_grounded": [True]}]
     out = er.compute_citation_grounding(rows)
     assert out == {"citation_grounding_rate": round(2 / 3, 4), "citations_checked": 3}
+
+
+def test_summarize_repeats_mean_sd_and_unstable():
+    def out(acc, pred):
+        per = {c: {"f1": 0.5} for c in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT")}
+        return {"run_name": f"r{acc}", "avg_latency_ms": 1000,
+                "metrics_6class": {"accuracy": acc, "macro_f1": acc},
+                "metrics": {"recall_non_compliant_strict": acc, "per_class": per},
+                "retrieval": {"mrr": 0.5, "hit_rate_at_5": 0.8},
+                "results": [{"clause_id": "BAB4-01", "predicted_6": pred},
+                            {"clause_id": "BAB1-01", "predicted_6": "NOT_ADDRESSED"}]}
+    s = er.summarize_repeats([out(0.5, "NON_COMPLIANT"), out(1.0, "PARTIALLY_COMPLIANT")])
+    assert s["metrics"]["accuracy_6class"]["mean"] == 0.75
+    assert s["metrics"]["accuracy_6class"]["sd"] == pytest.approx(0.3536, abs=1e-4)
+    assert s["unstable_clauses"] == ["BAB4-01"]
+
+
+def test_build_result_has_agent_diagnostics():
+    ojk = {"verdict": "PARTIALLY_COMPLIANT", "confidence_score": 0.7, "missing_elements": ["(B)"],
+           "violated_articles": [], "reasoning_trace": "alasan", "evidence": []}
+    r = er.build_result(SAMPLE_OJK, _audit_result(final="PARTIALLY_COMPLIANT", ojk=ojk), latency=1)
+    d = r["diagnostics"]["ojk"]
+    assert d["status"] == "PARTIALLY_COMPLIANT" and d["missing_elements"] == ["(B)"] and d["reasoning"] == "alasan"
+    assert r["diagnostics"]["bi"] == {}

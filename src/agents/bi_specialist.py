@@ -236,7 +236,8 @@ class BISpecialistAgent(BaseAgent):
             "rule": (
                 "Jika klausa MEMBAHAS batas saldo → periksa berapa sub-elemen (A–C) yang dicakup. "
                 "Jika nilai yang disebutkan MELEBIHI batas → NON_COMPLIANT untuk tier tersebut. "
-                "Jika hanya satu tier dicakup dan yang lain tidak → PARTIALLY_COMPLIANT. "
+                "Jika hanya satu tier dicakup dan yang lain tidak → PARTIALLY_COMPLIANT HANYA bila nilai tier yang disebut SESUAI; "
+                "jika nilai tier yang disebut melebihi batas → NON_COMPLIANT (pelanggaran aktif mengalahkan cakupan tidak lengkap). "
                 "Jika semua tier disebutkan dengan nilai sesuai → COMPLIANT."
             ),
         },
@@ -255,7 +256,8 @@ class BISpecialistAgent(BaseAgent):
             "rule": (
                 "Jika klausa MEMBAHAS batas transaksi → periksa sub-elemen (A–C). "
                 "Jika menyebutkan 'unlimited' atau 'tanpa batas' → NON_COMPLIANT. "
-                "Jika hanya arah masuk/keluar saja yang disebutkan → PARTIALLY_COMPLIANT. "
+                "Jika hanya arah masuk/keluar saja yang disebutkan → PARTIALLY_COMPLIANT HANYA bila nilainya SESUAI; "
+                "jika nilai yang disebut melebihi batas atau tidak dibatasi → NON_COMPLIANT. "
                 "Jika semua limit sesuai → COMPLIANT."
             ),
         },
@@ -345,6 +347,7 @@ ATURAN PENTING — BACA SEBELUM MENJAWAB:
 a) Topik yang relevan BI: batas saldo, batas transaksi, KYC, settlement, penyelenggaraan pembayaran. Topik TIDAK relevan: penanganan keluhan/pengaduan, data privasi, klausula baku, perlindungan konsumen — ini domain OJK.
 b) Gunakan "NOT_ADDRESSED" jika klausa SOP TIDAK MEMBAHAS topik yang diatur pasal BI.
 c) Gunakan "NON_COMPLIANT" HANYA jika klausa SOP secara AKTIF menetapkan nilai/aturan yang BERTENTANGAN dengan pasal regulasi (nilai disebutkan dan melebihi batas yang diijinkan).
+   PRIORITAS (Tabel 3.6): jika SEMUA ketentuan yang DINYATAKAN klausa bertentangan dengan pasal (tidak ada satu pun bagian yang sesuai), status WAJIB "NON_COMPLIANT" — meskipun sub-elemen checklist lain tidak disebut. Sub-elemen yang tidak disebut BUKAN "bagian yang sesuai". "PARTIALLY_COMPLIANT" hanya bila ada bagian yang sesuai DAN bagian yang bertentangan/tidak dicakup.
 d) Gunakan "COMPLIANT" HANYA jika klausa mencakup SEMUA sub-elemen wajib dalam checklist DAN nilainya sesuai. Klausa yang hanya menyebut SATU elemen dari topik multi-elemen TIDAK boleh COMPLIANT.
 e) Gunakan "PARTIALLY_COMPLIANT" dalam DUA skenario:
    SKENARIO 1 — KONFLIK PARSIAL: nilai sebagian sesuai dan sebagian bertentangan.
