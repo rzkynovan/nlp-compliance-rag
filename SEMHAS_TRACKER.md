@@ -58,7 +58,7 @@
 
 | Kategori | Jumlah | Status |
 |---|---|---|
-| Gap diperbaiki di kode (Phase 16) | 25 | ✅ / 🟡 (perlu run ulang) |
+| Gap diperbaiki di kode (Phase 16) | 26 | ✅ / 🟡 (perlu run ulang) |
 | Pekerjaan [DATA] di server | 10 langkah (R1–R8, R6b, R6c) | ⏳ lihat [§5 Runbook](#5-runbook--urutan-menjalankan-ulang-di-server) |
 | Item revisi untuk laporan Semhas | 27 (25 perlu ditulis; S-12 sudah diselesaikan di kode, S-26 sudah sesuai) | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
 | Utang teknis yang ditemukan | 4 | ⏳ lihat [§6](#6-utang-teknis-di-luar-cakupan-gap) |
@@ -95,9 +95,10 @@ Semua item di tabel ini **menyelaraskan kode dengan proposal final tanpa menguba
 | **B6** | `train_indobert.py` gagal di env conda yang memasang TensorFlow + Keras 3 (`transformers` ikut memuat TF). | — | `USE_TF=0` / `TRANSFORMERS_NO_TF=1` di-set sebelum import `transformers` (training & inferensi gate). | `train_indobert.py`, `sop_gate.py` | uji import | ✅ |
 | **P1** | Prompt BI/OJK tidak punya aturan prioritas antara "pelanggaran aktif → NON_COMPLIANT" dan "cakupan tidak lengkap → PARTIALLY". Checklist `BALANCE_LIMIT` bahkan memuat keduanya, sehingga klausul satu-tier bernilai melanggar (BAB4-01/02) berganti label antar-run. | Tabel 3.6 (Partially = mematuhi *sebagian*) | Aturan PRIORITAS di kedua prompt: jika semua ketentuan yang dinyatakan klausul bertentangan (tidak ada bagian yang sesuai) → NON_COMPLIANT; sub-elemen yang tidak disebut bukan "bagian yang sesuai". Aturan `BALANCE_LIMIT` / `TRANSACTION_LIMIT` diberi syarat "hanya bila nilainya sesuai". Tidak ada contoh baru yang meniru klausul uji. | `bi_specialist.py`, `ojk_specialist.py` | perlu R6 ulang (`--repeat 3`) | 🟡 |
 | **V1** | Satu run evaluasi pada n = 12 sangat sensitif terhadap variasi LLM (satu klausul berubah = ±0,167 recall NC). | Subbab 3.5.6 | `evaluation_runner.py --repeat N` → rata-rata ± SD metrik utama + daftar klausul yang tidak stabil (`repeat_*.json`). Hasil per klausul kini menyertakan diagnostik agen (status, reasoning, pelanggaran + grounded, missing_elements, resolusi Φ). | `src/evaluation_runner.py` | 2 unit test | ✅ |
+| **B7** | Chunker: baris rujukan yang terpotong ("…dimaksud pada ayat⏎(1) dan/atau ayat (3) dikenai…") terbaca sebagai ayat baru → label ayat salah (mis. POJK Pasal 69 "Ayat 1-1") dan batas pemecahan chunk bergeser. 105 dari 1.046 pasal terdampak. Ditemukan saat analisis run 16:22. | Subbab 3.3.1 | Penanda `(n)` polos hanya diterima bila melanjutkan urutan (n = sebelumnya + 1); `Ayat (n)` eksplisit (Penjelasan) cukup lebih besar; huruf diterima bila `a` atau huruf berikutnya. Jumlah chunk tetap 848 (198/358/292); POJK Pasal 69 kini "Ayat 1-7". | `src/retrieval/hierarchical_chunker.py` | 2 test regresi | 🟡 (re-ingest) |
 | **B3** | Prompt fallback LLM-only menyebut regulasi yang salah ("POJK 22/POJK.05/2023 … Jasa Keuangan Digital") dan tidak menyebut PBI 22/23/2020. | Batasan Masalah no. 2 | Diganti tiga regulasi korpus dengan judul resmi. | `rag_service.py` | — | ✅ |
 
-**Test:** `python -m pytest src/tests -q` → **83 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 164 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
+**Test:** `python -m pytest src/tests -q` → **85 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 164 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
 
 ---
 
@@ -159,8 +160,31 @@ Dijalankan 2026-09-27 tanpa API key, pada index hasil ingest PyMuPDF + chunker h
 |---|---|---|
 | Gate rule-based, split 80/10/10 (n uji 16) | Accuracy 0,875; F1-w 0,875; precision "bukan klausul" 0,889; recall "klausul" 0,857 | Final untuk varian rule-based (tidak butuh API) |
 | **Run lokal pertama** (laptop, 2026-09-27, GPT-5.4-mini, `query_aware`) — ⚠️ **memakai index LAMA** (1.590 / 1.031 vektor, chunking Markdown) karena re-ingest gagal (B5) | Accuracy 0,833 (CI95 0,552–0,953); Macro-F1 6 kelas 0,867; Recall NC 0,667 (broad 1,000); F1 NC 0,800; F1 PC 0,800; NA 1,000; latensi rata-rata **3,5 dtk** (dulu 9,6 dtk → efek K2 paralel); MRR/Hit@K 0 dan 0 sitasi diperiksa | Salah: BAB3-02 (SLA 60 hari) dan BAB4-02 → PARTIALLY, seharusnya NON_COMPLIANT. MRR 0 dan grounding kosong diduga karena index lama tidak memiliki metadata `pasal_number` yang dipakai qrels; **ulang setelah re-ingest**. File: `data/audit_results/eval_openai_gpt-5.4-mini_query_aware_20260927_161143.json` (di laptop). |
+| **R6 GPT-5.4-mini ×3 (`--repeat 3`)** — laptop 2026-09-27 16:22–16:24, index baru, **setelah P1**, sebelum B7. **Hasil valid pertama sesuai konfigurasi proposal** | Accuracy 6 kelas **0,917 ± 0,083** (1,000 / 0,833 / 0,917); Macro-F1 6 kelas **0,933 ± 0,067**; **Recall NC 0,833 ± 0,167** (1,000 / 0,667 / 0,833); F1 NC 0,903 ± 0,100; F1 PC 0,896 ± 0,100; **MRR 0,575; Hit@3 0,50; Hit@5 0,80** (deterministik, SD 0); citation grounding 1,0 (7–10 sitasi/run); latensi **4,4 ± 0,1 dtk** | Lihat analisis kesalahan §3.5. File: `data/audit_results/eval_openai_gpt-5.4-mini_query_aware_20260927_162210.json`, `…_162301`, `…_162355`, `repeat_…_162210_x3.json` (di repo). Target Recall NC ≥ 0,90 tercapai di 1 dari 3 run. Hit@5 0,80 < target 0,85. |
 | **Run lokal kedua — index BARU** (laptop, 2026-09-27 16:15, GPT-5.4-mini, `query_aware`, PyMuPDF + hierarkis, 556/292 chunk) — hasil pertama dengan konfigurasi retrieval sesuai proposal; **sebelum** perbaikan P1 | Accuracy 0,667 (CI95 0,391–0,862); Macro-F1 6 kelas 0,676; **Recall NC 0,333** (broad 0,833); F1 NC 0,500; F1 PC 0,727; F1 NA 0,800; **MRR 0,575; Hit@3 0,50; Hit@5 0,80**; citation grounding 1,0 (3 sitasi); latensi 3,9 dtk | Salah: BAB3-01 (jam pengaduan) → PC; BAB3-03 (pembekuan akun) → NA; BAB4-01, BAB4-02 (batas saldo) → PC. Retrieval kini valid (bug K1 terkonfirmasi selesai). Penurunan recall NC → konflik aturan prompt, diperbaiki P1. File: `eval_openai_gpt-5.4-mini_query_aware_20260927_161541.json` (laptop). |
 | **BM25 saja** pada 10 klausul golden yang punya qrels (Top-10 per regulator) | **MRR@10 = 0,520; Hit@3 = 0,60; Hit@5 = 0,70; Hit@10 = 0,70** | Rank pasal relevan: BAB2-01 → 1, BAB2-02 → –, BAB2-03 → –, BAB2-04 → 5, BAB3-01 → 1, BAB3-02 → 2, BAB3-03 → –, BAB4-01 → 1, BAB4-02 → 2, BAB4-03 → 1. Klausul privasi yang sangat singkat (AES-256, right to erasure) dan klausula pembekuan akun (Pasal 46) tidak ditemukan BM25; diharapkan tertolong oleh dense retrieval. Bisa dipakai sebagai baseline "sparse-only" di Bab IV setelah dikonfirmasi ulang di R6. |
+
+## 3.5 Analisis kesalahan R6 (GPT-5.4-mini ×3)
+
+**Klasifikasi.** 10 dari 12 klausul stabil dan benar di ketiga run. Dua klausul tidak stabil:
+
+| Klausul | Label | Run 1 / 2 / 3 | Temuan dari diagnostik |
+|---|---|---|---|
+| BAB4-02 (saldo verified Rp500 jt) | NC | NC / **PC** / **PC** | Agen BI menandai PARTIALLY **sambil mencantumkan pelanggaran Pasal 160 ayat (1) (grounded)**, dan reasoning-nya mengakui nilainya melampaui batas. Keluaran agen tidak konsisten dengan aturannya sendiri (prioritas P1). |
+| BAB3-02 (SLA 60 hari kerja) | NC | NC / **PC** / NC | Run 2: agen OJK menandai PARTIALLY dengan `violations = []`, padahal reasoning menyebut nilai waktunya tidak sesuai. Inkonsistensi yang sama. |
+
+→ **Sumber kesalahan tersisa = inkonsistensi internal keluaran LLM** (status vs. pelanggaran yang ia tulis sendiri), bukan retrieval. Pasal yang benar (160, 75) ada di peringkat 1 pada ketiga run.
+
+**Retrieval (per klausul, identik di ketiga run).** Rank pasal relevan: BAB2-01 → 1, BAB2-02 → 4, **BAB2-03 → tidak ada**, BAB2-04 → 4, BAB3-01 → 4, BAB3-02 → 1, **BAB3-03 → tidak ada**, BAB4-01/02/03 → 1. Kegagalan ada pada klausul privasi yang sangat singkat (BAB2-03 "right to erasure") dan BAB3-03 (pembekuan akun; qrel POJK Pasal 46 ayat 2 tentang klausul eksonerasi).
+
+**Sitasi.** BAB3-03 dilabeli benar (NC) di ketiga run, tetapi pasal yang dikutip adalah **Pasal 36** (pemasaran) atau **Pasal 51** (masa jeda), bukan Pasal 46. Keduanya ada di Top-5 sehingga `grounded = True`. → **Citation grounding hanya mengukur "pasal ada di konteks", bukan "pasal tepat"**. Untuk Bab IV, tambahkan metrik *citation accuracy* terhadap qrels di samping grounding rate.
+
+**Confidence (S-01).** Rata-rata confidence prediksi benar = 0,977, prediksi salah = 0,977 (3 kesalahan dari 36 prediksi). Verbalized confidence **tidak membedakan** prediksi benar dan salah. Temuan penting untuk analisis kalibrasi (R8).
+
+**Opsi perbaikan inkonsistensi (keputusan terbuka X2, belum dikerjakan):**
+- *X2-A — ekstraksi terstruktur + aturan deterministik:* LLM hanya mengeluarkan daftar ketentuan yang dinyatakan klausul beserta `sesuai/bertentangan`, dan status ditentukan aturan Tabel 3.6 di kode. Paling konsisten dan mudah dijelaskan, tetapi mengubah format keluaran agen, dan perlu disetel lagi pada golden set (menambah beban S-28).
+- *X2-B — self-consistency (n = 3, voting mayoritas per agen):* biaya dan latensi LLM ×3; sekaligus memberi confidence berbasis proporsi suara (lebih bermakna untuk S-01).
+- *X2-C — biarkan:* laporkan rata-rata ± SD dan klausul tidak stabil sebagai keterbatasan.
 
 ---
 
@@ -190,7 +214,7 @@ Hasil berikut dihasilkan **sebelum** Phase 16 dan dipengaruhi K1, K2, K3, K4, K6
 | R1 | Tarik branch, lalu siapkan `docker/.env` baru dari `docker/.env.example` (default sudah `indobert` / `0.5` / `query_aware`) | `SOP_GATE_MODEL=indobert`, `SOP_GATE_THRESHOLD=0.5`, `RETRIEVAL_STRATEGY=query_aware`. Jika memakai `.env` lama, pastikan tidak lagi berisi `rule_based` / `0.8`, karena `.env` mengalahkan default kode. | ⏳ |
 | R2 | Build ulang backend | `cd docker && docker-compose build backend && docker-compose up -d backend` | ⏳ |
 | R3 | **Re-ingest PyMuPDF + hierarkis + cosine** | Lokal: `OPENAI_API_KEY=… python src/ingest.py --force` (default `--extractor pymupdf --chunker hierarchical`). Docker: `docker-compose exec backend python /app/src/ingest.py --force`. Pastikan log menunjukkan BI 556 / OJK 292 (S-08). | ⏳ |
-| R4 | Latih ulang IndoBERT (split 80/10/10) | `docker-compose exec backend python /app/src/classifier/train_indobert.py` → `data/classifier/indobert_metrics.json` | ⏳ |
+| R4 | Latih ulang IndoBERT (split 80/10/10) — **belum**: `indobert_metrics.json` di repo masih dari split lama (118/17/24) | `docker-compose exec backend python /app/src/classifier/train_indobert.py` → `data/classifier/indobert_metrics.json` | ⏳ |
 | R5 | (Opsional, berbiaya) GPT FT ulang + evaluasi 3 gate. **Rule-based sudah dihitung ulang di sandbox (2026-09-25), split 80/10/10, n uji 16: accuracy 0,875; F1-w 0,875; precision "bukan klausul" 0,889; recall "klausul" 0,857.** Salah 2: 1 klausul GoPay ("GoPay berhak untuk mengubah, menangguhkan…") ditolak, 1 keluhan pengguna ("Saya mau komplain…") diloloskan. | `python /app/src/classifier/train_gpt_finetune.py` lalu `python /app/src/classifier/evaluate_gates.py --mlflow-uri http://mlflow:5000` | ⏳ |
 | R6 | Evaluasi utama (ablation LLM) — **pakai `--repeat 3`** dan laporkan rata-rata ± SD | `~/nlp-compliance-rag/scripts/run_ablation.sh` (GPT-5.4-mini vs Claude Haiku 4.5, `query_aware`). Output: `data/audit_results/eval_<provider>_<model>_query_aware_<ts>.json` + MLflow | ⏳ |
 | R6b | Ablation retrieval (GPT-5.4-mini) | `docker-compose exec -e RETRIEVAL_STRATEGY=dense backend python /app/src/evaluation_runner.py` dan ulangi dengan `RETRIEVAL_STRATEGY=rrf_equal` | ⏳ |
@@ -261,3 +285,4 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 | 2026-09-27 | Claude Code | Keputusan X1 = PyMuPDF, diimplementasikan (E1) untuk ingest dan upload. Uji ingest end-to-end di sandbox (848 chunk). Menemukan dan memperbaiki bug B4 (tabrakan kunci RRF). Hasil awal BM25-only dicatat di §3.4. |
 | 2026-09-27 | Claude Code | Run lokal pertama: ingest gagal (B5, path `/app` dari `.env`), train IndoBERT gagal (B6, Keras 3). Keduanya diperbaiki. Evaluasi GPT-5.4-mini berjalan pada index lama (hasil dicatat di §3.4 sebagai non-final). |
 | 2026-09-27 | Claude Code | Run lokal kedua (index baru): retrieval valid (MRR 0,575, Hit@5 0,80) tapi Recall NC 0,333. Akar masalah: konflik aturan prompt → P1. Tambah `--repeat` + diagnostik (V1). Catat S-28 (tuning prompt pada golden set) dan D5 (pyarrow). |
+| 2026-09-27 | Claude Code | Analisis R6 ×3 (§3.4–3.5): Acc 0,917 ± 0,083, Recall NC 0,833 ± 0,167, MRR 0,575, Hit@5 0,80. Kesalahan tersisa = inkonsistensi status LLM (X2 dibuka). Temuan: grounding ≠ sitasi tepat; confidence tidak informatif. Bug chunker B7 diperbaiki (perlu re-ingest). IndoBERT belum dilatih ulang. |
