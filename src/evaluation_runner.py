@@ -347,8 +347,8 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
     ant_key     = os.getenv("ANTHROPIC_API_KEY", "")
     provider    = os.getenv("LLM_PROVIDER", "openai")
     model       = os.getenv("LLM_MODEL", "gpt-5.4-mini")
-    chroma_path = os.getenv("CHROMADB_PERSIST_DIR",
-                            str(_ROOT / "data" / "processed" / "chroma_db"))
+    from storage_paths import resolve_chroma_dir
+    chroma_path = str(resolve_chroma_dir(_ROOT / "data" / "processed" / "chroma_db"))
 
     print(f"\n{'='*60}")
     print(f"  Compliance Audit — Systematic Evaluation")

@@ -23,6 +23,11 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Optional
 
+# Training/inferensi IndoBERT hanya memakai PyTorch. Cegah transformers memuat
+# TensorFlow (mis. di env conda dengan Keras 3 → "Keras 3 is not yet supported").
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
+
 MODEL_DIR = Path(__file__).resolve().parent.parent.parent / "data" / "classifier"
 
 

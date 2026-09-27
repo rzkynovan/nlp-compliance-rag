@@ -62,7 +62,8 @@ RAW_DATA_DIR  = BASE_DIR / "data" / "raw"
 # Bisa diarahkan ke direktori lain (mis. untuk ablation chunking) lewat
 # CHROMADB_PERSIST_DIR — variabel yang sama dibaca backend & evaluation_runner.
 # BM25 index selalu di <parent>/bm25_index, konsisten dengan agents.
-CHROMA_DB_DIR = Path(os.getenv("CHROMADB_PERSIST_DIR", str(BASE_DIR / "data" / "processed" / "chroma_db")))
+from storage_paths import resolve_chroma_dir
+CHROMA_DB_DIR = resolve_chroma_dir(BASE_DIR / "data" / "processed" / "chroma_db")
 BM25_INDEX_DIR = CHROMA_DB_DIR.parent / "bm25_index"
 
 REGULATOR_MAPPING = {

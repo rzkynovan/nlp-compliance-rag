@@ -15,8 +15,14 @@ Requirements:
 
 import argparse
 import json
+import os
 import sys
 from pathlib import Path
+
+# Training/inferensi IndoBERT hanya memakai PyTorch. Cegah transformers memuat
+# TensorFlow (mis. di env conda dengan Keras 3 → "Keras 3 is not yet supported").
+os.environ.setdefault("USE_TF", "0")
+os.environ.setdefault("TRANSFORMERS_NO_TF", "1")
 
 import pandas as pd
 

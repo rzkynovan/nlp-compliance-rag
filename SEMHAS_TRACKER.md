@@ -58,7 +58,7 @@
 
 | Kategori | Jumlah | Status |
 |---|---|---|
-| Gap diperbaiki di kode (Phase 16) | 21 | ✅ / 🟡 (perlu run ulang) |
+| Gap diperbaiki di kode (Phase 16) | 23 | ✅ / 🟡 (perlu run ulang) |
 | Pekerjaan [DATA] di server | 10 langkah (R1–R8, R6b, R6c) | ⏳ lihat [§5 Runbook](#5-runbook--urutan-menjalankan-ulang-di-server) |
 | Item revisi untuk laporan Semhas | 27 (25 perlu ditulis; S-12 sudah diselesaikan di kode, S-26 sudah sesuai) | 📝 lihat [§3](#3-daftar-revisi-untuk-laporan-semhas-semhas) |
 | Utang teknis yang ditemukan | 4 | ⏳ lihat [§6](#6-utang-teknis-di-luar-cakupan-gap) |
@@ -91,9 +91,11 @@ Semua item di tabel ini **menyelaraskan kode dengan proposal final tanpa menguba
 | **B2** | `PBI_230621.pdf` tidak dikenali mapping nama file, sehingga `regulation_code` kosong. | Tabel 3.1 | Mapping ditambahkan. | `src/retrieval/metadata_extractor.py` | verifikasi 3 file | 🟡 (re-ingest) |
 | **E1** | Ekstraksi PDF memakai LlamaParse (berbayar, butuh API key), bukan PyMuPDF. Cache LlamaParse ikut hilang bersama server. | Gambar 3.4 Fase 1, Subbab 3.5.4 Step 3 | Modul `src/pdf_extractor.py` (PyMuPDF). `ingest.py --extractor pymupdf` jadi default; `--extractor llamaparse` opsional (key hanya diperiksa di mode ini). Upload dokumen: PyMuPDF default (`PDF_EXTRACTOR`), LlamaParse bila `PDF_EXTRACTOR=llamaparse`, pypdf hanya cadangan bila PyMuPDF tidak terpasang. `pymupdf>=1.24.0` ditambahkan ke kedua requirements. | `src/pdf_extractor.py`, `src/ingest.py`, `backend/app/api/v1/audit.py`, `backend/app/config.py`, `requirements.txt`, `backend/requirements.txt`, `docker/.env.example` | **Ingest end-to-end sungguhan** di sandbox (PyMuPDF → chunker → ChromaDB cosine → BM25; embedding mock): BI 556 chunk, OJK 292 chunk, tanpa `LLAMA_CLOUD_API_KEY`. Test upload pada PDF asli. | 🟡 (R3 dengan embedding asli) |
 | **B4** | RRF menggabungkan skor chunk **berbeda** karena kunci dokumen = 80 karakter pertama; breadcrumb hierarki membuat prefiks sama antar-pasal. Ditemukan saat uji ingest end-to-end (3 chunk berbeda sama-sama `relevance_score` 1,0). | Pers. 3.2 | Kunci dokumen = SHA-1 seluruh isi chunk. | `src/retrieval/hybrid_retriever.py` | Test regresi (gagal di kode lama, lulus di kode baru) | ✅ |
+| **B5** | Regresi dari Phase 16: `ingest.py` membaca `CHROMADB_PERSIST_DIR` dari `.env` lokal yang berisi path container `/app/...` → di macOS gagal `Read-only file system (os error 30)` (run lokal 2026-09-27). | — | `src/storage_paths.py::resolve_chroma_dir`: env dipakai hanya bila direktorinya bisa dibuat/ditulis; jika tidak, kembali ke `data/processed/chroma_db` dengan peringatan. Dipakai `ingest.py` dan `evaluation_runner.py`. | `src/storage_paths.py`, `src/ingest.py`, `src/evaluation_runner.py` | `src/tests/test_storage_paths.py` | ✅ |
+| **B6** | `train_indobert.py` gagal di env conda yang memasang TensorFlow + Keras 3 (`transformers` ikut memuat TF). | — | `USE_TF=0` / `TRANSFORMERS_NO_TF=1` di-set sebelum import `transformers` (training & inferensi gate). | `train_indobert.py`, `sop_gate.py` | uji import | ✅ |
 | **B3** | Prompt fallback LLM-only menyebut regulasi yang salah ("POJK 22/POJK.05/2023 … Jasa Keuangan Digital") dan tidak menyebut PBI 22/23/2020. | Batasan Masalah no. 2 | Diganti tiga regulasi korpus dengan judul resmi. | `rag_service.py` | — | ✅ |
 
-**Test:** `python -m pytest src/tests -q` → **78 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 164 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
+**Test:** `python -m pytest src/tests -q` → **81 lulus**. `cd backend && OPENAI_API_KEY=sk-test python -m pytest tests -q` → 164 lulus. 3 gagal + 15 error **sudah ada sebelum Phase 16** (lihat §6, D1).
 
 ---
 
@@ -153,6 +155,7 @@ Dijalankan 2026-09-27 tanpa API key, pada index hasil ingest PyMuPDF + chunker h
 | Pengujian | Hasil | Catatan |
 |---|---|---|
 | Gate rule-based, split 80/10/10 (n uji 16) | Accuracy 0,875; F1-w 0,875; precision "bukan klausul" 0,889; recall "klausul" 0,857 | Final untuk varian rule-based (tidak butuh API) |
+| **Run lokal pertama** (laptop, 2026-09-27, GPT-5.4-mini, `query_aware`) — ⚠️ **memakai index LAMA** (1.590 / 1.031 vektor, chunking Markdown) karena re-ingest gagal (B5) | Accuracy 0,833 (CI95 0,552–0,953); Macro-F1 6 kelas 0,867; Recall NC 0,667 (broad 1,000); F1 NC 0,800; F1 PC 0,800; NA 1,000; latensi rata-rata **3,5 dtk** (dulu 9,6 dtk → efek K2 paralel); MRR/Hit@K 0 dan 0 sitasi diperiksa | Salah: BAB3-02 (SLA 60 hari) dan BAB4-02 → PARTIALLY, seharusnya NON_COMPLIANT. MRR 0 dan grounding kosong diduga karena index lama tidak memiliki metadata `pasal_number` yang dipakai qrels; **ulang setelah re-ingest**. File: `data/audit_results/eval_openai_gpt-5.4-mini_query_aware_20260927_161143.json` (di laptop). |
 | **BM25 saja** pada 10 klausul golden yang punya qrels (Top-10 per regulator) | **MRR@10 = 0,520; Hit@3 = 0,60; Hit@5 = 0,70; Hit@10 = 0,70** | Rank pasal relevan: BAB2-01 → 1, BAB2-02 → –, BAB2-03 → –, BAB2-04 → 5, BAB3-01 → 1, BAB3-02 → 2, BAB3-03 → –, BAB4-01 → 1, BAB4-02 → 2, BAB4-03 → 1. Klausul privasi yang sangat singkat (AES-256, right to erasure) dan klausula pembekuan akun (Pasal 46) tidak ditemukan BM25; diharapkan tertolong oleh dense retrieval. Bisa dipakai sebagai baseline "sparse-only" di Bab IV setelah dikonfirmasi ulang di R6. |
 
 ---
@@ -251,3 +254,4 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 | 2026-09-25 | Claude Code (Phase 16, lanjutan) | Sandbox cloud tidak punya API key dan memblokir api.openai.com, huggingface.co, api.cloud.llamaindex.ai; `data/processed/chroma_db` dan `data/llama_cache` tidak ada di repo. Hanya evaluasi gate rule-based yang bisa dijalankan (lihat R5). R3–R8 tetap harus di laptop/server. |
 | 2026-09-27 | Claude Code | Server cloud lama mati. Aset yang hilang dicatat di §0.1; runbook §5 diarahkan ke laptop/server baru; keputusan X1 (LlamaParse vs PyMuPDF) dibuka. |
 | 2026-09-27 | Claude Code | Keputusan X1 = PyMuPDF, diimplementasikan (E1) untuk ingest dan upload. Uji ingest end-to-end di sandbox (848 chunk). Menemukan dan memperbaiki bug B4 (tabrakan kunci RRF). Hasil awal BM25-only dicatat di §3.4. |
+| 2026-09-27 | Claude Code | Run lokal pertama: ingest gagal (B5, path `/app` dari `.env`), train IndoBERT gagal (B6, Keras 3). Keduanya diperbaiki. Evaluasi GPT-5.4-mini berjalan pada index lama (hasil dicatat di §3.4 sebagai non-final). |
