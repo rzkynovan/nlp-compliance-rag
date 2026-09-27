@@ -1,0 +1,2011 @@
+{
+  "run_name": "openai_gpt-5.4-mini_query_aware_20260927_161143",
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "timestamp": "2026-09-27T16:11:43.263731",
+  "retrieval_setup": {
+    "strategy": "query_aware",
+    "BI_SPECIALIST": "hybrid",
+    "OJK_SPECIALIST": "hybrid"
+  },
+  "metrics": {
+    "classes": [
+      "COMPLIANT",
+      "NON_COMPLIANT",
+      "PARTIALLY_COMPLIANT",
+      "NOT_ADDRESSED"
+    ],
+    "accuracy": 0.8333,
+    "accuracy_ci95_wilson": [
+      0.552,
+      0.953
+    ],
+    "macro_precision": 0.8889,
+    "macro_recall": 0.8889,
+    "macro_f1": 0.8667,
+    "recall_non_compliant_strict": 0.6667,
+    "recall_non_compliant_broad": 1.0,
+    "per_class": {
+      "COMPLIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NON_COMPLIANT": {
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "tp": 4,
+        "fp": 0,
+        "fn": 2
+      },
+      "PARTIALLY_COMPLIANT": {
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8,
+        "tp": 4,
+        "fp": 2,
+        "fn": 0
+      },
+      "NOT_ADDRESSED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "total": 12,
+    "correct": 10
+  },
+  "metrics_6class": {
+    "classes": [
+      "COMPLIANT",
+      "NON_COMPLIANT",
+      "PARTIALLY_COMPLIANT",
+      "NEEDS_REVIEW",
+      "NOT_ADDRESSED",
+      "UNCLEAR"
+    ],
+    "accuracy": 0.8333,
+    "accuracy_ci95_wilson": [
+      0.552,
+      0.953
+    ],
+    "macro_precision": 0.8889,
+    "macro_recall": 0.8889,
+    "macro_f1": 0.8667,
+    "recall_non_compliant_strict": 0.6667,
+    "recall_non_compliant_broad": 1.0,
+    "per_class": {
+      "COMPLIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NON_COMPLIANT": {
+        "precision": 1.0,
+        "recall": 0.6667,
+        "f1": 0.8,
+        "tp": 4,
+        "fp": 0,
+        "fn": 2
+      },
+      "PARTIALLY_COMPLIANT": {
+        "precision": 0.6667,
+        "recall": 1.0,
+        "f1": 0.8,
+        "tp": 4,
+        "fp": 2,
+        "fn": 0
+      },
+      "NEEDS_REVIEW": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NOT_ADDRESSED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      },
+      "UNCLEAR": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "total": 12,
+    "correct": 10
+  },
+  "retrieval": {
+    "mrr": 0.0,
+    "hit_rate_at_3": 0.0,
+    "hit_rate_at_5": 0.0,
+    "evaluated_clauses": 10,
+    "per_clause": [
+      {
+        "clause_id": "BAB2-01",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB2-02",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB2-03",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB2-04",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB3-01",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB3-02",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB3-03",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB4-01",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB4-02",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB4-03",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      }
+    ]
+  },
+  "citation_grounding": {
+    "citation_grounding_rate": null,
+    "citations_checked": 0
+  },
+  "avg_latency_ms": 3504,
+  "results": [
+    {
+      "clause_id": "BAB1-01",
+      "category": "GENERAL",
+      "clause": "SOP ini mengatur standar operasional layanan uang elektronik \"NusantaraPay\" (selanjutnya disebut \"Pe...",
+      "predicted": "NOT_ADDRESSED",
+      "expected": "NOT_ADDRESSED",
+      "predicted_norm": "NOT_ADDRESSED",
+      "expected_norm": "NOT_ADDRESSED",
+      "predicted_6": "NOT_ADDRESSED",
+      "expected_6": "NOT_ADDRESSED",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 7804,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 167\n\n1. Fitur uang elektronik yang dapat disediakan oleh PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik terdiri atas:\n1. pengisian ulang (top up);\n2. pembayaran transaksi pembelanjaan; dan/atau\n3. pembayaran tagihan.\n2. Selain fitur sebagaimana dimaksud pada ayat (1), PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa pener",
+          "relevance_score": 0.9285,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 177\n\nUntuk perlindungan konsumen, PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik wajib:\n\n1. membatasi permintaan dan penggunaan data dan/atau informasi pengguna uang elektronik, sebatas yang diperlukan dalam penyelenggaraan uang elektronik;\n2. menyediakan sarana dan/atau infrastruktur untuk pengisian ulang (top up) secara luas untuk keperlua",
+          "relevance_score": 0.9214,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf b\n\nYang dimaksud dengan “pengguna uang elektronik” adalah Pengguna Jasa yang menggunakan instrumen uang elektronik.",
+          "relevance_score": 0.9025,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 169\n\n(1) Selain menerapkan standar keamanan sistem informasi sebagaimana dimaksud dalam Pasal 45 huruf a angka 3, PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik wajib meningkatkan standar keamanan transaksi uang elektronik untuk uang elektronik yang memiliki batas nilai uang elektronik di atas Rp2.000.000,00 (dua juta rupiah).\n\n(2) Peningkat",
+          "relevance_score": 0.8931,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 178\n\n1. Penyelenggaraan uang elektronik oleh bank umum syariah, unit usaha syariah, atau Lembaga Selain Bank yang melaksanakan kegiatan usaha berdasarkan prinsip syariah dilakukan sesuai dengan ketentuan dalam Peraturan Bank Indonesia ini, sepanjang tidak bertentangan dengan prinsip syariah.\n2. Bagi PJP berupa bank umum syariah, unit usaha syariah, atau Lembaga Selain Bank yang melaksanaka",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (3)\n\nLayanan penerimaan Pengaduan dapat difasilitasi melalui media antara lain telepon, surat elektronik, mesin penjawab otomatis, dan dokumen surat.",
+          "relevance_score": 0.82,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nPerjanjian tertulis termasuk perjanjian dalam bentuk elektronik. Yang dimaksud dengan “perjanjian baku” adalah kontrak antara PUJK dan Konsumen yang isinya dirancang, dirumuskan, ditetapkan, digandakan, dan ditawarkan secara sepihak oleh PUJK untuk disepakati bersama Konsumen.",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (4)\n\nRingkasan informasi produk dan/atau layanan PAYDI sebagaimana dimaksud pada ayat (3) terdiri dari 2 (dua) versi:\n\na. versi umum pada situs web PUJK; dan\n\nb. versi personal kepada calon pemegang polis, tertanggung, atau peserta.",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nYang dimaksud dengan “pihak” adalah orang perseorangan, perusahaan, usaha bersama, asosiasi, atau kelompok yang terorganisasi. Kegiatan usaha di sektor keuangan antara lain:\n\n- a. penghimpunan dana dari masyarakat dan/atau untuk disalurkan kepada masyarakat; Ketentuan ini tidak dimaksudkan untuk mencakup penghimpunan dana di luar sektor keuangan, misalnya arisan keluarga dan penghimpun",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (2)\nPerjanjian PAYDI berbentuk polis asuransi.\n\nHuruf a\nCukup jelas.\n\nHuruf b\nCukup jelas.\n\nHuruf c\nCukup jelas.\n\nHuruf d\nCukup jelas.\n\nHuruf e\nCukup jelas.\n\nHuruf f\nCukup jelas.\n\nHuruf g\nCukup jelas.\n\nHuruf h\nCukup jelas.\n\nHuruf i\nContoh “fitur tambahan”: loyalty bonus, bonus premi atau kontribusi top-up, dan bonus pengembalian biaya administrasi saat terpenuhi kriteria atau kondisi terten",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB1-02",
+      "category": "GENERAL",
+      "clause": "SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan....",
+      "predicted": "NOT_ADDRESSED",
+      "expected": "NOT_ADDRESSED",
+      "predicted_norm": "NOT_ADDRESSED",
+      "expected_norm": "NOT_ADDRESSED",
+      "predicted_6": "NOT_ADDRESSED",
+      "expected_6": "NOT_ADDRESSED",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2285,
+      "confidence": 0.96,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 262\n\nSRO wajib:\n\n- melaksanakan tugas yang telah ditetapkan oleh Bank Indonesia; dan\n- menjaga kerahasian data dan/atau informasi.",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(2) PJP, PIP, dan pihak yang bekerja sama sebagaimana dimaksud pada ayat (1) wajib bertanggung jawab atas keabsahan, kebenaran, kelengkapan, dan ketepatan waktu atas setiap penyampaian dokumen, data, informasi, laporan, keterangan, dan/atau penjelasan kepada Bank Indonesia.\n\n(3) Dokumen, data, informasi, laporan, keterangan, dan/atau penjelasan sebagaimana dimaksud pada ayat (2) disampaikan melalu",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 114\n\nPersyaratan aspek penerapan manajemen risiko untuk kerja sama dengan kategori risiko sedang disertai dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n1. hasil penilaian terhadap eksposur risiko yang timbul akibat kerja sama yang dilakukan dan mitigasi risiko;\n2. hasil penilaian terhadap prosedur pemantauan anti pencucian uang atau pencegahan pendanaan terorisme serta prosedu",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 93\n\n1. PJP, PIP, dan pihak yang bekerja sama wajib menyampaikan kepada Bank Indonesia atau pihak lain yang ditugaskan oleh Bank Indonesia:",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Kewajiban SRO",
+          "relevance_score": 0.6569,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.",
+          "relevance_score": 0.9301,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# 16.\n\nPegawai adalah semua tenaga kerja yang memperoleh upah dan/atau gaji dari PUJK.",
+          "relevance_score": 0.9218,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# 4.\n\nhubungan kepemilikan saham dalam perusahaan sebesar 20% (dua puluh persen) atau lebih; dan/atau",
+          "relevance_score": 0.8661,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.",
+          "relevance_score": 0.8642,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (3)\n\nContoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK.",
+          "relevance_score": 0.8592,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB2-01",
+      "category": "PRIVACY",
+      "clause": "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 3184,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nKetentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 257\n\n1. Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib:\n2.\nmenerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi:\n3.\npengumpulan data pribadi dilakukan secara terbatas dan spesifik, sah secara hukum, patut, dan transparan;\n4. pemro",
+          "relevance_score": 0.9683,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# 157\n\nkehilangan, penyalahgunaan, akses dan pengungkapan yang tidak sah, serta pengubahan atau perusakan data pribadi;\n\n1. pemrosesan data pribadi dilakukan dengan memberitahukan tujuan pengumpulan, aktivitas pemrosesan, dan kegagalan pelindungan data pribadi; dan\n2. pemrosesan data pribadi dimusnahkan dan/atau dihapus kecuali masih dalam masa retensi sesuai dengan kebutuhan berdasarkan ketentuan",
+          "relevance_score": 0.9214,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 109\n\n(1) PJP dan PIP dapat mentransfer data individual nasabah kepada pihak lain di luar wilayah hukum Negara Kesatuan Republik Indonesia sesuai dengan ketentuan peraturan perundang-undangan mengenai perlindungan data pribadi dan ketentuan Bank Indonesia.\n\n(2) Dalam hal transfer data individual nasabah sebagaimana dimaksud pada ayat (1) tidak sesuai dengan ketentuan peraturan perundang-und",
+          "relevance_score": 0.9139,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 107\n\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP, PIP, dan/atau pihak yang bekerja sama dengan PJP dan PIP wajib:\n\n- a. menerapkan prinsip perlindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya;\n- b. memenuhi mekanisme pemrosesan data dan/atau informasi terkait Sistem Pembayaran yang ditetapkan oleh Bank I",
+          "relevance_score": 0.9009,
+          "found_in": "hybrid"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 23\n\n1. Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi.\n2. PUJK wajib menjelaskan secara tertulis dan/atau lisan mengenai tujuan dan konsekuensi dari persetujuan Konsumen terkait dengan pemberian data dan/atau informasi Konsum",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 19\n\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen.\n\n(2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup:\n\na. perseorangan:\n\n1. nama lengkap;\n2. Nomor Induk Kependudukan;\n3. alamat;\n4. tanggal lahir dan/atau umur;\n5. nomor telepon;\n6. nama ibu kandung;\n7. data lain yang diserahkan atau diberikan akses oleh Konsumen kepada PUJK;",
+          "relevance_score": 0.9618,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nContoh pihak lain: pihak di luar PUJK yang berinisiasi untuk menukar data dan/atau informasi Konsumen. Contoh memperhatikan ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi yang menyatakan bahwa pengendali data pribadi berkewajiban memiliki dasar pemrosesan data pribadi, sehingga PUJK juga berkewajiban memiliki dasar pemrosesan data pribadi. Contoh peraturan per",
+          "relevance_score": 0.9324,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 8\n\nContoh data lainnya sesuai dengan ketentuan peraturan perundang-undangan:\n\n1. data dan informasi kesehatan, merupakan catatan atau keterangan individu yang berkaitan dengan kesehatan fisik, kesehatan mental, dan/atau pelayanan kesehatan;\n2. data keuangan pribadi, termasuk namun tidak terbatas kepada data jumlah simpanan pada bank termasuk tabungan, deposito, dan data kartu kredit;\n3. ca",
+          "relevance_score": 0.9218,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 22\n\n(1) PUJK dilarang:\n\n- a. memberikan data dan/atau informasi mengenai Konsumen kepada pihak lain;\n- b. menggunakan data dan/atau informasi Konsumen yang telah mengakhiri perjanjian produk dan/atau layanan;\n- c. menggunakan data dan/atau informasi calon Konsumen yang permohonan penggunaan produk dan/atau layanan ditolak oleh PUJK; dan/atau\n- d. menggunakan data dan/atau informasi calon K",
+          "relevance_score": 0.9161,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB2-02",
+      "category": "SECURITY",
+      "clause": "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupu...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2578,
+      "confidence": 0.97,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nKetentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 257\n\n1. Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib:\n2.\nmenerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi:\n3.\npengumpulan data pribadi dilakukan secara terbatas dan spesifik, sah secara hukum, patut, dan transparan;\n4. pemro",
+          "relevance_score": 0.9623,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# 157\n\nkehilangan, penyalahgunaan, akses dan pengungkapan yang tidak sah, serta pengubahan atau perusakan data pribadi;\n\n1. pemrosesan data pribadi dilakukan dengan memberitahukan tujuan pengumpulan, aktivitas pemrosesan, dan kegagalan pelindungan data pribadi; dan\n2. pemrosesan data pribadi dimusnahkan dan/atau dihapus kecuali masih dalam masa retensi sesuai dengan kebutuhan berdasarkan ketentuan",
+          "relevance_score": 0.9509,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf a\n\nPenerapan prinsip perlindungan data pribadi dilakukan sesuai dengan ketentuan peraturan perundang-undangan dan/atau standar internasional yang mengatur tentang perlindungan data pribadi.",
+          "relevance_score": 0.947,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# c. penerapan standar keamanan siber;",
+          "relevance_score": 0.8821,
+          "found_in": "hybrid"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 19\n\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen.\n\n(2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup:\n\na. perseorangan:\n\n1. nama lengkap;\n2. Nomor Induk Kependudukan;\n3. alamat;\n4. tanggal lahir dan/atau umur;\n5. nomor telepon;\n6. nama ibu kandung;\n7. data lain yang diserahkan atau diberikan akses oleh Konsumen kepada PUJK;",
+          "relevance_score": 0.9578,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf d\n\nYang dimaksud dengan “pelindungan aset, privasi, dan data Konsumen” adalah prinsip yang menekankan pada kepastian adanya prosedur, mekanisme, dan sistem untuk memberikan jaminan pelindungan, menjaga kerahasiaan dan keamanan atas aset keuangan, sistem informasi, dan ketahanan siber yang dikelola oleh PUJK, privasi, data dan/atau informasi Konsumen, serta menggunakan sesuai dengan kepenti",
+          "relevance_score": 0.9403,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf a\n\nContoh hak Konsumen mendapatkan keamanan dalam menggunakan produk dan/atau memanfaatkan layanan sesuai yang ditetapkan dalam ketentuan peraturan perundang-undangan dan/atau perjanjian:\n\n1. Konsumen berhak atas keamanan dan kerahasiaan data dan informasi Konsumen;\n2. Konsumen berhak mendapatkan keamanan sistem informasi dan ketahanan siber dari PUJK; dan\n3. Konsumen berhak mendapatkan ke",
+          "relevance_score": 0.9278,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nContoh pihak lain: pihak di luar PUJK yang berinisiasi untuk menukar data dan/atau informasi Konsumen. Contoh memperhatikan ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi yang menyatakan bahwa pengendali data pribadi berkewajiban memiliki dasar pemrosesan data pribadi, sehingga PUJK juga berkewajiban memiliki dasar pemrosesan data pribadi. Contoh peraturan per",
+          "relevance_score": 0.8915,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 21\n\n(1) PUJK dapat melakukan transfer data dan/atau informasi Konsumen berupa perseorangan sebagaimana dimaksud dalam Pasal 19 ayat (2) huruf a kepada pihak lain di luar wilayah hukum Negara Kesatuan Republik Indonesia dengan memenuhi ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi dan peraturan perundang-undangan lain yang ditetapkan oleh Otoritas Jasa Keuangan.\n\n",
+          "relevance_score": 0.8556,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB2-03",
+      "category": "PRIVACY",
+      "clause": "Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas Data Pribadi mereka kapan ...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2575,
+      "confidence": 0.96,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nKetentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 257\n\n1. Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib:\n2.\nmenerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi:\n3.\npengumpulan data pribadi dilakukan secara terbatas dan spesifik, sah secara hukum, patut, dan transparan;\n4. pemro",
+          "relevance_score": 0.9577,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# 157\n\nkehilangan, penyalahgunaan, akses dan pengungkapan yang tidak sah, serta pengubahan atau perusakan data pribadi;\n\n1. pemrosesan data pribadi dilakukan dengan memberitahukan tujuan pengumpulan, aktivitas pemrosesan, dan kegagalan pelindungan data pribadi; dan\n2. pemrosesan data pribadi dimusnahkan dan/atau dihapus kecuali masih dalam masa retensi sesuai dengan kebutuhan berdasarkan ketentuan",
+          "relevance_score": 0.9469,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf a\n\nPenerapan prinsip perlindungan data pribadi dilakukan sesuai dengan ketentuan peraturan perundang-undangan dan/atau standar internasional yang mengatur tentang perlindungan data pribadi.",
+          "relevance_score": 0.9285,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 109\n\n(1) PJP dan PIP dapat mentransfer data individual nasabah kepada pihak lain di luar wilayah hukum Negara Kesatuan Republik Indonesia sesuai dengan ketentuan peraturan perundang-undangan mengenai perlindungan data pribadi dan ketentuan Bank Indonesia.\n\n(2) Dalam hal transfer data individual nasabah sebagaimana dimaksud pada ayat (1) tidak sesuai dengan ketentuan peraturan perundang-und",
+          "relevance_score": 0.9279,
+          "found_in": "hybrid"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nContoh pihak lain: pihak di luar PUJK yang berinisiasi untuk menukar data dan/atau informasi Konsumen. Contoh memperhatikan ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi yang menyatakan bahwa pengendali data pribadi berkewajiban memiliki dasar pemrosesan data pribadi, sehingga PUJK juga berkewajiban memiliki dasar pemrosesan data pribadi. Contoh peraturan per",
+          "relevance_score": 0.9521,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (4)\n\nContoh pihak lain: perusahaan pengelola data.",
+          "relevance_score": 0.9242,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 5\n\nContoh data lain: alamat surat elektronik perusahaan, Nomor Pokok Wajib Pajak perusahaan, alamat Protokol Internet (IP address) perusahaan, aset dan data karyawan, dan pemilik manfaat (beneficiary owner).",
+          "relevance_score": 0.8959,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf c\n\nYang dimaksud dengan “sarana komunikasi pribadi calon Konsumen” adalah sarana komunikasi yang bersifat personal antara lain telepon, telepon seluler, surat elektronik, short message service, voicemail, video call, dan aplikasi pesan instan.",
+          "relevance_score": 0.8803,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf d\n\nContoh hak Konsumen mendapatkan informasi mengenai produk dan/atau layanan yang jelas, akurat, benar, mudah diakses, dan tidak berpotensi menyesatkan:\n\n1. Konsumen berhak mendapatkan informasi mengenai produk dan/atau layanan yang jelas, akurat, benar, mudah diakses, dan tidak berpotensi menyesatkan;\n2. Konsumen berhak mendapatkan ringkasan informasi produk dan/atau layanan;\n3. pada saa",
+          "relevance_score": 0.8391,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB2-04",
+      "category": "PRIVACY",
+      "clause": "Data Pribadi Nasabah tidak akan pernah dijual kepada pihak ketiga mana pun tanpa izin eksplisit yang...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 3466,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nKetentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 109\n\n(1) PJP dan PIP dapat mentransfer data individual nasabah kepada pihak lain di luar wilayah hukum Negara Kesatuan Republik Indonesia sesuai dengan ketentuan peraturan perundang-undangan mengenai perlindungan data pribadi dan ketentuan Bank Indonesia.\n\n(2) Dalam hal transfer data individual nasabah sebagaimana dimaksud pada ayat (1) tidak sesuai dengan ketentuan peraturan perundang-und",
+          "relevance_score": 0.9672,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Huruf c\n\nYang dimaksud dengan “prinsip pelindungan data” adalah memastikan kerahasiaan dan perlindungan data yang disimpan atau diproses menggunakan infrastruktur data pihak ketiga.",
+          "relevance_score": 0.9593,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Penggunaan dan Keterbukaan Data Individual Nasabah",
+          "relevance_score": 0.9429,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 257\n\n1. Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib:\n2.\nmenerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi:\n3.\npengumpulan data pribadi dilakukan secara terbatas dan spesifik, sah secara hukum, patut, dan transparan;\n4. pemro",
+          "relevance_score": 0.9421,
+          "found_in": "hybrid"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 8\n\nContoh data lainnya sesuai dengan ketentuan peraturan perundang-undangan:\n\n1. data dan informasi kesehatan, merupakan catatan atau keterangan individu yang berkaitan dengan kesehatan fisik, kesehatan mental, dan/atau pelayanan kesehatan;\n2. data keuangan pribadi, termasuk namun tidak terbatas kepada data jumlah simpanan pada bank termasuk tabungan, deposito, dan data kartu kredit;\n3. ca",
+          "relevance_score": 0.9952,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 19\n\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen.\n\n(2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup:\n\na. perseorangan:\n\n1. nama lengkap;\n2. Nomor Induk Kependudukan;\n3. alamat;\n4. tanggal lahir dan/atau umur;\n5. nomor telepon;\n6. nama ibu kandung;\n7. data lain yang diserahkan atau diberikan akses oleh Konsumen kepada PUJK;",
+          "relevance_score": 0.9637,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 22\n\n(1) PUJK dilarang:\n\n- a. memberikan data dan/atau informasi mengenai Konsumen kepada pihak lain;\n- b. menggunakan data dan/atau informasi Konsumen yang telah mengakhiri perjanjian produk dan/atau layanan;\n- c. menggunakan data dan/atau informasi calon Konsumen yang permohonan penggunaan produk dan/atau layanan ditolak oleh PUJK; dan/atau\n- d. menggunakan data dan/atau informasi calon K",
+          "relevance_score": 0.9465,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 23\n\n1. Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi.\n2. PUJK wajib menjelaskan secara tertulis dan/atau lisan mengenai tujuan dan konsekuensi dari persetujuan Konsumen terkait dengan pemberian data dan/atau informasi Konsum",
+          "relevance_score": 0.9403,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nContoh pihak lain: pihak di luar PUJK yang berinisiasi untuk menukar data dan/atau informasi Konsumen. Contoh memperhatikan ketentuan peraturan perundang-undangan mengenai pelindungan data pribadi yang menyatakan bahwa pengendali data pribadi berkewajiban memiliki dasar pemrosesan data pribadi, sehingga PUJK juga berkewajiban memiliki dasar pemrosesan data pribadi. Contoh peraturan per",
+          "relevance_score": 0.9373,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": []
+    },
+    {
+      "clause_id": "BAB3-01",
+      "category": "COMPLAINT",
+      "clause": "Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin ...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NON_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4253,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 69 Ayat 3"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 106\n\nPersyaratan aspek perlindungan konsumen untuk pengembangan aktivitas dan/atau pengembangan produk yang disertai kerja sama dengan kategori risiko tinggi dengan pemenuhan paling sedikit dokumen yang menunjukkan:\n\n- a. kebijakan dan prosedur operasional dalam rangka perlindungan konsumen;\n- b. transparansi aktivitas atau produk yang dikembangkan kepada Pengguna Jasa;\n- c. prosedur dan m",
+          "relevance_score": 0.9429,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "d. hasil penilaian PJP mengenai dampak pengembangan aktivitas dan/atau pengembangan produk dan kerja sama terhadap perubahan kebijakan dan prosedur operasional dalam rangka perlindungan konsumen, dan prosedur dan mekanisme penanganan dan penyelesaian pengaduan konsumen; dan\n\ne. hasil penyesuaian prosedur dan mekanisme berdasarkan hasil penilaian sebagaimana dimaksud dalam huruf d.",
+          "relevance_score": 0.8662,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(3) Dalam hal penyampaian laporan sebagaimana dimaksud pada ayat (1) dan ayat (2) jatuh pada hari Sabtu, Minggu, hari libur, dan/atau cuti bersama yang ditetapkan oleh Bank Indonesia, penyampaian laporan disampaikan pada hari kerja berikutnya.\n\n(4) Untuk penyampaian laporan berkala secara daring (online) dan pengenaan sanksi dilakukan sesuai dengan ketentuan peraturan Bank Indonesia.\n\n(5) Ketentua",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 36\n\nIndonesia paling lama 120 (seratus dua puluh) hari kerja sejak tanggal selesai pemeriksaan lapangan (on site visit).\n\n(3) Bank Indonesia menolak permohonan perizinan pada tahapan pemeriksaan lapangan (on site visit) sebagaimana dimaksud dalam Pasal 32 ayat (3) dalam hal:\n\n- a. laporan dan/atau dokumen perbaikan hasil pemeriksaan lapangan (on site visit) sebagaimana dimaksud pada ayat (",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 98\n\n(1) Penyampaian permohonan persetujuan untuk pengembangan aktivitas, pengembangan produk, dan/atau kerja sama disertai dengan dokumen pendukung pemenuhan persyaratan meliputi aspek:\n\n1. kesiapan operasional;\n2. keamanan dan keandalan sistem;\n3. penerapan manajemen risiko; dan\n4. perlindungan konsumen.",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 75\n\n1. PUJK wajib melakukan tindak lanjut dan melakukan penyelesaian Pengaduan secara tertulis paling lama 10 (sepuluh) hari kerja sejak dokumen sebagaimana dimaksud dalam Pasal 71 ayat (2) dan/atau ayat (3) diterima secara lengkap.\n2. Dalam hal terdapat kondisi tertentu, PUJK dapat memperpanjang jangka waktu paling lama 10 (sepuluh) hari kerja sejak jangka waktu sebagaimana dimaksud pada ",
+          "relevance_score": 0.9637,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 69\n\n1. PUJK wajib menyediakan Layanan Pengaduan Konsumen.\n2. Layanan Pengaduan sebagaimana dimaksud pada ayat (1) memiliki ruang lingkup terdiri atas:\n1. penerimaan Pengaduan;\n2. penanganan Pengaduan; dan\n3. penyelesaian Pengaduan.\n3. Dalam hal pemanfaatan layanan PUJK digunakan selama 24 (dua puluh empat) jam, PUJK wajib menyediakan paling kurang layanan penerimaan Pengaduan selama 24 (du",
+          "relevance_score": 0.9569,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (2)\n\nPengaduan secara lisan antara lain melalui telepon, dan/atau short message services (SMS). Pengaduan secara tertulis antara lain melalui surat, surat elektronik (email), faksimili, laman (website) PUJK, dan/atau media elektronik yang dikelola resmi oleh PUJK yang dapat digunakan untuk menyampaikan dokumen Pengaduan. Pengaduan yang diterima oleh PUJK dari Konsumen walk in, dikategorikan",
+          "relevance_score": 0.9145,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 96\n\n1. Konsumen dapat menyampaikan Pengaduan melalui layanan Pengaduan kepada Otoritas Jasa Keuangan.\n2. Penyampaian Pengaduan sebagaimana dimaksud pada ayat (1) dilakukan melalui Sistem Layanan Konsumen dan Masyarakat Terintegrasi di Sektor Jasa Keuangan.\n3. Konsumen dapat memantau penyelesaian Pengaduan pada Sistem Layanan Konsumen dan Masyarakat Terintegrasi di Sektor Jasa Keuangan.\n4. ",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 71\n\n1. PUJK wajib menangani Pengaduan secara tertulis bagi Konsumen yang telah melengkapi dokumen yang dipersyaratkan.\n2. Dokumen yang dipersyaratkan oleh PUJK sebagaimana dimaksud pada ayat (1) terdiri atas:\n1. identitas Konsumen;\n2. jenis dan tanggal pemanfaatan produk dan/atau layanan;\n3. permasalahan yang diadukan; dan\n4. dokumen lain.\n3. Dalam hal Konsumen memiliki dokumen yang berkai",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        null,
+        null
+      ]
+    },
+    {
+      "clause_id": "BAB3-02",
+      "category": "COMPLAINT",
+      "clause": "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaika...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": false,
+      "correct_6": false,
+      "latency_ms": 3368,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 75 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(5) Bank Indonesia melakukan analisis substansi persyaratan persetujuan dalam jangka waktu paling lama 20 (dua puluh) hari kerja setelah PJP menyampaikan dokumen perbaikan sebagaimana dimaksud pada ayat (4).",
+          "relevance_score": 0.9539,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(3) Setelah dokumen persyaratan permohonan persetujuan dinyatakan lengkap dan benar berdasarkan penelitian administratif sebagaimana dimaksud dalam Pasal 91 ayat (2), Bank Indonesia melakukan analisis model bisnis dan analisis substansi persyaratan persetujuan dalam jangka waktu paling lama 20 (dua puluh) hari kerja.\n\n(4) Dalam hal dokumen persyaratan permohonan persetujuan belum sesuai berdasarka",
+          "relevance_score": 0.9319,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 42\n\n(1) PJP yang telah memperoleh izin harus menyelenggarakan aktivitasnya paling lambat 120 (seratus dua puluh) hari kerja terhitung sejak tanggal surat pemberian izin dari Bank Indonesia.\n\n(2) PJP yang telah menyelenggarakan aktivitas Sistem Pembayaran harus menyampaikan laporan realisasi secara tertulis kepada Bank Indonesia melalui aplikasi perizinan Bank Indonesia.\n\n(3) Dalam hal apli",
+          "relevance_score": 0.9286,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(6) PJP yang izinnya dinyatakan batal dan tidak berlaku sebagaimana dimaksud pada ayat (5), dapat mengajukan permohonan izin kembali paling cepat 180 (seratus delapan puluh) hari kerja terhitung sejak tanggal batalnya izin.",
+          "relevance_score": 0.8746,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "- 25 -\n\nditerima dan dinyatakan lengkap oleh front office perizinan;\n\nb. dalam hal dokumen persyaratan perizinan belum sesuai berdasarkan hasil analisis Bank Indonesia, calon PJP harus menyampaikan perbaikan dokumen persyaratan dimaksud dalam jangka waktu paling lama 40 (empat puluh) hari kerja; dan\n\nc. Bank Indonesia melakukan analisis substansi persyaratan izin terhadap perbaikan dokumen sebagai",
+          "relevance_score": 0.8277,
+          "found_in": "hybrid"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 75\n\n1. PUJK wajib melakukan tindak lanjut dan melakukan penyelesaian Pengaduan secara tertulis paling lama 10 (sepuluh) hari kerja sejak dokumen sebagaimana dimaksud dalam Pasal 71 ayat (2) dan/atau ayat (3) diterima secara lengkap.\n2. Dalam hal terdapat kondisi tertentu, PUJK dapat memperpanjang jangka waktu paling lama 10 (sepuluh) hari kerja sejak jangka waktu sebagaimana dimaksud pada ",
+          "relevance_score": 0.9952,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 74\n\n1. PUJK wajib melakukan tindak lanjut dan menyelesaikan Pengaduan secara lisan paling lama 5 (lima) hari kerja sejak Pengaduan diterima PUJK.\n2. Dalam hal PUJK membutuhkan dokumen pendukung dan jangka waktu penyelesaian Pengaduan sebagaimana dimaksud pada ayat (1) tidak dapat dipenuhi, PUJK meminta kepada Konsumen untuk menyampaikan Pengaduan secara tertulis dengan melampirkan dokumen ",
+          "relevance_score": 0.9355,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (6)\n\nDalam hal pihak lain sebagaimana dimaksud pada ayat (5) merupakan PUJK, pihak lain dimaksud wajib menyampaikan tindak lanjut Pengaduan dalam jangka waktu paling lama 10 (sepuluh) hari kerja sejak tanggal permintaan tindak lanjut dari PUJK yang menerima Pengaduan awal.",
+          "relevance_score": 0.9279,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (5)\n\nYang dimaksud dengan “penyelesaian Pengaduan di luar jangka waktu” adalah penyelesaian Pengaduan yang dilakukan oleh PUJK dengan atau tanpa melalui tahapan tindak lanjut dan penyelesaian Pengaduan dan perpanjangan waktu tindak lanjut serta penyelesaian Pengaduan.\n\nContoh pihak lain: pihak yang memiliki kerja sama dengan PUJK dalam penyediaan produk dan/atau layanan jasa keuangan.",
+          "relevance_score": 0.926,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (5)\n\nWaktu 10 (sepuluh) hari kerja termasuk untuk konfirmasi dan klarifikasi bukti pendukung.",
+          "relevance_score": 0.9093,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": [
+        null
+      ]
+    },
+    {
+      "clause_id": "BAB3-03",
+      "category": "CONSUMER_RIGHTS",
+      "clause": "Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan sementara akun...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NON_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 3606,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 46 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(3) Dalam hal aplikasi sebagaimana dimaksud pada ayat (1) belum dapat diimplementasikan atau mengalami gangguan, penyampaian permohonan persetujuan dilakukan secara langsung sesuai dengan mekanisme yang ditetapkan oleh Bank Indonesia.",
+          "relevance_score": 0.8915,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "c. tidak melanggar prinsip perlindungan konsumen dan anti pencucian uang dan pencegahan pendanaan terorisme; dan\n\nd. kepatuhan terhadap ketentuan peraturan perundang-undangan.\n\n(4) Pemberian persetujuan bersyarat sebagaimana dimaksud pada ayat (2) huruf a diberikan setelah dokumen dinyatakan benar dan lengkap berdasarkan penelitian administratif.\n\n(5) Persetujuan bersyarat sebagaimana dimaksud pad",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# b. akibat yang ditimbulkan terhadap:\n\n1. aspek kelancaran dan keamanan Sistem Pembayaran;\n2. aspek perlindungan konsumen;\n3. aspek anti pencucian uang dan pencegahan pendanaan terorisme; dan/atau\n4. aspek lainnya yang ditetapkan Bank Indonesia.\n\n(3) Pengenaan sanksi administratif sebagaimana diatur pada ayat (1) dapat disertai dengan:\n\npengumuman kepada publik;\npenghentian pemrosesan persetujuan",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nYang dimaksud dengan ”pengguna aktif” adalah pengguna layanan penyimpanan data instrumen pembayaran yang melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran secara reguler dan/atau melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran paling sedikit 1 (satu) kali dalam 1 (satu) bulan.",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nYang dimaksud dengan “pengguna layanan penyimpanan data instrumen” adalah Pengguna Jasa yang menggunakan layanan penyimpanan data instrumen.",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (2)\n\nContoh kecuali diatur lain oleh ketentuan peraturan perundang-undangan:\n\nCalon Konsumen tabungan yang setelah dilakukan due diligence ternyata diindikasikan terlibat tindak pidana pencucian uang sesuai dengan ketentuan Undang-Undang Nomor 8 Tahun 2010 tentang Pencegahan dan Pemberantasan Tindak Pidana Pencucian Uang dan/atau terlibat tindak pidana pendanaan terorisme sesuai dengan kete",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 51\n\n1. bersifat kumpulan, bukan berdasarkan pilihan dan inisiatif pribadi, dan merupakan fasilitas yang diperoleh Konsumen; atau\n2. yang telah diberikan waktu yang cukup kepada calon Konsumen sebagaimana dimaksud dalam Pasal 45 ayat (2) paling kurang 2 (dua) hari kerja.\n\nDalam hal belum terdapat ketentuan pembatalan perjanjian pada masa jeda untuk pembatalan yang terjadi pada produk invest",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "dipenuhi oleh calon Konsumen dan/atau Konsumen dalam menggunakan, membeli, atau memanfaatkan produk dan/atau layanan. Informasi yang harus dipenuhi antara lain:\n\n1. dokumen yang harus dipersiapkan calon Konsumen dan/atau Konsumen, termasuk menyampaikan kewajiban calon Konsumen dan/atau Konsumen menyediakan informasi dan/atau data sesuai dengan kondisi sesungguhnya dan konsekuensi jika calon Konsum",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (1)\n\nMasa jeda diberikan PUJK kepada Konsumen untuk mempelajari kembali dokumen perjanjian untuk tetap melaksanakan atau membatalkan perjanjian.",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "pada hari Sabtu, hari Minggu, atau hari libur, laporan Layanan Pengaduan disampaikan pada 1 (satu) hari kerja berikutnya.\n\n(5) PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat (1) dikenai sanksi administratif berupa denda administratif dengan rincian:\n\n- a. sebesar Rp50.000.000,00 (lima puluh juta rupiah) untuk masing-masing laporan bagi PUJK berupa Bank Umum, Perusahaan Efek, Dana Pen",
+          "relevance_score": 0.6569,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        null
+      ]
+    },
+    {
+      "clause_id": "BAB4-01",
+      "category": "LIMITS",
+      "clause": "Akun Unverified (Belum KYC): Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo ...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NON_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 3214,
+      "confidence": 0.97,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 160\n\n1. Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut:\n- untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan\n- untuk uang elektronik registered paling banyak Rp10.000.000,00 (sepuluh juta rupiah).\n2. Batas nilai transaksi uang elektronik dalam 1 (satu) bulan paling banyak Rp20.000.000,00 (dua puluh juta ru",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (3)\n\nYang dimaksud dengan “tidak menghapus dan/atau menghilangkan nilai uang elektronik yang belum digunakan” adalah pengguna uang elektronik masih memiliki hak tagih.",
+          "relevance_score": 0.9179,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (6)\n\nYang dimaksud dengan “kewajiban PJP” antara lain kewajiban dana float yang belum dibayarkan kepada pengguna uang elektronik.",
+          "relevance_score": 0.8932,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 2\n\nYang dimaksud dengan “unregistered” adalah uang elektronik yang data identitas Penggunanya tidak terdaftar dan tidak tercatat pada PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana tersebut.",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 1\n\nYang dimaksud dengan “registered” adalah uang elektronik yang data identitas Penggunanya terdaftar dan tercatat pada PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana tersebut.",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(4) Sanksi sebagaimana dimaksud pada ayat (3) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (3) huruf a.\n\n(5) Sanksi denda sebagaimana dimaksud pada ayat (3) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (12)\n\nSanksi denda sebagaimana dimaksud pada ayat (10) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9839,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (10)\n\nSanksi denda sebagaimana dimaksud pada ayat (8) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.947,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(11) Sanksi denda sebagaimana dimaksud pada ayat (9) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).\n\n(12) PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat (1) dapat dikenai sanksi sesuai dengan undang-undang mengenai pengembangan dan penguatan sektor keuangan.",
+          "relevance_score": 0.9469,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (7)\n\nSanksi denda sebagaimana dimaksud pada ayat (5) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9278,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": [
+        null
+      ]
+    },
+    {
+      "clause_id": "BAB4-02",
+      "category": "LIMITS",
+      "clause": "Akun Verified (Sudah KYC): Nasabah yang sudah diverifikasi identitasnya dapat menyimpan saldo maksim...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "PARTIALLY_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": false,
+      "correct_6": false,
+      "latency_ms": 2838,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 160\n\n1. Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut:\n- untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan\n- untuk uang elektronik registered paling banyak Rp10.000.000,00 (sepuluh juta rupiah).\n2. Batas nilai transaksi uang elektronik dalam 1 (satu) bulan paling banyak Rp20.000.000,00 (dua puluh juta ru",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 150\n\nb. batasan penyelenggaraan Akses ke Sumber Dana untuk pemenuhan manajemen risiko dan prinsip perlindungan konsumen meliputi:\n\n1. batasan nominal transaksi;\n2. batasan nilai yang disimpan dalam akses ke Sumber Dana berupa instrumen atau layanan penyimpanan data instrumen pembayaran;\n3. batasan penarikan uang tunai; dan/atau\n4. batasan penyelenggaraan akses ke Sumber Dana lainnya yang d",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Angka 1\n\nYang dimaksud dengan “registered” adalah uang elektronik yang data identitas Penggunanya terdaftar dan tercatat pada PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana tersebut.",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "e. menempatkan dana float pada rekening yang terpisah dari rekening operasional PJP yang menyelenggarakan aktivitas penatausahaan Sumber Dana berupa penerbitan uang elektronik.",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "e. dijamin dengan dana yang memadai sesuai nilai yang dapat digunakan oleh konsumen; dan\n\nf. batasan lainnya yang ditetapkan Bank Indonesia.\n\n(3) Bank Indonesia dapat melakukan pemeriksaan dan/atau meminta laporan, dokumen, data, informasi, keterangan, dan/atau penjelasan terhadap penerbit nilai yang dapat dipersamakan dengan uang yang digunakan untuk tujuan pembayaran dan/atau pemenuhan kegiatan ",
+          "relevance_score": 0.6569,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(4) Sanksi sebagaimana dimaksud pada ayat (3) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (3) huruf a.\n\n(5) Sanksi denda sebagaimana dimaksud pada ayat (3) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 1.0,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (7)\n\nSanksi denda sebagaimana dimaksud pada ayat (5) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9778,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (6)\n\nSanksi denda sebagaimana dimaksud pada ayat (4) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9623,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (12)\n\nSanksi denda sebagaimana dimaksud pada ayat (10) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9429,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# (10)\n\nSanksi denda sebagaimana dimaksud pada ayat (8) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.9374,
+          "found_in": "hybrid"
+        }
+      ],
+      "citation_grounded": [
+        null
+      ]
+    },
+    {
+      "clause_id": "BAB4-03",
+      "category": "LIMITS",
+      "clause": "Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk men...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NON_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2881,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "hybrid",
+      "retrieval_mode_ojk": "hybrid",
+      "sparse_boost": 0.3,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 160\n\n1. Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut:\n- untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan\n- untuk uang elektronik registered paling banyak Rp10.000.000,00 (sepuluh juta rupiah).\n2. Batas nilai transaksi uang elektronik dalam 1 (satu) bulan paling banyak Rp20.000.000,00 (dua puluh juta ru",
+          "relevance_score": 0.9792,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 2,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Ayat (3)\n\nTermasuk transaksi yang bersifat incoming antara lain setoran awal, transfer dana masuk, dan/atau pengisian ulang (top up).",
+          "relevance_score": 0.9778,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 3,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(3) Bank Indonesia dapat menyesuaikan batas jumlah pengguna aktif yang dikecualikan dari kewajiban izin sebagai PJP sebagaimana dimaksud pada ayat (1) dengan mempertimbangkan:\n\n- a. perkembangan transaksi;\n- b. kebutuhan masyarakat atau industri;\n- c. manajemen risiko;\n- d. perlindungan konsumen; dan/atau\n- e. mendorong perluasan akseptasi, efisiensi, kompetisi, layanan, dan inovasi.\n\n(4) Ketentua",
+          "relevance_score": 0.9623,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 4,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "sebagaimana dimaksud pada ayat (5) dengan mempertimbangkan:\n\n- a. perkembangan transaksi pembayaran;\n- b. menjaga pertumbuhan industri;\n- c. efisiensi nasional;\n- d. kepentingan publik; dan/atau\n- e. aspek lainnya dalam mendorong perluasan akseptasi layanan dan inovasi.\n\n(7) Ketentuan mengenai perubahan komposisi pengelolaan dan penempatan serta mekanisme pencatatan dana float sebagaimana dimaksud",
+          "relevance_score": 0.9122,
+          "found_in": "hybrid"
+        },
+        {
+          "rank": 5,
+          "regulator": "Bank Indonesia (BI)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 150\n\nb. batasan penyelenggaraan Akses ke Sumber Dana untuk pemenuhan manajemen risiko dan prinsip perlindungan konsumen meliputi:\n\n1. batasan nominal transaksi;\n2. batasan nilai yang disimpan dalam akses ke Sumber Dana berupa instrumen atau layanan penyimpanan data instrumen pembayaran;\n3. batasan penarikan uang tunai; dan/atau\n4. batasan penyelenggaraan akses ke Sumber Dana lainnya yang d",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "(4) Dalam hal Penyelenggara Layanan Pendanaan Bersama Berbasis Teknologi Informasi melakukan kerja sama dengan pihak lain sebagaimana dimaksud pada ayat (3) wajib memenuhi ketentuan pihak lain tersebut bukan merupakan afiliasi Penyelenggara Layanan Pendanaan Bersama Berbasis Teknologi Informasi atau pemberi dana.\n\n(5) PUJK wajib bertanggung jawab atas segala dampak yang ditimbulkan dari kerja sama",
+          "relevance_score": 0.7,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 28\n\n1. PUJK wajib memiliki pedoman penetapan nilai/harga dan/atau biaya produk dan/atau layanan.\n2. PUJK berhak menerima pembayaran sesuai dengan nilai/harga dan/atau biaya produk dan/atau layanan yang disepakati dengan Konsumen.\n3. PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat (1) dikenai sanksi administratif berupa:\n1. peringatan tertulis;\n2. pembatasan produk dan/atau lay",
+          "relevance_score": 0.6887,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 38\n\n1. Dalam hal PUJK menjual produk dan/atau layanan hasil aktivitas kerja sama dengan PUJK lain dengan model bisnis referensi untuk produk dan/atau layanan PUJK, PUJK wajib menyediakan pilihan produk dan/atau layanan hasil aktivitas kerja sama model bisnis referensi dari paling sedikit 2 (dua) PUJK, kecuali diatur lain oleh ketentuan peraturan perundang-undangan di sektor jasa keuangan.\n",
+          "relevance_score": 0.6778,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "- 62 -\n\nInformasi, PT Permodalan Nasional Madani, dan Penyelenggara Layanan Urun Dana; atau\n\nb. sebesar Rp50.000,00 (lima puluh ribu rupiah) per hari keterlambatan bagi PUJK berupa Bank Perekonomian Rakyat, Perusahaan Pembiayaan, Perusahaan Modal Ventura, Lembaga Penjaminan, dan Perusahaan Perdagangan Aset Keuangan Digital.\n\n(6) Pelaku usaha jasa keuangan lainnya, Perusahaan Pergadaian Swasta, Lem",
+          "relevance_score": 0.6672,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "Otoritas Jasa Keuangan (OJK)",
+          "regulation": "",
+          "bab": "",
+          "bagian": "",
+          "article": "",
+          "pasal_number": "",
+          "article_text": "# Pasal 12\n\n1. PUJK wajib melaksanakan kegiatan untuk meningkatkan Inklusi Keuangan kepada Konsumen dan/atau masyarakat sebagai program tahunan.\n2. Pelaksanaan kegiatan sebagaimana dimaksud pada ayat (1) wajib dilakukan paling sedikit 1 (satu) kali dalam 1 (satu) semester.\n3. PUJK wajib mendokumentasikan pelaksanaan kegiatan sebagaimana dimaksud pada ayat (1).\n4. Ketentuan mengenai pelaksanaan keg",
+          "relevance_score": 0.6569,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        null
+      ]
+    }
+  ]
+}
