@@ -253,7 +253,9 @@ def check_retrieval_ready(coordinator) -> Dict:
                 f"[{agent.name}] Vector store '{agent.collection_name}' tidak termuat — "
                 "jalankan src/ingest.py terlebih dahulu. Evaluasi dihentikan."
             )
-        setup[agent.name] = "hybrid" if agent.hybrid_retriever is not None else "dense"
+        # Label mengikuti mode yang benar-benar dipakai saat query (strategi dense mengabaikan BM25)
+        use_hybrid = agent.hybrid_retriever is not None and setup["strategy"] != "dense"
+        setup[agent.name] = "hybrid" if use_hybrid else "dense"
         if agent.hybrid_retriever is None:
             print(f"  ⚠ [{agent.name}] BM25 index tidak ditemukan — retrieval dense-only")
     return setup
@@ -362,14 +364,50 @@ def build_error_result(sample: Dict, error: Exception, latency: int) -> Dict:
     }
 
 
+# ── Validasi run (D6) ─────────────────────────────────────────────────────────
+
+# Kegagalan yang pasti berulang untuk setiap klausul: key salah/kosong, saldo atau
+# kuota habis. Melanjutkan run hanya menghasilkan 12 prediksi ERROR yang tidak bermakna.
+_FATAL_API_ERROR_TYPES = {"AuthenticationError", "PermissionDeniedError"}
+_FATAL_API_ERROR_MARKERS = (
+    "could not resolve authentication", "invalid x-api-key", "incorrect api key",
+    "invalid api key", "api key", "credit balance", "insufficient_quota",
+    "exceeded your current quota", "billing",
+    "unknown model", "model_not_found", "does not exist",
+)
+
+
+def check_api_keys(provider: str) -> None:
+    """Hentikan run sebelum memanggil API apa pun bila key yang dibutuhkan kosong."""
+    missing = []
+    if not os.getenv("OPENAI_API_KEY"):
+        missing.append("OPENAI_API_KEY (selalu dibutuhkan untuk embedding)")
+    if provider == "anthropic" and not os.getenv("ANTHROPIC_API_KEY"):
+        missing.append("ANTHROPIC_API_KEY (LLM_PROVIDER=anthropic)")
+    if missing:
+        sys.exit("Evaluasi dihentikan — environment variable kosong: " + "; ".join(missing))
+
+
+def is_fatal_api_error(error: Exception) -> bool:
+    if type(error).__name__ in _FATAL_API_ERROR_TYPES:
+        return True
+    msg = str(error).lower()
+    return any(m in msg for m in _FATAL_API_ERROR_MARKERS)
+
+
+def count_errors(results: List[Dict]) -> int:
+    return sum(1 for r in results if r.get("error"))
+
+
 # ── Runner utama ──────────────────────────────────────────────────────────────
 
 def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
+    provider    = os.getenv("LLM_PROVIDER", "openai")
+    check_api_keys(provider)
+
     from agents.coordinator import CoordinatorAgent
 
     api_key     = os.getenv("OPENAI_API_KEY", "")
-    ant_key     = os.getenv("ANTHROPIC_API_KEY", "")
-    provider    = os.getenv("LLM_PROVIDER", "openai")
     model       = os.getenv("LLM_MODEL", "gpt-5.4-mini")
     from storage_paths import resolve_chroma_dir
     chroma_path = str(resolve_chroma_dir(_ROOT / "data" / "processed" / "chroma_db"))
@@ -408,11 +446,18 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
         except Exception as e:
             print(f"  ⚠ Error: {e}")
             result = build_error_result(sample, e, round((time.time() - t0) * 1000))
+            if is_fatal_api_error(e):
+                results.append(result)
+                print("  ✗ Error API fatal (key/saldo/kuota) — sisa klausul tidak dijalankan.")
+                break
 
         results.append(result)
         status_icon = "✓" if result["correct"] else "✗"
         print(f"  {status_icon} pred={result['predicted']:20s} exp={result['expected']:20s} "
               f"({result['latency_ms']}ms)")
+
+    n_errors = count_errors(results)
+    invalid  = n_errors > 0 or len(results) < len(GROUND_TRUTH)
 
     # Hitung metrik
     metrics    = compute_metrics(results)
@@ -452,10 +497,13 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
                  f"{datetime.now().strftime('%Y%m%d_%H%M%S')}")
     out_dir   = _ROOT / "data" / "audit_results"
     out_dir.mkdir(parents=True, exist_ok=True)
-    out_path  = out_dir / f"eval_{run_name}.json"
+    # Run invalid diberi prefiks lain agar tidak ikut pola eval_*.json di semhas_metrics/tracker
+    out_path  = out_dir / (f"invalid_eval_{run_name}.json" if invalid else f"eval_{run_name}.json")
 
     output = {
         "run_name":    run_name,
+        "invalid":     invalid,
+        "n_errors":    n_errors,
         "provider":    provider,
         "model":       model,
         "timestamp":   datetime.now().isoformat(),
@@ -471,6 +519,11 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
         json.dump(output, f, ensure_ascii=False, indent=2)
     print(f"  Hasil disimpan: {out_path}")
 
+    if invalid:
+        print(f"  ✗ RUN TIDAK VALID — {n_errors} error API dari {len(results)}/{len(GROUND_TRUTH)} "
+              "klausul yang dijalankan. Tidak di-log ke MLflow; jangan dipakai di laporan.")
+        return output
+
     # MLflow logging
     if use_mlflow:
         _log_to_mlflow(output, run_name, mlflow_uri)
@@ -481,6 +534,10 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
 def summarize_repeats(outputs: List[Dict]) -> Dict:
     """Rata-rata ± SD metrik utama lintas run + klausul yang prediksinya tidak stabil."""
     import statistics
+    bad = [o.get("run_name", "?") for o in outputs
+           if o.get("invalid") or count_errors(o.get("results", []))]
+    if bad:
+        raise ValueError(f"Run tidak valid (berisi error API) tidak boleh dirangkum: {bad}")
     getters = {
         "accuracy_6class":             lambda o: o["metrics_6class"]["accuracy"],
         "macro_f1_6class":             lambda o: o["metrics_6class"]["macro_f1"],
@@ -590,10 +647,13 @@ if __name__ == "__main__":
                         help="Jalankan evaluasi N kali untuk mengukur variasi LLM (laporkan rata-rata ± SD)")
     args = parser.parse_args()
 
-    outputs = [
-        run_evaluation(use_mlflow=not args.no_mlflow, mlflow_uri=args.mlflow_uri)
-        for _ in range(max(1, args.repeat))
-    ]
+    outputs = []
+    for _ in range(max(1, args.repeat)):
+        output = run_evaluation(use_mlflow=not args.no_mlflow, mlflow_uri=args.mlflow_uri)
+        if output["invalid"]:
+            sys.exit(f"Evaluasi gagal: run {output['run_name']} tidak valid "
+                     f"({output['n_errors']} error API). Pengulangan dihentikan.")
+        outputs.append(output)
     if len(outputs) > 1:
         summary = summarize_repeats(outputs)
         print(f"\n{'='*60}\n  RINGKASAN {len(outputs)} RUN (rata-rata ± SD)\n{'='*60}")

@@ -1,0 +1,101 @@
+{
+  "n_runs": 3,
+  "runs": [
+    "openai_gpt-5.4-mini_rrf_equal_20260927_174307",
+    "openai_gpt-5.4-mini_rrf_equal_20260927_174401",
+    "openai_gpt-5.4-mini_rrf_equal_20260927_174453"
+  ],
+  "metrics": {
+    "accuracy_6class": {
+      "mean": 0.9722,
+      "sd": 0.0481,
+      "min": 0.9167,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.9167
+      ]
+    },
+    "macro_f1_6class": {
+      "mean": 0.9677,
+      "sd": 0.056,
+      "min": 0.903,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.903
+      ]
+    },
+    "recall_non_compliant_strict": {
+      "mean": 0.9444,
+      "sd": 0.0962,
+      "min": 0.8333,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.8333
+      ]
+    },
+    "f1_non_compliant": {
+      "mean": 0.9697,
+      "sd": 0.0525,
+      "min": 0.9091,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.9091
+      ]
+    },
+    "f1_partially_compliant": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "mrr": {
+      "mean": 0.525,
+      "sd": 0.0,
+      "min": 0.525,
+      "max": 0.525,
+      "values": [
+        0.525,
+        0.525,
+        0.525
+      ]
+    },
+    "hit_rate_at_5": {
+      "mean": 0.7,
+      "sd": 0.0,
+      "min": 0.7,
+      "max": 0.7,
+      "values": [
+        0.7,
+        0.7,
+        0.7
+      ]
+    },
+    "avg_latency_ms": {
+      "mean": 4589.6667,
+      "sd": 348.9303,
+      "min": 4308.0,
+      "max": 4980.0,
+      "values": [
+        4980.0,
+        4481.0,
+        4308.0
+      ]
+    }
+  },
+  "unstable_clauses": [
+    "BAB3-01"
+  ]
+}

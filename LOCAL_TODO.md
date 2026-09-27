@@ -31,7 +31,7 @@ source venv/bin/activate          # atau env yang dipakai sebelumnya (lihat D5 b
 export USE_TF=0
 test -n "$OPENAI_API_KEY"    && echo "OPENAI ok"    || echo "OPENAI_API_KEY KOSONG"
 test -n "$ANTHROPIC_API_KEY" && echo "ANTHROPIC ok" || echo "ANTHROPIC_API_KEY KOSONG"
-python -m pytest src/tests -q     # harus lulus semua (85)
+python -m pytest src/tests -q     # harus lulus semua (97)
 ```
 
 Pastikan index pasca-B7 ada: `data/processed/chroma_db` dan `data/processed/bm25_index` (BI 556 / OJK 292 chunk).
@@ -41,10 +41,10 @@ Jika tidak ada → jalankan R3: `python src/ingest.py --force`.
 
 | # | ID | Tugas | Wajib? | Status |
 |---|---|---|---|---|
-| T1 | D6 | `evaluation_runner.py` gagal cepat saat error API | Wajib, **kerjakan pertama** | [ ] |
-| T2 | R6 | Claude Haiku 4.5 ×3 | Wajib | [ ] |
-| T3 | R6b | Ablation retrieval `dense` ×3 dan `rrf_equal` ×3 | Wajib | [ ] |
-| T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib | [ ] |
+| T1 | D6 | `evaluation_runner.py` gagal cepat saat error API | Wajib, **kerjakan pertama** | [x] |
+| T2 | R6 | Claude Haiku 4.5 ×3 | Wajib — **ditunda: saldo Anthropic habis** | [ ] |
+| T3 | R6b | Ablation retrieval `dense` ×3 dan `rrf_equal` ×3 | Wajib | [x] |
+| T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib — GPT selesai, Haiku menunggu T2 | [~] |
 | T5 | R7 | Audit ulang T&C GoPay (121 klausul) | Wajib, butuh user | [ ] |
 | T6 | R5 | GPT fine-tuned gate: latih ulang + evaluasi 3 gate | Opsional (berbiaya) | [ ] |
 | T7 | D1 | Perbaiki test backend lama (3 gagal + 15 error) | Opsional | [ ] |
@@ -207,10 +207,10 @@ Periksa manual: tidak ada teks merah `[MENUNGGU: ...]` kecuali yang disengaja, d
 
 | # | Tanggal | Ringkasan hasil | File / commit |
 |---|---|---|---|
-| T1 | | | |
+| T1 | 2026-09-27 | Cek key di awal (exit 1 tanpa file), stop pada error fatal (auth/saldo/kuota), run ber-error → `invalid_eval_*.json` + `invalid`/`n_errors`, tanpa MLflow, exit 1; `summarize_repeats` menolak run invalid. 12 test baru, `src/tests` 97 lulus. | `src/evaluation_runner.py`, `src/tests/test_evaluation_runner.py` |
 | T2 | | | |
-| T3 | | | |
-| T4 | | | |
+| T3 | 2026-09-27 | dense: MRR 0,590 · Hit@3 0,60 · Hit@5 0,80 · acc 0,972. rrf_equal: MRR 0,525 · Hit@3 0,60 · Hit@5 0,70 · acc 0,972. query_aware ≈ dense > rrf_equal untuk retrieval; akurasi tidak berbeda bermakna (CI tumpang-tindih). Jalankan dengan conda base (`/opt/anaconda3/bin/python`) — venv punya llama-index-llms-openai lama yang tidak kenal gpt-5.4-mini. | `eval_openai_gpt-5.4-mini_{dense_20260927_174015..,rrf_equal_20260927_174307..}.json` |
+| T4 | 2026-09-27 (GPT) | `scripts/reliability_diagram.py`; GPT-5.4-mini ECE 0,0575, n = 36, semua di bin 0,9–1,0 (akurasi 0,917 vs conf 0,974). Haiku menyusul setelah T2. Belum disalin ke repo proposal. | `data/audit_results/figures/reliability_gpt-5.4-mini.png` |
 | T5 | | | |
 | T6 | | | |
 | T7 | | | |

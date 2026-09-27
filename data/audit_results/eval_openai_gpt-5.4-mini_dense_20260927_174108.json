@@ -1,0 +1,2366 @@
+{
+  "run_name": "openai_gpt-5.4-mini_dense_20260927_174108",
+  "invalid": false,
+  "n_errors": 0,
+  "provider": "openai",
+  "model": "gpt-5.4-mini",
+  "timestamp": "2026-09-27T17:41:08.699431",
+  "retrieval_setup": {
+    "strategy": "dense",
+    "BI_SPECIALIST": "hybrid",
+    "OJK_SPECIALIST": "hybrid"
+  },
+  "metrics": {
+    "classes": [
+      "COMPLIANT",
+      "NON_COMPLIANT",
+      "PARTIALLY_COMPLIANT",
+      "NOT_ADDRESSED"
+    ],
+    "accuracy": 0.9167,
+    "accuracy_ci95_wilson": [
+      0.6461,
+      0.9851
+    ],
+    "macro_precision": 0.9333,
+    "macro_recall": 0.9444,
+    "macro_f1": 0.9327,
+    "recall_non_compliant_strict": 0.8333,
+    "recall_non_compliant_broad": 1.0,
+    "per_class": {
+      "COMPLIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NON_COMPLIANT": {
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091,
+        "tp": 5,
+        "fp": 0,
+        "fn": 1
+      },
+      "PARTIALLY_COMPLIANT": {
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.8889,
+        "tp": 4,
+        "fp": 1,
+        "fn": 0
+      },
+      "NOT_ADDRESSED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "total": 12,
+    "correct": 11
+  },
+  "metrics_6class": {
+    "classes": [
+      "COMPLIANT",
+      "NON_COMPLIANT",
+      "PARTIALLY_COMPLIANT",
+      "NEEDS_REVIEW",
+      "NOT_ADDRESSED",
+      "UNCLEAR"
+    ],
+    "accuracy": 0.9167,
+    "accuracy_ci95_wilson": [
+      0.6461,
+      0.9851
+    ],
+    "macro_precision": 0.9333,
+    "macro_recall": 0.9444,
+    "macro_f1": 0.9327,
+    "recall_non_compliant_strict": 0.8333,
+    "recall_non_compliant_broad": 1.0,
+    "per_class": {
+      "COMPLIANT": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NON_COMPLIANT": {
+        "precision": 1.0,
+        "recall": 0.8333,
+        "f1": 0.9091,
+        "tp": 5,
+        "fp": 0,
+        "fn": 1
+      },
+      "PARTIALLY_COMPLIANT": {
+        "precision": 0.8,
+        "recall": 1.0,
+        "f1": 0.8889,
+        "tp": 4,
+        "fp": 1,
+        "fn": 0
+      },
+      "NEEDS_REVIEW": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      },
+      "NOT_ADDRESSED": {
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0,
+        "tp": 2,
+        "fp": 0,
+        "fn": 0
+      },
+      "UNCLEAR": {
+        "precision": 0.0,
+        "recall": 0.0,
+        "f1": 0.0,
+        "tp": 0,
+        "fp": 0,
+        "fn": 0
+      }
+    },
+    "total": 12,
+    "correct": 11
+  },
+  "retrieval": {
+    "mrr": 0.59,
+    "hit_rate_at_3": 0.6,
+    "hit_rate_at_5": 0.8,
+    "evaluated_clauses": 10,
+    "per_clause": [
+      {
+        "clause_id": "BAB2-01",
+        "first_relevant_rank": 1,
+        "rr": 1.0
+      },
+      {
+        "clause_id": "BAB2-02",
+        "first_relevant_rank": 5,
+        "rr": 0.2
+      },
+      {
+        "clause_id": "BAB2-03",
+        "first_relevant_rank": 2,
+        "rr": 0.5
+      },
+      {
+        "clause_id": "BAB2-04",
+        "first_relevant_rank": 5,
+        "rr": 0.2
+      },
+      {
+        "clause_id": "BAB3-01",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB3-02",
+        "first_relevant_rank": 1,
+        "rr": 1.0
+      },
+      {
+        "clause_id": "BAB3-03",
+        "first_relevant_rank": null,
+        "rr": 0.0
+      },
+      {
+        "clause_id": "BAB4-01",
+        "first_relevant_rank": 1,
+        "rr": 1.0
+      },
+      {
+        "clause_id": "BAB4-02",
+        "first_relevant_rank": 1,
+        "rr": 1.0
+      },
+      {
+        "clause_id": "BAB4-03",
+        "first_relevant_rank": 1,
+        "rr": 1.0
+      }
+    ]
+  },
+  "citation_grounding": {
+    "citation_grounding_rate": 1.0,
+    "citations_checked": 6
+  },
+  "avg_latency_ms": 4403,
+  "results": [
+    {
+      "clause_id": "BAB1-01",
+      "category": "GENERAL",
+      "clause": "SOP ini mengatur standar operasional layanan uang elektronik \"NusantaraPay\" (selanjutnya disebut \"Pe...",
+      "predicted": "NOT_ADDRESSED",
+      "expected": "NOT_ADDRESSED",
+      "predicted_norm": "NOT_ADDRESSED",
+      "expected_norm": "NOT_ADDRESSED",
+      "predicted_6": "NOT_ADDRESSED",
+      "expected_6": "NOT_ADDRESSED",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2982,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 156",
+          "pasal_number": "156",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 156\nUang elektronik merupakan instrumen pembayaran yang memenuhi unsur: a. diterbitkan atas dasar Sumber Dana berupa nilai uang rupiah yang disetor terlebih dahulu kepada PJP yang menyelenggarakan aktivitas ",
+          "relevance_score": 0.6246,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 157 Ayat 1-2",
+          "pasal_number": "157",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 157 ayat (1-2)\n(1) Nilai uang elektronik merupakan nilai uang yang disimpan secara elektronik dalam suatu media server atau chip yang dapat dipindahkan untuk kepentingan pemindahan dana. (2) Nilai uang elekt",
+          "relevance_score": 0.6222,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 159",
+          "pasal_number": "159",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 159\nAkses ke Sumber Dana berupa uang elektronik dapat dibedakan berdasarkan: a. media penyimpan nilai uang elektronik berupa: 1. server based; dan 2. chip based; dan b. pencatatan data identitas pengguna uan",
+          "relevance_score": 0.6205,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesatu",
+          "article": "Pasal 4 Ayat 5-6",
+          "pasal_number": "4",
+          "article_text": "PBI 23/6/PBI/2021 | BAB II AKTIVITAS DAN PERIZINAN PENYEDIA JASA PEMBAYARAN | Bagian Kesatu Ruang Lingkup Aktivitas | Paragraf 1 Aktivitas PJP | Pasal 4 ayat (5-6)\n(5) Mekanisme dan prosedur sebagaimana dimaksud pada ayat (4) huruf a ditetapkan oleh PJP. (6) Penetapan mekanisme dan prosedur sebagaimana dimaksud pada ayat (5) harus memenuhi ketentuan manajemen risiko dan prinsip perlindungan konsum",
+          "relevance_score": 0.6196,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 171 Ayat 1-2",
+          "pasal_number": "171",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 171 ayat (1-2)\n(1) PJP dilarang melakukan kerja sama dengan pihak lain untuk penyediaan layanan umum secara eksklusif. (2) Suatu kerja sama bersifat eksklusif apabila kerja sama tersebut memenuhi unsur seper",
+          "relevance_score": 0.6176,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 57 Ayat 1-6",
+          "pasal_number": "57",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 57 ayat (1-6)\n(1) PUJK wajib memberikan laporan kepada Konsumen tentang posisi saldo dan mutasi dana, aset, atau kewajiban Konsumen secara akurat, benar, tepat waktu, dan dengan cara atau sar",
+          "relevance_score": 0.5792,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Keenam",
+          "article": "Pasal 41 Ayat 6-8",
+          "pasal_number": "41",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Keenam Pemasaran Produk dan Layanan | Paragraf 2 PAYDI | Pasal 41 ayat (6-8)\n(6) PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat (1) sampai dengan ayat (5) dikenai sanksi administratif berupa: a. peringatan tertulis; b. pembatasan produk dan/atau layanan dan/atau kegiatan usaha untuk s",
+          "relevance_score": 0.5789,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 61 Ayat 1-7",
+          "pasal_number": "61",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 61 ayat (1-7)\n(1) Contoh pihak lain: perusahaan jasa penagihan dan pihak di luar PUJK. (2) Bermeterai termasuk meterai dalam bentuk elektronik, atau bentuk lainnya yang memiliki ciri dan mengandung unsur pengaman yang dikeluarkan oleh Pemerintah Republik Indonesia yang digunakan untuk membayar pajak atas dokumen sebagaimana diatur dalam ketentuan peraturan perunda",
+          "relevance_score": 0.5723,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 32 Ayat 1-7",
+          "pasal_number": "32",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 32 ayat (1-7)\n(1) Contoh memberikan informasi mengenai produk dan/atau layanan yang jelas, akurat, jujur, mudah diakses, dan tidak berpotensi menyesatkan sesuai ketentuan peraturan perundang- undangan dan/atau perjanjian: PUJK yang menyediakan PAYDI, memberikan informasi bahwa PAYDI yang dipasarkan merupakan produk asuransi dan bukan merupkan produk simpanan/tabun",
+          "relevance_score": 0.5717,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 58 Ayat 1-4",
+          "pasal_number": "58",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 58 ayat (1-4)\n(1) PUJK wajib melaksanakan instruksi Konsumen sesuai dengan: a. perjanjian antara PUJK dan Konsumen; dan b. ketentuan peraturan perundang-undangan. (2) PUJK yang melanggar kete",
+          "relevance_score": 0.57,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "NOT_ADDRESSED",
+          "final": "NOT_ADDRESSED",
+          "primary_regulator": "BALANCED"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa hanya menyatakan bahwa SOP mengatur standar operasional layanan uang elektronik \"NusantaraPay\" dan tidak memuat ketentuan substansial tentang batas saldo, batas transaksi, KYC/verifikasi identitas, settlement, atau mekanisme penyelenggaraan pembayaran. (2) Karena tidak ada pembahasan eksplisit mengenai topik-topik yang menjadi dasar checklist BI, maka checklist tidak dapat diterapkan. (3) Tidak terdapat nilai, limit, atau prosedur yang bertentangan dengan pasal BI yang diberikan. (4) Kesimpulan: klausa tidak membahas topik yang diuji, sehingga statusnya NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa SOP yang diuji hanya menyatakan bahwa SOP mengatur standar operasional layanan uang elektronik \"NusantaraPay\". Klausa ini tidak membahas data privasi, SLA/pengaduan, klausula baku/eksonerasi, persetujuan konsumen, transparansi informasi, atau hak konsumen sebagaimana topik relevan OJK yang diberikan. (2) Karena tidak ada pembahasan eksplisit atas topik yang masuk checklist, tidak ada checklist topik yang dapat diterapkan. (3) Dengan demikian, klausa tidak mengandung elemen yang bisa dinilai sebagai terpenuhi atau tidak terpenuhi terhadap sub-elemen checklist. (4) Kesimpulan: NOT_ADDRESSED."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB1-02",
+      "category": "GENERAL",
+      "clause": "SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan....",
+      "predicted": "NOT_ADDRESSED",
+      "expected": "NOT_ADDRESSED",
+      "predicted_norm": "NOT_ADDRESSED",
+      "expected_norm": "NOT_ADDRESSED",
+      "predicted_6": "NOT_ADDRESSED",
+      "expected_6": "NOT_ADDRESSED",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 2782,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VIII",
+          "bagian": "Bagian Kesatu",
+          "article": "Pasal 262",
+          "pasal_number": "262",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VIII SRO | Bagian Kesatu Kewajiban SRO | Pasal 262\nSRO wajib: a. melaksanakan tugas yang telah ditetapkan oleh Bank Indonesia; dan b. menjaga kerahasian data dan/atau informasi.",
+          "relevance_score": 0.6148,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 90",
+          "pasal_number": "90",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 90\na. Aspek kepatuhan terhadap ketentuan perundang-undangan antara lain penerapan perlindungan konsumen serta anti pencucian uang dan pencegahan pendanaan terorisme. Risiko PJP dan PIP terdiri dari risiko operasional, risiko penyelesaian akhir (settlement), risiko hukum, risiko reputasi dan risiko strategis. Risiko operasional antara lain risiko terhadap sis",
+          "relevance_score": 0.572,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kesatu",
+          "article": "Pasal 51 Ayat 1-4",
+          "pasal_number": "51",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kesatu Prinsip Umum Penyelenggaraan | Paragraf 1 Kewajiban PJP dalam Penyelenggaraan Sistem Pembayaran | Pasal 51 ayat (1-4)\n(1) PJP wajib melakukan edukasi dan pembinaan terhadap Penyedia Barang dan/atau Jasa yang bekerja sama dengan PJP. (2) PJP wajib menghentikan kerja sama dengan Penyedia Barang dan/atau Jasa yang ",
+          "relevance_score": 0.571,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kesatu",
+          "article": "Pasal 44",
+          "pasal_number": "44",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kesatu Prinsip Umum Penyelenggaraan | Pasal 44\nPJP wajib memenuhi prinsip umum dalam penyelenggaraan Sistem Pembayaran yang terdiri atas: a. kewajiban penyelenggaraan yang meliputi aspek: 1. tata kelola; 2. manajemen risiko termasuk prinsip kehati-hatian; 3. standar keamanan sistem informasi; 4. interkoneksi dan intero",
+          "relevance_score": 0.5692,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 259 Ayat 1-4",
+          "pasal_number": "259",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 259 ayat (1-4)\n(1) PJP dan/atau pihak lain dalam pelaksanaan standardisasi data, standardisasi teknis, standardisasi keamanan, dan standardisasi tata kelola sebagaimana dimaksud dalam Pasal 258 huruf b wajib memenuhi: a. penerapan standar; b. pengujian dan verifikasi standar; c. pengemban",
+          "relevance_score": 0.5691,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 9 Ayat 1-5",
+          "pasal_number": "9",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 9 ayat (1-5)\n(1) PUJK wajib mencegah Direksi, Dewan Komisaris, Pegawai, dan/atau pihak ketiga yang bekerja untuk atau mewakili kepentingan PUJK dari perilaku: a. memperkaya atau menguntungkan diri sendiri atau pihak lain; dan/atau b. menyalahgunak",
+          "relevance_score": 0.585,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 4 Ayat 1-7",
+          "pasal_number": "4",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 4 ayat (1-7)\n(1) PUJK wajib beriktikad baik dalam melakukan kegiatan usaha dan/atau memberikan produk dan/atau layanan kepada calon Konsumen dan/atau Konsumen. (2) PUJK wajib memperlakukan atau melayani Konsumen secara tidak diskriminatif, kecuali",
+          "relevance_score": 0.5785,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 90 Ayat 1-8",
+          "pasal_number": "90",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 90 ayat (1-8)\n(1) Yang dimaksud dengan “kepatuhan” antara lain memastikan penyusunan dan pelaksanaan prosedur Pelindungan Konsumen. (2) Pengawasan atas pelaksanaan tanggung jawab Direksi antara lain dengan memastikan Direksi PUJK untuk memiliki dan melaksanakan prosedur Pelindungan Konsumen. (3) Cukup jelas. (4) Cukup jelas. (5) Mekanisme pelaporan merupakan saran",
+          "relevance_score": 0.5765,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 8 Ayat 1-6",
+          "pasal_number": "8",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 8 ayat (1-6)\n(1) PUJK wajib memiliki dan menerapkan kebijakan dan prosedur tertulis Pelindungan Konsumen. (2) Kebijakan dan prosedur tertulis Pelindungan Konsumen sebagaimana dimaksud pada ayat (1) terdapat pada kegiatan: a. desain produk dan/atau",
+          "relevance_score": 0.5699,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 110 Ayat 1-2",
+          "pasal_number": "110",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 110 ayat (1-2)\n(1) a. Cukup jelas. b. Cukup jelas. c. Cukup jelas. d. Contoh pihak lain: pihak yang memiliki kerja sama dengan PUJK dalam penyediaan produk dan/atau layanan jasa keuangan. e. Cukup jelas. f. Contoh Perintah Tertulis lainnya: menyampaikan informasi, dokumen, dan/atau laporan tertentu kepada Otoritas Jasa Keuangan. (2) Cukup jelas.",
+          "relevance_score": 0.5696,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "NOT_ADDRESSED",
+          "final": "NOT_ADDRESSED",
+          "primary_regulator": "BALANCED"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.99,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa \"SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan.\" bersifat umum dan tidak secara eksplisit membahas batas saldo, batas transaksi, KYC/verifikasi identitas, settlement, maupun penyelenggaraan pembayaran. (2) Karena tidak ada pembahasan topik BI yang menjadi dasar checklist, tidak ada checklist yang dapat diterapkan. (3) Tidak ada nilai, batas, atau mekanisme yang bertentangan dengan pasal BI yang diberikan. (4) Kesimpulan: klausa tidak mengatur topik yang diuji, sehingga statusnya NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "Langkah 1: Klausa 'SOP ini wajib dipatuhi oleh seluruh karyawan dan mitra kerja Perusahaan.' hanya bersifat umum sebagai pernyataan kepatuhan internal. Klausa ini tidak secara eksplisit membahas data privasi, SLA pengaduan, klausula baku/eksonerasi, transparansi informasi, persetujuan konsumen, maupun hak konsumen. Langkah 2: Karena tidak ada topik OJK yang relevan secara eksplisit dibahas, tidak ada checklist yang dapat diterapkan. Langkah 3-4: Tidak ada sub-elemen yang dapat ditandai ADA/TIDAK ADA karena topik checklist tidak terbuka. Kesimpulan: NOT_ADDRESSED."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB2-01",
+      "category": "PRIVACY",
+      "clause": "Perusahaan wajib memperoleh persetujuan tertulis atau persetujuan elektronik (explicit consent) dari...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4570,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 109 Ayat 1-2",
+          "pasal_number": "109",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 109 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Cukup jelas.",
+          "relevance_score": 0.6815,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 108 Ayat 1-2",
+          "pasal_number": "108",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 108 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Pertukaran data individual nasabah berlangsung lebih efisien melalui infrastruktur pengelolaan data dan/atau infrastruktur Sistem Pembayaran secara terintegrasi yang dapat d",
+          "relevance_score": 0.6814,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 1",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (1)\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib: a. menerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi: 1. pe",
+          "relevance_score": 0.6646,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "BAB IX",
+          "bagian": "Bagian Keempat",
+          "article": "Pasal 107 Ayat 1-2",
+          "pasal_number": "107",
+          "article_text": "PBI 22/23/PBI/2020 | BAB IX DATA DAN/ATAU INFORMASI | Bagian Keempat Pemrosesan Data dan/atau Informasi | Pasal 107 ayat (1-2)\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP, PIP, dan/atau pihak yang bekerja sama dengan PJP dan PIP wajib: a. menerapkan prinsip perlindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya; b",
+          "relevance_score": 0.6313,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 2-5",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (2-5)\n(2) Penerapan prinsip pelindungan data pribadi sebagaimana dimaksud pada ayat (1) huruf a, dilakukan dengan mempertimbangkan aspek kepentingan publik dan/atau persyaratan lain yang ditetapkan oleh otoritas. (3) Mekanisme pemrosesan data dan/atau informasi terkait Sistem Pem",
+          "relevance_score": 0.6285,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 23 Ayat 1-6",
+          "pasal_number": "23",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 23 ayat (1-6)\n(1) Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelin",
+          "relevance_score": 0.6537,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 20 Ayat 1-3",
+          "pasal_number": "20",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 20 ayat (1-3)\n(1) Dalam penggunaan data dan/atau informasi Konsumen, PUJK dapat melakukan pertukaran data dan/atau informasi Konsumen dengan pihak lain dengan memperhatikan ketentuan peraturan perundang- undangan",
+          "relevance_score": 0.6344,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 39 Ayat 1-12",
+          "pasal_number": "39",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 39 ayat (1-12)\n(1) Persetujuan calon Konsumen dan/atau Konsumen diperoleh sebelum PUJK menghubungi calon Konsumen dan/atau Konsumen atau pada saat sebelum menawarkan produk dan/atau layanan melalui sarana komunikasi pribadi. (2) Cukup jelas. (3) Cukup jelas. (4) Contoh pihak lain: perusahaan pengelola data dan pihak di luar PUJK. (5) Yang dimaksud dengan “perekama",
+          "relevance_score": 0.6301,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 19 Ayat 1-8",
+          "pasal_number": "19",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 19 ayat (1-8)\n(1) Cukup jelas. (2) a. Angka 1 Cukup jelas. Angka 2 Cukup jelas. Angka 3 Cukup jelas. Angka 4 Cukup jelas. Angka 5 Cukup jelas. Angka 6 Cukup jelas. Angka 7 Yang dimaksud dengan “data lain yang diserahkan atau diberikan akses oleh Konsumen kepada PUJK” antara lain foto. Angka 8 Contoh data lainnya sesuai dengan ketentuan peraturan perundang-undangan",
+          "relevance_score": 0.6284,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 19 Ayat 1-5",
+          "pasal_number": "19",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 19 ayat (1-5)\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen. (2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup: a. perseorangan: 1. nama lengkap; ",
+          "relevance_score": 0.6279,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "PARTIALLY_COMPLIANT",
+          "final": "PARTIALLY_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa yang diuji membahas persetujuan tertulis/elektronik atas pengumpulan dan pemrosesan data pribadi, tujuan pengumpulan data, jenis data, dan konsekuensi persetujuan. Ini adalah topik perlindungan data pribadi/konsen, bukan topik BI yang menjadi checklist dalam instruksi (batas saldo, batas transaksi, KYC, settlement). (2) Karena topik klausla tidak secara eksplisit membahas batas saldo, batas transaksi, KYC/verifikasi identitas, atau settlement, maka checklist BI tidak लागू/ tidak relevan. (3) Ketentuan BI tentang pemrosesan data pribadi memang ada pada pasal yang diberikan, tetapi klausla ini tidak mengatur limit/threshold atau mekanisme KYC yang menjadi objek checklist. (4) Kesimpulan: klausa tidak addressed terhadap checklist BI yang diminta."
+        },
+        "ojk": {
+          "status": "PARTIALLY_COMPLIANT",
+          "confidence": 0.98,
+          "checklist_topic": "Perlindungan Data Pribadi",
+          "missing_elements": [
+            "(C) Standar keamanan teknis (enkripsi/keamanan penyimpanan data)",
+            "(D) Hak konsumen mengakses dan mengoreksi data pribadi",
+            "(E) Hak konsumen meminta penghapusan data (right to erasure)",
+            "(F) Larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit"
+          ],
+          "violations": [],
+          "reasoning": "(1) Klausa relevan dengan topik OJK karena secara eksplisit mengatur persetujuan sebelum pengumpulan dan pemrosesan Data Pribadi serta penjelasan tujuan dan konsekuensi pemberian data Nasabah. Ini masuk ke topik Perlindungan Data Pribadi. (2) Checklist yang digunakan adalah Perlindungan Data Pribadi. (3) Sub-elemen yang tercakup: (A) klausa mewajibkan persetujuan tertulis atau elektronik (explicit consent) sebelum mengumpulkan dan memproses Data Pribadi; (B) klausa mewajibkan penjelasan tertulis dan/atau lisan mengenai tujuan pengumpulan data serta konsekuensi persetujuan. Sub-elemen yang tidak dicakup: (C) keamanan teknis/enkripsi, (D) hak akses dan koreksi data, (E) hak hapus data, dan (F) larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit. (4) Karena klausa mem"
+        }
+      }
+    },
+    {
+      "clause_id": "BAB2-02",
+      "category": "SECURITY",
+      "clause": "Data Pribadi Nasabah akan dienkripsi menggunakan standar keamanan AES-256 baik saat in-transit maupu...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 3893,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 107 Ayat 1-2",
+          "pasal_number": "107",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 107 ayat (1-2)\n(1) a. Penerapan prinsip perlindungan data pribadi dilakukan sesuai dengan ketentuan peraturan perundang-undangan dan/atau standar internasional yang mengatur tentang perlindungan data pribadi. b. Mekanisme pemrosesan data dan/atau informasi terkait Sistem Pembayaran dapat terdiri atas: 1. mekanisme pemrosesan data dan/atau informasi pembayara",
+          "relevance_score": 0.5893,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 1",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (1)\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib: a. menerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi: 1. pe",
+          "relevance_score": 0.5891,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "BAB V",
+          "bagian": "Bagian Kesatu",
+          "article": "Pasal 34",
+          "pasal_number": "34",
+          "article_text": "PBI 22/23/PBI/2020 | BAB V PENYELENGGARAAN SISTEM PEMBAYARAN | Bagian Kesatu Kewajiban PJP | Pasal 34\nAspek standar keamanan sistem informasi sebagaimana dimaksud dalam Pasal 31 ayat (2) huruf c mencakup: a. ketersediaan kebijakan dan prosedur tertulis sistem informasi; b. penggunaan sistem yang aman dan andal paling sedikit: 1. pengamanan dan perlindungan kerahasiaan data; 2. pengelolaan fraud; 3",
+          "relevance_score": 0.5781,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 260",
+          "pasal_number": "260",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 260\nDalam hal pemrosesan data dan/atau informasi terkait Sistem Pembayaran yang dilakukan melalui pemanfaatan infrastruktur data pihak ketiga, PJP dan/atau pihak yang bekerja sama dengan PJP harus memenuhi paling sedikit: a. akses dan surveilans Bank Indonesia b. manajemen risiko dan keam",
+          "relevance_score": 0.5777,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 41",
+          "pasal_number": "41",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 41\na. Cukup jelas. b. Angka 1 Cukup jelas. Angka 2 Pengelolaan fraud meliputi tahap prevention, detection, response, dan monitoring. Implementasi pengelolaan fraud dapat dilakukan antara lain dengan menerapkan Fraud Detection System (FDS) pada level akun dan transaksi. Angka 3 Yang dimaksud dengan “sertifikasi dan/atau standar keamanan dan keandalan sistem” ",
+          "relevance_score": 0.5757,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 21 Ayat 1-4",
+          "pasal_number": "21",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 21 ayat (1-4)\n(1) PUJK dapat melakukan transfer data dan/atau informasi Konsumen berupa perseorangan sebagaimana dimaksud dalam Pasal 19 ayat (2) huruf a kepada pihak lain di luar wilayah hukum Negara Kesatuan Re",
+          "relevance_score": 0.5622,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 24 Ayat 1-6",
+          "pasal_number": "24",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 24 ayat (1-6)\n(1) Dalam pelaksanaan kegiatan usaha, PUJK wajib memastikan keamanan sistem informasi dan ketahanan siber untuk Pelindungan Konsumen. (2) Dalam memastikan keamanan sistem informasi sebagaimana dimak",
+          "relevance_score": 0.5616,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 19 Ayat 1-5",
+          "pasal_number": "19",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 19 ayat (1-5)\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen. (2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup: a. perseorangan: 1. nama lengkap; ",
+          "relevance_score": 0.5581,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 21 Ayat 1-8",
+          "pasal_number": "21",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 21 ayat (1-8)\n(1) Yang dimaksud dengan “transfer” adalah perpindahan, pengiriman, dan/atau penggandaan data pribadi baik secara elektronik maupun nonelektronik dari PUJK kepada pihak lain. (2) Cukup jelas. (3) a. Cukup jelas. b. Cukup jelas. c. Instrumen pelindungan data yang memadai dan mengikat lain yang ditetapkan oleh Otoritas Jasa Keuangan antara lain standar",
+          "relevance_score": 0.5523,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 23 Ayat 1-6",
+          "pasal_number": "23",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 23 ayat (1-6)\n(1) Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelin",
+          "relevance_score": 0.5511,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "PARTIALLY_COMPLIANT",
+          "final": "PARTIALLY_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa yang diuji membahas enkripsi Data Pribadi Nasabah dengan AES-256 saat in-transit maupun at-rest. Ini relevan dengan topik perlindungan data, keamanan sistem informasi, dan pemrosesan data, bukan topik checklist yang disediakan seperti batas saldo, batas transaksi, KYC, atau settlement. (2) Karena klausa tidak secara eksplisit membahas batas saldo e-wallet, batas transaksi bulanan, atau mekanisme KYC/verifikasi identitas, tidak ada checklist topik yang dapat diterapkan. (3) Klausa juga tidak memuat nilai limit, tier akun, atau proses verifikasi identitas, sehingga tidak ada sub-elemen checklist yang bisa ditandai ADA/TIDAK ADA. (4) Kesimpulan: topik BI yang diminta oleh mekanisme checklist tidak addressed oleh klausa ini, sehingga statusnya NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "PARTIALLY_COMPLIANT",
+          "confidence": 0.98,
+          "checklist_topic": "Perlindungan Data Pribadi",
+          "missing_elements": [
+            "(A) Persetujuan eksplisit konsumen sebelum pemrosesan data pribadi",
+            "(B) Penjelasan tujuan spesifik penggunaan data",
+            "(D) Hak konsumen mengakses dan mengoreksi data pribadi",
+            "(E) Hak konsumen meminta penghapusan data (right to erasure)",
+            "(F) Larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit"
+          ],
+          "violations": [],
+          "reasoning": "(1) Klausa relevan dengan topik OJK karena secara langsung membahas perlindungan data pribadi nasabah, khususnya aspek keamanan data. (2) Checklist yang dipakai adalah Perlindungan Data Pribadi. (3) Dari sub-elemen yang diuji, klausa hanya secara eksplisit menyebut standar keamanan teknis berupa enkripsi AES-256 untuk data saat in-transit maupun at-rest, sehingga memenuhi elemen (C). Klausa tidak menyebut persetujuan eksplisit, tujuan penggunaan data, hak akses/koreksi, hak hapus, maupun larangan transfer/penjualan ke pihak ketiga. (4) Karena hanya 1 dari 6 sub-elemen yang tercakup, statusnya adalah PARTIALLY_COMPLIANT, bukan COMPLIANT."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB2-03",
+      "category": "PRIVACY",
+      "clause": "Nasabah berhak untuk meminta penghapusan permanen (Right to Erasure) atas Data Pribadi mereka kapan ...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4211,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 1",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (1)\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib: a. menerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi: 1. pe",
+          "relevance_score": 0.6129,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 108 Ayat 1-2",
+          "pasal_number": "108",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 108 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Pertukaran data individual nasabah berlangsung lebih efisien melalui infrastruktur pengelolaan data dan/atau infrastruktur Sistem Pembayaran secara terintegrasi yang dapat d",
+          "relevance_score": 0.5981,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 109 Ayat 1-2",
+          "pasal_number": "109",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 109 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Cukup jelas.",
+          "relevance_score": 0.5974,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 2-5",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (2-5)\n(2) Penerapan prinsip pelindungan data pribadi sebagaimana dimaksud pada ayat (1) huruf a, dilakukan dengan mempertimbangkan aspek kepentingan publik dan/atau persyaratan lain yang ditetapkan oleh otoritas. (3) Mekanisme pemrosesan data dan/atau informasi terkait Sistem Pem",
+          "relevance_score": 0.5946,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 107 Ayat 1-2",
+          "pasal_number": "107",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 107 ayat (1-2)\n(1) a. Penerapan prinsip perlindungan data pribadi dilakukan sesuai dengan ketentuan peraturan perundang-undangan dan/atau standar internasional yang mengatur tentang perlindungan data pribadi. b. Mekanisme pemrosesan data dan/atau informasi terkait Sistem Pembayaran dapat terdiri atas: 1. mekanisme pemrosesan data dan/atau informasi pembayara",
+          "relevance_score": 0.5857,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 19 Ayat 1-5",
+          "pasal_number": "19",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 19 ayat (1-5)\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen. (2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup: a. perseorangan: 1. nama lengkap; ",
+          "relevance_score": 0.5968,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 23 Ayat 1-6",
+          "pasal_number": "23",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 23 ayat (1-6)\n(1) Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelin",
+          "relevance_score": 0.5948,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 21 Ayat 1-4",
+          "pasal_number": "21",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 21 ayat (1-4)\n(1) PUJK dapat melakukan transfer data dan/atau informasi Konsumen berupa perseorangan sebagaimana dimaksud dalam Pasal 19 ayat (2) huruf a kepada pihak lain di luar wilayah hukum Negara Kesatuan Re",
+          "relevance_score": 0.5891,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 24 Ayat 7-8",
+          "pasal_number": "24",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 24 ayat (7-8)\n(7) Sanksi sebagaimana dimaksud pada ayat (6) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (6) huruf a. (8)",
+          "relevance_score": 0.5861,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 22 Ayat 1-5",
+          "pasal_number": "22",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 22 ayat (1-5)\n(1) PUJK dilarang: a. memberikan data dan/atau informasi mengenai Konsumen kepada pihak lain; b. menggunakan data dan/atau informasi Konsumen yang telah mengakhiri perjanjian produk dan/atau layanan",
+          "relevance_score": 0.5843,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "PARTIALLY_COMPLIANT",
+          "final": "PARTIALLY_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.99,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa SOP membahas hak penghapusan permanen data pribadi (Right to Erasure) dalam konteks privasi/data pribadi. Ini tidak secara eksplisit membahas topik BI yang menjadi basis checklist seperti batas saldo, batas transaksi, KYC, atau settlement. (2) Walaupun ada keterkaitan umum dengan pemrosesan data dalam PBI 23/6/PBI/2021 Pasal 257, checklist yang diberikan hanya berlaku bila klausa membahas topik-topik spesifik BI tersebut. (3) Karena klausa tidak membahas batas saldo, batas transaksi, maupun KYC, tidak ada checklist yang diterapkan. (4) Kesimpulan: status NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "PARTIALLY_COMPLIANT",
+          "confidence": 0.97,
+          "checklist_topic": "Perlindungan Data Pribadi",
+          "missing_elements": [
+            "(A) Persetujuan eksplisit konsumen sebelum pemrosesan data pribadi",
+            "(B) Penjelasan tujuan spesifik penggunaan data",
+            "(C) Standar keamanan teknis (enkripsi/keamanan penyimpanan data)",
+            "(D) Hak konsumen mengakses dan mengoreksi data pribadi",
+            "(F) Larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit"
+          ],
+          "violations": [],
+          "reasoning": "Langkah 1: Klausa relevan dengan topik OJK karena membahas hak konsumen atas data pribadi, khususnya permintaan penghapusan permanen (right to erasure). Ini masuk ranah perlindungan data dan informasi konsumen. Langkah 2: Checklist yang digunakan adalah TOPIK: Perlindungan Data Pribadi. Langkah 3: Klausa hanya secara eksplisit menyebut satu sub-elemen, yaitu (E) hak konsumen meminta penghapusan data. Klausa tidak menyebut persetujuan eksplisit sebelum pemrosesan, tujuan spesifik penggunaan data, standar keamanan teknis, hak akses/koreksi, maupun larangan transfer/penjualan data ke pihak ketiga tanpa persetujuan eksplisit. Langkah 4: Hasilnya 1/6 sub-elemen terpenuhi, sehingga berdasarkan aturan checklist statusnya tidak boleh COMPLIANT dan harus PARTIALLY_COMPLIANT. Tidak ada konflik aktif"
+        }
+      }
+    },
+    {
+      "clause_id": "BAB2-04",
+      "category": "PRIVACY",
+      "clause": "Data Pribadi Nasabah tidak akan pernah dijual kepada pihak ketiga mana pun tanpa izin eksplisit yang...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "PARTIALLY_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "PARTIALLY_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "PARTIALLY_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "PARTIALLY_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4008,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 23 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 108 Ayat 1-2",
+          "pasal_number": "108",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 108 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Pertukaran data individual nasabah berlangsung lebih efisien melalui infrastruktur pengelolaan data dan/atau infrastruktur Sistem Pembayaran secara terintegrasi yang dapat d",
+          "relevance_score": 0.5884,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 257 Ayat 1",
+          "pasal_number": "257",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Ketiga Pemrosesan Data dan/atau Informasi | Pasal 257 ayat (1)\n(1) Dalam pemrosesan data dan/atau informasi terkait Sistem Pembayaran, PJP dan/atau pihak yang bekerja sama dengan PJP wajib: a. menerapkan prinsip pelindungan data pribadi termasuk memenuhi aspek persetujuan Pengguna Jasa atas penggunaan data pribadinya yang meliputi: 1. pe",
+          "relevance_score": 0.5834,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "BAB IX",
+          "bagian": "Bagian Kelima",
+          "article": "Pasal 108 Ayat 1-2",
+          "pasal_number": "108",
+          "article_text": "PBI 22/23/PBI/2020 | BAB IX DATA DAN/ATAU INFORMASI | Bagian Kelima Penggunaan dan Keterbukaan Data Individual Nasabah | Pasal 108 ayat (1-2)\n(1) PJP dan/atau PIP dapat melakukan pertukaran data individual nasabah dengan PJP dan/atau PIP lainnya serta pihak terkait lain sesuai dengan ketentuan peraturan perundang-undangan mengenai perlindungan data pribadi dan ketentuan Bank Indonesia. (2) Pertuka",
+          "relevance_score": 0.5832,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "BAB IX",
+          "bagian": "Bagian Keenam",
+          "article": "Pasal 109 Ayat 1-2",
+          "pasal_number": "109",
+          "article_text": "PBI 22/23/PBI/2020 | BAB IX DATA DAN/ATAU INFORMASI | Bagian Keenam Transfer Data Individual Nasabah ke Luar Wilayah Negara Kesatuan Republik Indonesia | Pasal 109 ayat (1-2)\n(1) PJP dan PIP dapat mentransfer data individual nasabah kepada pihak lain di luar wilayah hukum Negara Kesatuan Republik Indonesia sesuai dengan ketentuan peraturan perundang-undangan mengenai perlindungan data pribadi dan ",
+          "relevance_score": 0.5783,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 109 Ayat 1-2",
+          "pasal_number": "109",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 109 ayat (1-2)\n(1) Ketentuan perundang-undangan mengenai perlindungan data pribadi antara lain kewajiban persetujuan Pengguna Jasa atas penggunaan data pribadinya (consumer consent). (2) Cukup jelas.",
+          "relevance_score": 0.5772,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 22 Ayat 1-5",
+          "pasal_number": "22",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 22 ayat (1-5)\n(1) PUJK dilarang: a. memberikan data dan/atau informasi mengenai Konsumen kepada pihak lain; b. menggunakan data dan/atau informasi Konsumen yang telah mengakhiri perjanjian produk dan/atau layanan",
+          "relevance_score": 0.5876,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 20 Ayat 1-3",
+          "pasal_number": "20",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 20 ayat (1-3)\n(1) Dalam penggunaan data dan/atau informasi Konsumen, PUJK dapat melakukan pertukaran data dan/atau informasi Konsumen dengan pihak lain dengan memperhatikan ketentuan peraturan perundang- undangan",
+          "relevance_score": 0.5748,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 21 Ayat 1-4",
+          "pasal_number": "21",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 21 ayat (1-4)\n(1) PUJK dapat melakukan transfer data dan/atau informasi Konsumen berupa perseorangan sebagaimana dimaksud dalam Pasal 19 ayat (2) huruf a kepada pihak lain di luar wilayah hukum Negara Kesatuan Re",
+          "relevance_score": 0.5741,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 19 Ayat 1-5",
+          "pasal_number": "19",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 19 ayat (1-5)\n(1) PUJK wajib menjaga kerahasiaan dan keamanan data dan/atau informasi Konsumen. (2) Data dan/atau informasi Konsumen sebagaimana dimaksud pada ayat (1) mencakup: a. perseorangan: 1. nama lengkap; ",
+          "relevance_score": 0.5721,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 23 Ayat 1-6",
+          "pasal_number": "23",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 23 ayat (1-6)\n(1) Ketentuan sebagaimana dimaksud dalam Pasal 22 ayat (1) dikecualikan untuk PUJK yang telah memiliki dasar pemrosesan sebagaimana diatur dalam ketentuan peraturan perundang-undangan mengenai pelin",
+          "relevance_score": 0.5718,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "PARTIALLY_COMPLIANT",
+          "final": "PARTIALLY_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.99,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa membahas larangan penjualan Data Pribadi Nasabah kepada pihak ketiga tanpa izin eksplisit terpisah, sehingga topiknya adalah perlindungan data pribadi/consent, bukan batas saldo, batas transaksi, KYC, settlement, atau penyelenggaraan pembayaran. (2) Sesuai aturan yang diberikan, topik data privasi berada di domain OJK dan tidak memicu checklist BI yang disediakan. (3) Karena klausa tidak secara eksplisit membahas topik checklist BI, tidak ada sub-elemen yang perlu dinilai. (4) Tidak ditemukan pelanggaran aktif terhadap pasal BI yang disediakan karena klausanya tidak berada dalam ruang lingkup checklist yang diminta."
+        },
+        "ojk": {
+          "status": "PARTIALLY_COMPLIANT",
+          "confidence": 0.98,
+          "checklist_topic": "Perlindungan Data Pribadi",
+          "missing_elements": [
+            "(A) Persetujuan eksplisit konsumen sebelum pemrosesan data pribadi",
+            "(B) Penjelasan tujuan spesifik penggunaan data",
+            "(C) Standar keamanan teknis (enkripsi/keamanan penyimpanan data)",
+            "(D) Hak konsumen mengakses dan mengoreksi data pribadi",
+            "(E) Hak konsumen meminta penghapusan data (right to erasure)"
+          ],
+          "violations": [],
+          "reasoning": "Langkah 1: Klausa relevan dengan topik OJK karena secara eksplisit membahas data pribadi nasabah dan larangan penjualan/transfer kepada pihak ketiga, sehingga masuk ranah perlindungan data pribadi. Langkah 2: Checklist yang digunakan adalah Perlindungan Data Pribadi. Langkah 3: Dari sub-elemen (A)-(F), klausa hanya secara eksplisit memuat (F) karena menyatakan data pribadi nasabah tidak akan dijual kepada pihak ketiga tanpa izin eksplisit yang terpisah. Klausa tidak menyebut persetujuan eksplisit sebelum pemrosesan, tujuan spesifik penggunaan data, standar keamanan teknis, hak akses/koreksi, maupun right to erasure. Langkah 4: 1 dari 6 sub-elemen terpenuhi, sehingga status tidak bisa COMPLIANT dan menjadi PARTIALLY_COMPLIANT."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB3-01",
+      "category": "COMPLAINT",
+      "clause": "Segala bentuk pengaduan atau keluhan nasabah hanya dapat diterima pada jam operasional kerja, Senin ...",
+      "predicted": "PARTIALLY_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "PARTIALLY_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "PARTIALLY_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "PARTIALLY_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": false,
+      "correct_6": false,
+      "latency_ms": 4901,
+      "confidence": 0.97,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 69 Ayat 3"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 254 Ayat 6",
+          "pasal_number": "254",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Kedua Mekanisme Perolehan Data dan/atau Informasi | Pasal 254 ayat (6)\n(6) Terjadinya gangguan sebagaimana dimaksud pada ayat (5) huruf c dan keadaan kahar (force majeure) sebagaimana dimaksud pada ayat (5) huruf d harus diberitahukan kepada Bank Indonesia paling lambat 1 (satu) jam setelah kejadian.",
+          "relevance_score": 0.5601,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 90",
+          "pasal_number": "90",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 90\na. Aspek kepatuhan terhadap ketentuan perundang-undangan antara lain penerapan perlindungan konsumen serta anti pencucian uang dan pencegahan pendanaan terorisme. Risiko PJP dan PIP terdiri dari risiko operasional, risiko penyelesaian akhir (settlement), risiko hukum, risiko reputasi dan risiko strategis. Risiko operasional antara lain risiko terhadap sis",
+          "relevance_score": 0.5578,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 43",
+          "pasal_number": "43",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 43\nKriteria dan persyaratan peserta, ruang lingkup layanan, hak dan kewajiban, mekanisme penyelesaian sengketa, dan pemantauan kepatuhan peserta diatur dalam ketentuan Bank Indonesia, perjanjian atau bylaws, dan/atau ketentuan yang diterbitkan SRO.",
+          "relevance_score": 0.556,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Keempat",
+          "article": "Pasal 96 Ayat 1-3",
+          "pasal_number": "96",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Keempat Pengembangan Aktivitas, Pengembangan Produk, dan/atau Kerja Sama | Paragraf 4 Pengajuan Pengembangan Aktivitas, Pengembangan Produk, dan/atau Kerja Sama | Pasal 96 ayat (1-3)\n(1) Bank Indonesia menolak permohonan persetujuan pada tahapan analisis model bisnis dan substansi dalam hal: a. berdasarkan hasil analis",
+          "relevance_score": 0.5537,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VII",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 255 Ayat 2-5",
+          "pasal_number": "255",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VII DATA DAN/ATAU INFORMASI | Bagian Kedua Mekanisme Perolehan Data dan/atau Informasi | Pasal 255 ayat (2-5)\n(2) Penyampaian laporan insidental sebagaimana dimaksud dalam Pasal 254 ayat (5) berlaku ketentuan: a. laporan perubahan modal dan/atau perubahan struktur kepemilikan dan pengendalian serta perubahan susunan pengurus PJP sebagaimana dimaksud dalam Pasal 254 ayat (5)",
+          "relevance_score": 0.5518,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 71 Ayat 1-8",
+          "pasal_number": "71",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 71 ayat (1-8)\n(1) PUJK wajib menangani Pengaduan secara tertulis bagi Konsumen yang telah melengkapi dokumen yang dipers",
+          "relevance_score": 0.6332,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 75 Ayat 1-6",
+          "pasal_number": "75",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 75 ayat (1-6)\n(1) PUJK wajib melakukan tindak lanjut dan melakukan penyelesaian Pengaduan secara tertulis paling lama 10",
+          "relevance_score": 0.6327,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 80 Ayat 1-7",
+          "pasal_number": "80",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 80 ayat (1-7)\n(1) Penyampaian laporan Layanan Pengaduan dilakukan melalui sistem pelaporan elektronik yang disediakan ol",
+          "relevance_score": 0.6291,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 78 Ayat 1-6",
+          "pasal_number": "78",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 78 ayat (1-6)\n(1) Tanggapan Pengaduan sebagaimana dimaksud dalam Pasal 77 ayat (1) dapat berupa: a. penjelasan permasala",
+          "relevance_score": 0.6276,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 74 Ayat 1-6",
+          "pasal_number": "74",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 74 ayat (1-6)\n(1) PUJK wajib melakukan tindak lanjut dan menyelesaikan Pengaduan secara lisan paling lama 5 (lima) hari ",
+          "relevance_score": 0.625,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "PARTIALLY_COMPLIANT",
+          "final": "PARTIALLY_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa hanya mengatur jam operasional penerimaan pengaduan/keluhan nasabah dan perlakuan atas keluhan di luar jam tersebut. Ini bukan topik batas saldo, batas transaksi, KYC/verifikasi identitas, settlement, atau penyelenggaraan pembayaran yang menjadi fokus checklist BI di instruksi ini. (2) Karena topiknya tidak relevan dengan checklist BI yang disediakan, tidak ada topik checklist yang dapat diterapkan. (3) Klausa juga tidak membahas ketentuan yang diatur oleh pasal BI yang diberikan. (4) Kesimpulan: status NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "PARTIALLY_COMPLIANT",
+          "confidence": 0.97,
+          "checklist_topic": "Penanganan Pengaduan / SLA",
+          "missing_elements": [
+            "(A) Batas waktu penyelesaian pengaduan tertulis ≤ 20 hari kerja (dengan opsi perpanjangan 10 hari)",
+            "(C) Kesempatan konsumen melengkapi dokumen yang kurang (≥ 10 hari kerja)"
+          ],
+          "violations": [],
+          "reasoning": "(1) Klausa relevan dengan topik OJK karena mengatur prosedur penerimaan/penanganan pengaduan nasabah, sehingga masuk ke checklist Penanganan Pengaduan / SLA. (2) Klausa ini tidak membahas data privasi atau klausula eksonerasi, melainkan pembatasan kanal dan jam penerimaan keluhan. (3) Dari checklist SLA, klausa hanya menyatakan pengaduan hanya diterima pada jam operasional Senin-Jumat 10:00-15:00 WIB dan pengaduan di luar jam tersebut akan diabaikan. Ini tidak memuat batas waktu penyelesaian tertulis, tidak memuat kesempatan melengkapi dokumen, dan tidak memuat respons tertulis atas substansi pengaduan. (4) Karena topik memang relevan tetapi cakupannya tidak lengkap, statusnya PARTIALLY_COMPLIANT, bukan COMPLIANT; tidak ada konflik SLA yang eksplisit terhadap batas waktu penyelesaian, namu"
+        }
+      }
+    },
+    {
+      "clause_id": "BAB3-02",
+      "category": "COMPLAINT",
+      "clause": "Tim Customer Service memiliki waktu maksimal 60 hari kerja sejak keluhan diterima untuk menyelesaika...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NON_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 5056,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 75 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB VI",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 248 Ayat 1-3",
+          "pasal_number": "248",
+          "article_text": "PBI 23/6/PBI/2021 | BAB VI PENGAKHIRAN PENYELENGGARAAN SISTEM PEMBAYARAN | Bagian Kedua Penyelesaian Kewajiban PJP | Pasal 248 ayat (1-3)\n(1) Tindak lanjut berupa penyerahan kewajiban dari PJP kepada Balai Harta Peninggalan sebagaimana dimaksud dalam Pasal 247 ayat (6) dilakukan paling lambat 30 (tiga puluh) hari kerja terhitung sejak berakhirnya jangka waktu penyelesaian kewajiban sebagaimana dim",
+          "relevance_score": 0.5507,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 62",
+          "pasal_number": "62",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 62\nPersyaratan tertentu kepada Penyelenggara Penunjang dilakukan untuk memastikan aspek prudensial dalam hal terdapat penampungan dana sebelum pelaksanaan penerusan pembayaran. Bentuk persyaratan tertentu antara lain adanya service level agreement penerusan pembayaran dari Penyelenggara Penunjang kepada Penyedia Barang dan/atau Jasa seperti: 1. batasan jangk",
+          "relevance_score": 0.5503,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB II",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 42 Ayat 1-6",
+          "pasal_number": "42",
+          "article_text": "PBI 23/6/PBI/2021 | BAB II AKTIVITAS DAN PERIZINAN PENYEDIA JASA PEMBAYARAN | Bagian Ketiga Pemberian Izin PJP | Pasal 42 ayat (1-6)\n(1) PJP yang telah memperoleh izin harus menyelenggarakan aktivitasnya paling lambat 120 (seratus dua puluh) hari kerja terhitung sejak tanggal surat pemberian izin dari Bank Indonesia. (2) PJP yang telah menyelenggarakan aktivitas Sistem Pembayaran harus menyampaika",
+          "relevance_score": 0.5449,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 39",
+          "pasal_number": "39",
+          "article_text": "PBI 23/6/PBI/2021 | BAB II AKTIVITAS DAN PERIZINAN PENYEDIA JASA PEMBAYARAN | Bagian Kedua Perizinan PJP | Paragraf 4 Mekanisme dan Tata Cara Pengajuan Izin | Pasal 39\nDalam hal permohonan izin calon PJP ditolak: a. calon PJP dapat mengajukan kembali permohonan izin setelah jangka waktu 180 (seratus delapan puluh) hari kerja terhitung sejak tanggal surat penolakan sebagaimana dimaksud dalam Pasal ",
+          "relevance_score": 0.5387,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Keempat",
+          "article": "Pasal 125 Ayat 1-6",
+          "pasal_number": "125",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Keempat Pengembangan Aktivitas, Pengembangan Produk, dan/atau Kerja Sama | Paragraf 4 Pengajuan Pengembangan Aktivitas, Pengembangan Produk, dan/atau Kerja Sama | Pasal 125 ayat (1-6)\n(1) PJP yang telah memperoleh persetujuan harus menyelenggarakan aktivitasnya paling lama 120 (seratus dua puluh) hari kerja terhitung s",
+          "relevance_score": 0.5363,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 75 Ayat 1-6",
+          "pasal_number": "75",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 75 ayat (1-6)\n(1) PUJK wajib melakukan tindak lanjut dan melakukan penyelesaian Pengaduan secara tertulis paling lama 10",
+          "relevance_score": 0.6502,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 74 Ayat 1-6",
+          "pasal_number": "74",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 74 ayat (1-6)\n(1) PUJK wajib melakukan tindak lanjut dan menyelesaikan Pengaduan secara lisan paling lama 5 (lima) hari ",
+          "relevance_score": 0.6311,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 78 Ayat 1-10",
+          "pasal_number": "78",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 78 ayat (1-10)\n(1) a. Cukup jelas. b. Contoh dari tanggapan Pengaduan berupa penawaran penyelesaian: penyampaian pernyataan maaf dan penawaran ganti rugi (redress/remedy). (2) Yang dimaksud dengan “jangka waktu yang cukup” adalah PUJK mempertimbangkan kondisi geografis, sarana informasi, dan kompleksitas produk dan/atau layanan. (3) Pernyataan Konsumen menerima pe",
+          "relevance_score": 0.6309,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 71 Ayat 1-8",
+          "pasal_number": "71",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 71 ayat (1-8)\n(1) PUJK wajib menangani Pengaduan secara tertulis bagi Konsumen yang telah melengkapi dokumen yang dipers",
+          "relevance_score": 0.6138,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kesembilan",
+          "article": "Pasal 69 Ayat 1-7",
+          "pasal_number": "69",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kesembilan Penanganan Pengaduan dan Penyelesaian Sengketa atas Produk dan Layanan | Paragraf 1 Layanan Pengaduan Subparagraf 1 Ruang Lingkup dan Prinsip Layanan Pengaduan | Pasal 69 ayat (1-7)\n(1) PUJK wajib menyediakan Layanan Pengaduan Konsumen. (2) Layanan Pengaduan sebagaimana dimaksud pada aya",
+          "relevance_score": 0.6136,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        true
+      ],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "NON_COMPLIANT",
+          "final": "NON_COMPLIANT",
+          "primary_regulator": "OJK"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.99,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa SOP membahas batas waktu penyelesaian keluhan nasabah oleh Tim Customer Service dan pemberian kompensasi, bukan topik BI yang relevan seperti batas saldo, batas transaksi, KYC, settlement, atau penyelenggaraan pembayaran. (2) Karena topiknya tidak relevan dengan checklist BI yang diberikan, tidak ada topik checklist yang perlu diterapkan. (3) Tidak ada sub-elemen regulasi BI yang dapat dicocokkan dengan isi klausa. (4) Kesimpulan: NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "NON_COMPLIANT",
+          "confidence": 0.98,
+          "checklist_topic": "Penanganan Pengaduan / SLA",
+          "missing_elements": [
+            "(B) Konfirmasi penerimaan pengaduan kepada konsumen dengan bukti tertulis",
+            "(C) Kesempatan konsumen melengkapi dokumen yang kurang (≥ 10 hari kerja)"
+          ],
+          "violations": [
+            {
+              "article": "Pasal 75 ayat (1)",
+              "grounded": true
+            }
+          ],
+          "reasoning": "(1) Klausa relevan dengan topik OJK karena secara eksplisit mengatur SLA penanganan pengaduan dan penyelesaian masalah nasabah. (2) Checklist yang dipakai adalah Penanganan Pengaduan / SLA. (3) Klausa ini menyebut adanya penyelesaian keluhan dan kompensasi, sehingga unsur respons/penyelesaian tertulis dapat dianggap tersirat, namun batas waktunya menetapkan 60 hari kerja yang jelas bertentangan dengan Pasal 75 ayat (1) POJK 22/2023. Klausa tidak menyebut konfirmasi penerimaan tertulis maupun kesempatan melengkapi dokumen kurang. (4) Karena terdapat ketentuan inti yang bertentangan (SLA 60 hari kerja), status harus NON_COMPLIANT, bukan PARTIALLY_COMPLIANT."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB3-03",
+      "category": "CONSUMER_RIGHTS",
+      "clause": "Nasabah yang memberikan rating bintang 1 pada aplikasi secara otomatis akan dibekukan sementara akun...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NOT_ADDRESSED",
+      "expected_bi": "NOT_ADDRESSED",
+      "predicted_ojk": "NON_COMPLIANT",
+      "expected_ojk": "NON_COMPLIANT",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 7367,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "POJK No. 22/2023 Pasal 46 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 41",
+          "pasal_number": "41",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 41\na. Cukup jelas. b. Angka 1 Cukup jelas. Angka 2 Pengelolaan fraud meliputi tahap prevention, detection, response, dan monitoring. Implementasi pengelolaan fraud dapat dilakukan antara lain dengan menerapkan Fraud Detection System (FDS) pada level akun dan transaksi. Angka 3 Yang dimaksud dengan “sertifikasi dan/atau standar keamanan dan keandalan sistem” ",
+          "relevance_score": 0.5515,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 34",
+          "pasal_number": "34",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 34\na. Cukup jelas. b. Angka 1 Cukup jelas. Angka 2 Pengelolaan fraud meliputi tahap prevention, detection, response, dan monitoring. Implementasi pengelolaan fraud dapat dilakukan antara lain dengan menerapkan Fraud Detection System (FDS) pada level akun dan transaksi. Angka 3 Yang dimaksud dengan “sertifikasi dan/atau standar keamanan dan keandalan sistem” ",
+          "relevance_score": 0.5488,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB IV",
+          "bagian": "Bagian Kelima",
+          "article": "Pasal 224 Ayat 7-8",
+          "pasal_number": "224",
+          "article_text": "PBI 23/6/PBI/2021 | BAB IV INOVASI TEKNOLOGI SISTEM PEMBAYARAN | Bagian Kelima Hasil Uji Coba Pengembangan Inovasi Teknologi Sistem Pembayaran | Pasal 224 ayat (7-8)\n(7) PJP yang melanggar ketentuan sebagaimana dimaksud pada ayat (6), dikenai sanksi administratif berupa: a. teguran; b. penghentian sementara, sebagian, atau seluruh kegiatan termasuk pelaksanaan kerja sama; dan/atau c. pencabutan iz",
+          "relevance_score": 0.5467,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 198 Ayat 1-4",
+          "pasal_number": "198",
+          "article_text": "PBI 23/6/PBI/2021 | Penjelasan | Pasal 198 ayat (1-4)\n(1) Yang dimaksud dengan ”pengguna aktif” adalah pengguna layanan penyimpanan data instrumen pembayaran yang melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran secara reguler dan/atau melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran paling sedikit 1 (satu) kali dalam ",
+          "relevance_score": 0.5461,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kelima",
+          "article": "Pasal 137 Ayat 1-2",
+          "pasal_number": "137",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kelima Kebijakan Kepemilikan Tunggal | Pasal 137 ayat (1-2)\n(1) Pihak yang melanggar ketentuan sebagaimana dimaksud dalam Pasal 135 atau Pasal 136 dikenai sanksi administratif berupa: a. teguran; b. penghentian sementara, sebagian, atau seluruh kegiatan termasuk pelaksanaan kerja sama; dan/atau c. pencabutan izin sebag",
+          "relevance_score": 0.5459,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 57 Ayat 1-6",
+          "pasal_number": "57",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 57 ayat (1-6)\n(1) PUJK wajib memberikan laporan kepada Konsumen tentang posisi saldo dan mutasi dana, aset, atau kewajiban Konsumen secara akurat, benar, tepat waktu, dan dengan cara atau sar",
+          "relevance_score": 0.5576,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Ketujuh",
+          "article": "Pasal 51 Ayat 8-13",
+          "pasal_number": "51",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Ketujuh Penyusunan Perjanjian Terkait Produk dan Layanan | Pasal 51 ayat (8-13)\n(8) Dalam hal belum terdapat ketentuan pembatalan perjanjian pada masa jeda untuk pembatalan yang terjadi pada produk investasi, PUJK wajib mengembalikan paling sedikit sejumlah nilai yang telah diberikan Konsumen dikur",
+          "relevance_score": 0.5556,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 55 Ayat 1-2",
+          "pasal_number": "55",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 55 ayat (1-2)\n(1) PUJK wajib menjaga keamanan simpanan, dana, atau aset Konsumen yang berada dalam tanggung jawab PUJK. (2) PUJK yang melanggar ketentuan sebagaimana dimaksud pada ayat (1) da",
+          "relevance_score": 0.5541,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 6",
+          "pasal_number": "6",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 6\nContoh iktikad tidak baik Konsumen: 1. Konsumen memberikan informasi dan/atau dokumen yang tidak jelas, tidak akurat, salah, dan menyesatkan; 2. Konsumen menolak melaksanakan kewajiban sebagaimana tercantum dalam perjanjian dan menggunakan cara ancaman atau kekerasan; 3. Konsumen mengalihkan barang yang menjadi agunan pada produk kredit atau pembiayaan tanpa per",
+          "relevance_score": 0.5479,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 55 Ayat 1-2",
+          "pasal_number": "55",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 55 ayat (1-2)\n(1) Yang dimaksud dengan menjaga keamanan simpanan, dana, atau aset Konsumen merupakan upaya PUJK antara lain untuk memastikan tidak terjadinya tindakan: a. kecurangan, penipuan, penggelapan simpanan, dana, atau aset, pembocoran informasi, dan tindak pidana sektor jasa keuangan; atau b. ketidaksesuaian dengan norma yang berlaku (misconduct). (2) Cuku",
+          "relevance_score": 0.5468,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        true,
+        true
+      ],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NOT_ADDRESSED",
+          "v_ojk": "NON_COMPLIANT",
+          "final": "NON_COMPLIANT",
+          "primary_regulator": "BALANCED"
+        },
+        "bi": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.98,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "Langkah 1: Klausa membahas pembekuan akun otomatis akibat rating bintang 1 dan investigasi keamanan. Ini tidak secara eksplisit membahas topik BI yang diminta dalam checklist seperti batas saldo, batas transaksi, KYC, atau settlement. Langkah 2: Karena topik BI yang relevan tidak dibahas, tidak ada checklist yang diterapkan. Langkah 3: Tidak ada sub-elemen yang dapat dinilai sebagai ada/tidak ada dari checklist BI yang disediakan. Langkah 4: Karena klausa tidak mengatur batas saldo, batas transaksi, atau KYC, status yang tepat adalah NOT_ADDRESSED."
+        },
+        "ojk": {
+          "status": "NON_COMPLIANT",
+          "confidence": 0.99,
+          "checklist_topic": "Klausula Baku / Eksonerasi",
+          "missing_elements": [],
+          "violations": [
+            {
+              "article": "Pasal 57 ayat (1-6)",
+              "grounded": true
+            },
+            {
+              "article": "Pasal 55 ayat (1-2)",
+              "grounded": true
+            }
+          ],
+          "reasoning": "Langkah 1: Klausa relevan dengan topik OJK karena mengatur pembatasan akses akun/nasabah dalam konteks layanan kepada konsumen dan berpotensi berdampak pada hak serta perlindungan konsumen. Langkah 2: Dari checklist yang tersedia, klausula ini paling dekat dengan topik Klausula Baku / Eksonerasi karena menetapkan tindakan sepihak PUJK terhadap konsumen tanpa pemberitahuan sebelumnya. Langkah 3: Sub-elemen yang paling terkait adalah (B) kewenangan sepihak PUJK mengubah syarat tanpa persetujuan konsumen dan (D) pembatasan hak konsumen mengajukan gugatan/keberatan hukum, namun klausula ini tidak hanya tidak lengkap tetapi juga menetapkan tindakan sepihak yang merugikan konsumen. Karena klausula secara aktif menyatakan pembekuan otomatis tanpa pemberitahuan sebelumnya, ini merupakan klausula s"
+        }
+      }
+    },
+    {
+      "clause_id": "BAB4-01",
+      "category": "LIMITS",
+      "clause": "Akun Unverified (Belum KYC): Nasabah yang belum mengunggah KTP (Unregistered) dapat menyimpan saldo ...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NON_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4443,
+      "confidence": 0.98,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 160 Ayat 1-6",
+          "pasal_number": "160",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 160 ayat (1-6)\n(1) Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut: a. untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan b",
+          "relevance_score": 0.6118,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 68 Ayat 1",
+          "pasal_number": "68",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Ketiga Klasifikasi PJP | Paragraf 3 Kewajiban Permodalan Sistem Pembayaran | Pasal 68 ayat (1)\n(1) Transaksi tertimbang menurut risiko sebagaimana dimaksud dalam Pasal 63 ayat (3) huruf a ditetapkan sebesar 10 (sepuluh) kali dari beban transaksi.",
+          "relevance_score": 0.5532,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 162 Ayat 7",
+          "pasal_number": "162",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 162 ayat (7)\n(7) Ketentuan mengenai perubahan batas jumlah dana float uang elektronik closed loop yang dikecualikan dari keharusan memperoleh izin sebagaimana dimaksud pada ayat (1) diatur dalam Peraturan An",
+          "relevance_score": 0.5522,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kesebelas",
+          "article": "Pasal 203",
+          "pasal_number": "203",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kesebelas Kebijakan terkait Nilai yang Dapat Dipersamakan dengan Uang | Pasal 203\nPJP dilarang memfasilitasi perdagangan virtual currency sebagai komoditas kecuali yang diatur sesuai dengan ketentuan peraturan perundangan-undangan.",
+          "relevance_score": 0.5458,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 165 Ayat 4-7",
+          "pasal_number": "165",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 165 ayat (4-7)\n(4) Dengan tetap memperhatikan ketentuan sebagaimana dimaksud pada ayat (2), persentase penempatan dana float wajib disesuaikan dengan jumlah rata-rata bulanan kebutuhan likuiditas untuk memen",
+          "relevance_score": 0.541,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Keempat",
+          "article": "Pasal 29 Ayat 10-11",
+          "pasal_number": "29",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Keempat Penyediaan Informasi Produk dan Layanan | Pasal 29 ayat (10-11)\n(10) Sanksi denda sebagaimana dimaksud pada ayat (8) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah). (11) Dalam hal PUJK tidak memenuhi sanksi administratif sebagaimana dimaksud pada ayat (8) unt",
+          "relevance_score": 0.5788,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 5 Ayat 7-8",
+          "pasal_number": "5",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 5 ayat (7-8)\n(7) Sanksi sebagaimana dimaksud pada ayat (6) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (6) huruf a. (8) Sanksi denda sebagaimana dimaksud p",
+          "relevance_score": 0.5711,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Ketujuh",
+          "article": "Pasal 49 Ayat 8-9",
+          "pasal_number": "49",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Ketujuh Penyusunan Perjanjian Terkait Produk dan Layanan | Pasal 49 ayat (8-9)\n(8) Sanksi sebagaimana dimaksud pada ayat (7) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (7) huruf a. (9) Sanksi denda sebagaim",
+          "relevance_score": 0.5657,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 24 Ayat 7-8",
+          "pasal_number": "24",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 24 ayat (7-8)\n(7) Sanksi sebagaimana dimaksud pada ayat (6) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (6) huruf a. (8)",
+          "relevance_score": 0.5645,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 34 Ayat 1-5",
+          "pasal_number": "34",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 34 ayat (1-5)\n(1) Cukup jelas. (2) Contoh kecuali diatur lain oleh ketentuan peraturan perundang- undangan: Calon Konsumen tabungan yang setelah dilakukan due diligence ternyata diindikasikan terlibat tindak pidana pencucian uang sesuai dengan ketentuan Undang-Undang Nomor 8 Tahun 2010 tentang Pencegahan dan Pemberantasan Tindak Pidana Pencucian Uang dan/atau terl",
+          "relevance_score": 0.5636,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        true
+      ],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NON_COMPLIANT",
+          "v_ojk": "NOT_ADDRESSED",
+          "final": "NON_COMPLIANT",
+          "primary_regulator": "BI"
+        },
+        "bi": {
+          "status": "NON_COMPLIANT",
+          "confidence": 0.99,
+          "checklist_topic": "Batas Saldo E-Wallet",
+          "missing_elements": [
+            "(B) Batas saldo akun VERIFIED ≤ Rp 10.000.000 tidak disebutkan",
+            "(C) Ketentuan peningkatan tier melalui verifikasi KYC yang jelas tidak disebutkan"
+          ],
+          "violations": [
+            {
+              "article": "Pasal 160 ayat (1)",
+              "grounded": true
+            }
+          ],
+          "reasoning": "(1) Klausa relevan dengan topik BI karena secara eksplisit mengatur batas saldo akun unverified/unregistered, yaitu area yang diatur dalam Pasal 160 ayat (1). (2) Checklist yang berlaku adalah Batas Saldo E-Wallet. (3) Sub-elemen (A) dibahas, tetapi nilainya bertentangan dengan regulasi; (B) tidak disebutkan; (C) tidak disebutkan. Karena terdapat pelanggaran aktif pada ketentuan yang dinyatakan klausa, status tidak dapat dianggap sekadar partially compliant. (4) Kesimpulan: NON_COMPLIANT karena klausa menetapkan limit saldo unregistered di atas batas yang diizinkan BI."
+        },
+        "ojk": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.97,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "Langkah 1: Klausa membahas batas saldo maksimal untuk akun yang belum verifikasi KTP (Unverified/Belum KYC). Ini adalah pengaturan teknis operasional terkait saldo/transaksi dan status registrasi akun, bukan topik yang diuji dalam checklist OJK yang diberikan seperti perlindungan data pribadi, SLA pengaduan, atau klausula baku/eksonerasi. Langkah 2: Karena klausa tidak secara eksplisit membahas topik checklist OJK yang relevan, tidak ada checklist yang diterapkan. Langkah 3-4: Tidak ada sub-elemen yang dinilai. Kesimpulan: NOT_ADDRESSED."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB4-02",
+      "category": "LIMITS",
+      "clause": "Akun Verified (Sudah KYC): Nasabah yang sudah diverifikasi identitasnya dapat menyimpan saldo maksim...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NON_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4393,
+      "confidence": 0.97,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 1"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 160 Ayat 1-6",
+          "pasal_number": "160",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 160 ayat (1-6)\n(1) Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut: a. untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan b",
+          "relevance_score": 0.5855,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 24 Ayat 1-5",
+          "pasal_number": "24",
+          "article_text": "PBI 23/6/PBI/2021 | BAB II AKTIVITAS DAN PERIZINAN PENYEDIA JASA PEMBAYARAN | Bagian Kedua Perizinan PJP | Paragraf 3 Persyaratan Perizinan PJP | Pasal 24 ayat (1-5)\n(1) Aspek permodalan dan keuangan sebagaimana dimaksud dalam Pasal 14 huruf b meliputi persyaratan minimal modal disetor, analisis kelayakan, dan proyeksi bisnis. (2) Besaran modal disetor minimum (initial capital) bagi calon PJP: a. ",
+          "relevance_score": 0.5431,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 162 Ayat 7",
+          "pasal_number": "162",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 162 ayat (7)\n(7) Ketentuan mengenai perubahan batas jumlah dana float uang elektronik closed loop yang dikecualikan dari keharusan memperoleh izin sebagaimana dimaksud pada ayat (1) diatur dalam Peraturan An",
+          "relevance_score": 0.5407,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "BAB V",
+          "bagian": "Bagian Ketujuh",
+          "article": "Pasal 68",
+          "pasal_number": "68",
+          "article_text": "PBI 22/23/PBI/2020 | BAB V PENYELENGGARAAN SISTEM PEMBAYARAN | Bagian Ketujuh Sumber Dana dan Akses ke Sumber Dana | Pasal 68\nSumber Dana harus memenuhi unsur: a. memiliki nilai dalam satuan rupiah; b. digunakan untuk tujuan pembayaran dan/atau pemenuhan kegiatan ekonomi; c. nilai uang pada Sumber Dana didasarkan atas dana yang disetorkan terlebih dahulu kepada pihak yang menatausahakan Sumber Dan",
+          "relevance_score": 0.5404,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kesebelas",
+          "article": "Pasal 203",
+          "pasal_number": "203",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kesebelas Kebijakan terkait Nilai yang Dapat Dipersamakan dengan Uang | Pasal 203\nPJP dilarang memfasilitasi perdagangan virtual currency sebagai komoditas kecuali yang diatur sesuai dengan ketentuan peraturan perundangan-undangan.",
+          "relevance_score": 0.5389,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Keempat",
+          "article": "Pasal 29 Ayat 10-11",
+          "pasal_number": "29",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Keempat Penyediaan Informasi Produk dan Layanan | Pasal 29 ayat (10-11)\n(10) Sanksi denda sebagaimana dimaksud pada ayat (8) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah). (11) Dalam hal PUJK tidak memenuhi sanksi administratif sebagaimana dimaksud pada ayat (8) unt",
+          "relevance_score": 0.5566,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 5 Ayat 7-8",
+          "pasal_number": "5",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 5 ayat (7-8)\n(7) Sanksi sebagaimana dimaksud pada ayat (6) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (6) huruf a. (8) Sanksi denda sebagaimana dimaksud p",
+          "relevance_score": 0.5565,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Ketujuh",
+          "article": "Pasal 49 Ayat 8-9",
+          "pasal_number": "49",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Ketujuh Penyusunan Perjanjian Terkait Produk dan Layanan | Pasal 49 ayat (8-9)\n(8) Sanksi sebagaimana dimaksud pada ayat (7) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (7) huruf a. (9) Sanksi denda sebagaim",
+          "relevance_score": 0.5542,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 23 Ayat 7",
+          "pasal_number": "23",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 3 Pelindungan Data dan Informasi Konsumen | Pasal 23 ayat (7)\n(7) Sanksi denda sebagaimana dimaksud pada ayat (5) huruf e dikenakan paling banyak Rp15.000.000.000,00 (lima belas miliar rupiah).",
+          "relevance_score": 0.5524,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 34 Ayat 1-5",
+          "pasal_number": "34",
+          "article_text": "POJK 22/2023 | Penjelasan | Pasal 34 ayat (1-5)\n(1) Cukup jelas. (2) Contoh kecuali diatur lain oleh ketentuan peraturan perundang- undangan: Calon Konsumen tabungan yang setelah dilakukan due diligence ternyata diindikasikan terlibat tindak pidana pencucian uang sesuai dengan ketentuan Undang-Undang Nomor 8 Tahun 2010 tentang Pencegahan dan Pemberantasan Tindak Pidana Pencucian Uang dan/atau terl",
+          "relevance_score": 0.5505,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        true
+      ],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NON_COMPLIANT",
+          "v_ojk": "NOT_ADDRESSED",
+          "final": "NON_COMPLIANT",
+          "primary_regulator": "BI"
+        },
+        "bi": {
+          "status": "NON_COMPLIANT",
+          "confidence": 0.99,
+          "checklist_topic": "Batas Saldo E-Wallet",
+          "missing_elements": [
+            "(A) Batas saldo akun UNVERIFIED ≤ Rp 2.000.000 tidak disebutkan",
+            "(C) Ketentuan peningkatan tier melalui verifikasi KYC yang jelas tidak disebutkan"
+          ],
+          "violations": [
+            {
+              "article": "Pasal 160 ayat (1)",
+              "grounded": true
+            }
+          ],
+          "reasoning": "1) Klausa relevan dengan topik BI karena secara eksplisit membahas batas saldo akun e-wallet/uang elektronik. 2) Checklist yang berlaku adalah TOPIK: Batas Saldo E-Wallet. 3) Klausa hanya menyebut akun verified, tetapi nilai saldo maksimal Rp 500.000.000 melebihi batas yang diatur BI untuk akun registered/verified sebesar Rp 10.000.000. Karena ada ketentuan aktif yang bertentangan, status menjadi NON_COMPLIANT. 4) Klausa juga tidak memuat batas saldo unverified maupun ketentuan upgrade KYC, namun kekurangan cakupan ini tidak menjadi alasan utama; pelanggaran aktif pada nilai saldo verified sudah cukup untuk non-compliant."
+        },
+        "ojk": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.96,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa yang diuji hanya mengatur batas saldo maksimal untuk akun yang sudah terverifikasi KYC, yaitu Rp 500.000.000. Ini adalah aturan operasional/produk, bukan topik yang secara eksplisit masuk dalam fokus checklist OJK yang diberikan (data privasi, SLA pengaduan, klausula eksonerasi, atau hak konsumen yang relevan). (2) Tidak ada pembahasan tentang persetujuan data pribadi, tujuan penggunaan data, keamanan data, akses/koreksi data, penghapusan data, transfer data, prosedur pengaduan, tenggat SLA, konfirmasi penerimaan pengaduan, atau klausula pembebasan tanggung jawab/ pembatasan hak hukum. (3) Karena klausa tidak membahas topik checklist yang relevan, checklist tidak diterapkan. (4) Oleh karena itu status yang tepat adalah NOT_ADDRESSED."
+        }
+      }
+    },
+    {
+      "clause_id": "BAB4-03",
+      "category": "LIMITS",
+      "clause": "Batas transaksi masuk bulanan (Monthly Incoming Limit) untuk semua pengguna tidak dibatasi untuk men...",
+      "predicted": "NON_COMPLIANT",
+      "expected": "NON_COMPLIANT",
+      "predicted_norm": "NON_COMPLIANT",
+      "expected_norm": "NON_COMPLIANT",
+      "predicted_6": "NON_COMPLIANT",
+      "expected_6": "NON_COMPLIANT",
+      "predicted_bi": "NON_COMPLIANT",
+      "expected_bi": "NON_COMPLIANT",
+      "predicted_ojk": "NOT_ADDRESSED",
+      "expected_ojk": "NOT_ADDRESSED",
+      "correct": true,
+      "correct_6": true,
+      "latency_ms": 4232,
+      "confidence": 0.97,
+      "retrieval_mode_bi": "dense",
+      "retrieval_mode_ojk": "dense",
+      "sparse_boost": null,
+      "expected_violated_articles": [
+        "PBI No. 23/6/PBI/2021 Pasal 160 Ayat 2"
+      ],
+      "evidence_bi": [
+        {
+          "rank": 1,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 160 Ayat 1-6",
+          "pasal_number": "160",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 160 ayat (1-6)\n(1) Batas nilai uang elektronik yang dapat disimpan pada uang elektronik ditetapkan sebagai berikut: a. untuk uang elektronik unregistered paling banyak Rp2.000.000,00 (dua juta rupiah); dan b",
+          "relevance_score": 0.5786,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "BAB III",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 162 Ayat 7",
+          "pasal_number": "162",
+          "article_text": "PBI 23/6/PBI/2021 | BAB III PENYELENGGARAAN SISTEM PEMBAYARAN OLEH PJP | Bagian Kedelapan Akses ke Sumber Dana Berupa Instrumen | Paragraf 1 Akses ke Sumber Dana Berupa Uang Elektronik | Pasal 162 ayat (7)\n(7) Ketentuan mengenai perubahan batas jumlah dana float uang elektronik closed loop yang dikecualikan dari keharusan memperoleh izin sebagaimana dimaksud pada ayat (1) diatur dalam Peraturan An",
+          "relevance_score": 0.5747,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 198 Ayat 1-4",
+          "pasal_number": "198",
+          "article_text": "PBI 23/6/PBI/2021 | Penjelasan | Pasal 198 ayat (1-4)\n(1) Yang dimaksud dengan ”pengguna aktif” adalah pengguna layanan penyimpanan data instrumen pembayaran yang melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran secara reguler dan/atau melakukan transaksi pembayaran menggunakan layanan penyimpanan data instrumen pembayaran paling sedikit 1 (satu) kali dalam ",
+          "relevance_score": 0.571,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "BI",
+          "regulation": "PBI 22/23/PBI/2020",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 74 Ayat 1-2",
+          "pasal_number": "74",
+          "article_text": "PBI 22/23/PBI/2020 | Penjelasan | Pasal 74 ayat (1-2)\n(1) Akses ke Sumber Dana yang dihubungkan dengan interface pembayaran terintegrasi diutamakan untuk instrumen yang berbasis akun dan menggunakan kanal mobile atau internet. (2) Cukup jelas.",
+          "relevance_score": 0.5645,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "BI",
+          "regulation": "PBI 23/6/PBI/2021",
+          "bab": "",
+          "bagian": "",
+          "article": "Pasal 160 Ayat 1-6",
+          "pasal_number": "160",
+          "article_text": "PBI 23/6/PBI/2021 | Penjelasan | Pasal 160 ayat (1-6)\n(1) Cukup jelas. (2) Cukup jelas. (3) Termasuk transaksi yang bersifat incoming antara lain setoran awal, transfer dana masuk, dan/atau pengisian ulang (top up). (4) Yang dimaksud dengan “akun pencatatan nilai Uang Elektronik” adalah akun pencatatan yang hanya digunakan oleh Penyedia Barang dan/atau Jasa untuk menerima pembayaran atas transaksi",
+          "relevance_score": 0.5626,
+          "found_in": "dense"
+        }
+      ],
+      "evidence_ojk": [
+        {
+          "rank": 1,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 61 Ayat 8-9",
+          "pasal_number": "61",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 2 Penagihan untuk Produk Kredit dan Pembiayaan oleh PUJK | Pasal 61 ayat (8-9)\n(8) Sanksi sebagaimana dimaksud pada ayat (7) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tert",
+          "relevance_score": 0.549,
+          "found_in": "dense"
+        },
+        {
+          "rank": 2,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 57 Ayat 1-6",
+          "pasal_number": "57",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 57 ayat (1-6)\n(1) PUJK wajib memberikan laporan kepada Konsumen tentang posisi saldo dan mutasi dana, aset, atau kewajiban Konsumen secara akurat, benar, tepat waktu, dan dengan cara atau sar",
+          "relevance_score": 0.5483,
+          "found_in": "dense"
+        },
+        {
+          "rank": 3,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Ketiga",
+          "article": "Pasal 28 Ayat 1-5",
+          "pasal_number": "28",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Ketiga Desain Produk dan Layanan | Pasal 28 ayat (1-5)\n(1) PUJK wajib memiliki pedoman penetapan nilai/harga dan/atau biaya produk dan/atau layanan. (2) PUJK berhak menerima pembayaran sesuai dengan nilai/harga dan/atau biaya produk dan/atau layanan yang disepakati dengan Konsumen. (3) PUJK yang me",
+          "relevance_score": 0.5482,
+          "found_in": "dense"
+        },
+        {
+          "rank": 4,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedelapan",
+          "article": "Pasal 56 Ayat 1-4",
+          "pasal_number": "56",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedelapan Pemberian Layanan atas Penggunaan Produk dan Layanan | Paragraf 1 Layanan kepada Konsumen | Pasal 56 ayat (1-4)\n(1) PUJK wajib memberikan: a. tanda bukti kepemilikan produk dan/atau pemanfaatan layanan; b. akses untuk memperoleh tanda bukti kepemilikan produk dan/atau pemanfaatan layanan;",
+          "relevance_score": 0.5476,
+          "found_in": "dense"
+        },
+        {
+          "rank": 5,
+          "regulator": "OJK",
+          "regulation": "POJK 22/2023",
+          "bab": "BAB II",
+          "bagian": "Bagian Kedua",
+          "article": "Pasal 5 Ayat 7-8",
+          "pasal_number": "5",
+          "article_text": "POJK 22/2023 | BAB II KETENTUAN PELINDUNGAN KONSUMEN DAN MASYARAKAT DI SEKTOR JASA KEUANGAN | Bagian Kedua Perilaku Dasar PUJK | Paragraf 1 Umum | Pasal 5 ayat (7-8)\n(7) Sanksi sebagaimana dimaksud pada ayat (6) huruf b sampai dengan huruf g dikenakan dengan atau tanpa didahului pengenaan sanksi peringatan tertulis sebagaimana dimaksud pada ayat (6) huruf a. (8) Sanksi denda sebagaimana dimaksud p",
+          "relevance_score": 0.5467,
+          "found_in": "dense"
+        }
+      ],
+      "citation_grounded": [
+        true
+      ],
+      "diagnostics": {
+        "resolution": {
+          "v_bi": "NON_COMPLIANT",
+          "v_ojk": "NOT_ADDRESSED",
+          "final": "NON_COMPLIANT",
+          "primary_regulator": "BI"
+        },
+        "bi": {
+          "status": "NON_COMPLIANT",
+          "confidence": 0.98,
+          "checklist_topic": "Batas Transaksi Bulanan",
+          "missing_elements": [
+            "(B) Batas transaksi keluar bulanan ≤ Rp 20.000.000 tidak disebutkan",
+            "(C) Pemberlakuan limit untuk kedua tier (unverified dan verified) tidak disebutkan"
+          ],
+          "violations": [
+            {
+              "article": "Pasal 160 ayat (2)",
+              "grounded": true
+            }
+          ],
+          "reasoning": "(1) Klausa relevan dengan topik BI karena secara eksplisit mengatur batas transaksi masuk bulanan pada uang elektronik. (2) Checklist yang digunakan adalah Batas Transaksi Bulanan. (3) Sub-elemen (A) dibahas, tetapi isi klausa bertentangan karena menyatakan 'tidak dibatasi', yang melanggar batas maksimal Rp20.000.000 per bulan. Sub-elemen (B) dan (C) tidak disebutkan. (4) Karena klausa memuat aturan aktif yang bertentangan dengan Pasal 160 ayat (2), statusnya NON_COMPLIANT."
+        },
+        "ojk": {
+          "status": "NOT_ADDRESSED",
+          "confidence": 0.97,
+          "checklist_topic": null,
+          "missing_elements": [],
+          "violations": [],
+          "reasoning": "(1) Klausa membahas batas transaksi masuk bulanan untuk mendorong GTV, yaitu pengaturan limit operasional/produk, bukan data privasi, SLA pengaduan, klausula baku eksonerasi, transparansi informasi, atau persetujuan konsumen. (2) Dari daftar topik OJK yang relevan, klausa ini tidak secara eksplisit membahas topik checklist mana pun. (3) Karena tidak ada topik checklist yang terpicu, tidak ada sub-elemen yang perlu dinilai ADA/TIDAK ADA. (4) Kesimpulan: NOT_ADDRESSED."
+        }
+      }
+    }
+  ]
+}

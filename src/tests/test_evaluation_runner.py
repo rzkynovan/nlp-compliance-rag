@@ -112,3 +112,61 @@ def test_build_result_has_agent_diagnostics():
     d = r["diagnostics"]["ojk"]
     assert d["status"] == "PARTIALLY_COMPLIANT" and d["missing_elements"] == ["(B)"] and d["reasoning"] == "alasan"
     assert r["diagnostics"]["bi"] == {}
+
+
+# ── D6: run dengan error API harus gagal, bukan terlihat seperti hasil model ──
+
+@pytest.mark.parametrize("provider,env,missing", [
+    ("anthropic", {"OPENAI_API_KEY": "x", "ANTHROPIC_API_KEY": ""}, "ANTHROPIC_API_KEY"),
+    ("openai",    {"OPENAI_API_KEY": "",  "ANTHROPIC_API_KEY": "x"}, "OPENAI_API_KEY"),
+    ("anthropic", {"OPENAI_API_KEY": "",  "ANTHROPIC_API_KEY": "x"}, "OPENAI_API_KEY"),
+])
+def test_check_api_keys_exits_when_key_empty(monkeypatch, provider, env, missing):
+    for k, v in env.items():
+        monkeypatch.setenv(k, v)
+    with pytest.raises(SystemExit) as exc:
+        er.check_api_keys(provider)
+    assert missing in str(exc.value)
+
+
+def test_check_api_keys_passes_when_keys_present(monkeypatch):
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "y")
+    er.check_api_keys("anthropic")
+    er.check_api_keys("openai")
+
+
+def test_run_evaluation_stops_before_any_api_call(monkeypatch, tmp_path):
+    monkeypatch.setenv("LLM_PROVIDER", "anthropic")
+    monkeypatch.setenv("OPENAI_API_KEY", "x")
+    monkeypatch.setenv("ANTHROPIC_API_KEY", "")
+    monkeypatch.setattr(er, "_ROOT", tmp_path)
+    with pytest.raises(SystemExit):
+        er.run_evaluation(use_mlflow=False)
+    assert not (tmp_path / "data").exists()
+
+
+@pytest.mark.parametrize("error,fatal", [
+    (Exception('"Could not resolve authentication method. Expected one of api_key"'), True),
+    (Exception("Your credit balance is too low to access the Anthropic API."), True),
+    (Exception("Error code: 429 - insufficient_quota"), True),
+    (type("AuthenticationError", (Exception,), {})("401"), True),
+    (Exception("Unknown model 'gpt-5.4-mini'. Please provide a valid OpenAI model name"), True),
+    (Exception("Request timed out"), False),
+])
+def test_is_fatal_api_error(error, fatal):
+    assert er.is_fatal_api_error(error) is fatal
+
+
+def test_error_result_counted():
+    ok = er.build_result(SAMPLE_OJK, _audit_result(), 10)
+    bad = er.build_error_result(SAMPLE_OJK, Exception("credit balance"), 10)
+    assert er.count_errors([ok, bad]) == 1
+
+
+def test_summarize_repeats_rejects_invalid_runs():
+    bad = er.build_error_result(SAMPLE_OJK, Exception("credit balance"), 10)
+    with pytest.raises(ValueError, match="tidak valid"):
+        er.summarize_repeats([{"run_name": "r1", "invalid": True, "results": [bad]}])
+    with pytest.raises(ValueError, match="tidak valid"):
+        er.summarize_repeats([{"run_name": "r2", "results": [bad]}])
