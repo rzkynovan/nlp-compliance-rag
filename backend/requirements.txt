@@ -20,6 +20,7 @@ llama-index>=0.10.0
 llama-index-embeddings-openai>=0.1.0
 llama-index-llms-openai>=0.1.0
 anthropic>=0.40.0
+brotli>=1.2            # anthropic>=1.x (httpx2) butuh brotli baru
 llama-index-vector-stores-chroma>=0.1.0
 llama-parse>=0.4.0
 openai>=1.10.0

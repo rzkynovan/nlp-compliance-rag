@@ -377,6 +377,10 @@ _FATAL_API_ERROR_MARKERS = (
 )
 
 
+# Error yang sama pada klausul berturut-turut (mis. koneksi/dependensi rusak) → hentikan run
+MAX_CONSECUTIVE_ERRORS = 2
+
+
 def check_api_keys(provider: str) -> None:
     """Hentikan run sebelum memanggil API apa pun bila key yang dibutuhkan kosong."""
     missing = []
@@ -430,6 +434,7 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
     retrieval_setup = check_retrieval_ready(coordinator)
 
     results = []
+    consecutive_errors = 0
     import asyncio
 
     for i, sample in enumerate(GROUND_TRUTH, 1):
@@ -446,10 +451,13 @@ def run_evaluation(use_mlflow: bool = True, mlflow_uri: str = None) -> Dict:
         except Exception as e:
             print(f"  ⚠ Error: {e}")
             result = build_error_result(sample, e, round((time.time() - t0) * 1000))
-            if is_fatal_api_error(e):
+            consecutive_errors += 1
+            if is_fatal_api_error(e) or consecutive_errors >= MAX_CONSECUTIVE_ERRORS:
                 results.append(result)
-                print("  ✗ Error API fatal (key/saldo/kuota) — sisa klausul tidak dijalankan.")
+                print("  ✗ Error API fatal atau berulang — sisa klausul tidak dijalankan.")
                 break
+        else:
+            consecutive_errors = 0
 
         results.append(result)
         status_icon = "✓" if result["correct"] else "✗"

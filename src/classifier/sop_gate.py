@@ -162,6 +162,15 @@ class IndoBERTGate(BaseSOPGate):
 
 # ── Gate C: GPT fine-tuned ────────────────────────────────────────────────────
 
+GPT_GATE_SYSTEM_PROMPT = (
+    "Kamu adalah classifier yang menentukan apakah sebuah teks adalah klausa SOP "
+    "(Standar Operasional Prosedur) atau dokumen T&C (Terms & Conditions) layanan keuangan "
+    "digital yang valid, atau bukan.\n\n"
+    "Jawab hanya dengan satu kata: 'SOP' jika teks adalah klausa SOP/T&C yang valid, "
+    "atau 'BUKAN_SOP' jika teks bukan klausa SOP (misalnya: sapaan, pertanyaan umum, "
+    "lirik lagu, kalimat acak, atau teks tidak bermakna)."
+)
+
 class GPTFineTunedGate(BaseSOPGate):
     model_name = "gpt_finetuned"
 
@@ -187,14 +196,8 @@ class GPTFineTunedGate(BaseSOPGate):
         response = self._client.chat.completions.create(
             model=self._model_id,
             messages=[
-                {
-                    "role": "system",
-                    "content": (
-                        "Kamu adalah classifier yang menentukan apakah sebuah teks adalah "
-                        "klausa SOP atau dokumen T&C layanan keuangan digital yang valid, atau bukan. "
-                        "Jawab hanya dengan satu kata: 'SOP' atau 'BUKAN_SOP'."
-                    ),
-                },
+                # Prompt identik dengan data fine-tuning (train_gpt_finetune.py)
+                {"role": "system", "content": GPT_GATE_SYSTEM_PROMPT},
                 {
                     "role": "user",
                     "content": f"Klasifikasikan teks berikut:\n\n{text}",

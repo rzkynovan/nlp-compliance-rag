@@ -14,6 +14,7 @@ import argparse
 import json
 import os
 import sys
+import time
 from pathlib import Path
 
 import pandas as pd
@@ -33,10 +34,14 @@ RESULTS_PATH = Path(__file__).resolve().parent.parent.parent / "data" / "classif
 
 def evaluate_gate(gate, X_test, y_test, gate_name: str) -> dict:
     print(f"\n[{gate_name}] Evaluating {len(X_test)} samples...")
-    preds, confidences = [], []
+    preds, confidences, latencies = [], [], []
+    # Pemanasan di luar pengukuran: IndoBERT/klien OpenAI dimuat saat predict pertama
+    gate.predict(X_test[0])
 
     for text in X_test:
+        t0 = time.perf_counter()
         result = gate.predict(text)
+        latencies.append((time.perf_counter() - t0) * 1000)
         preds.append(1 if result.is_sop else 0)
         confidences.append(result.confidence)
 
@@ -55,6 +60,7 @@ def evaluate_gate(gate, X_test, y_test, gate_name: str) -> dict:
         "recall_bukan_sop":    round(report["BUKAN_SOP"]["recall"], 4),
         "f1_bukan_sop":        round(report["BUKAN_SOP"]["f1-score"], 4),
         "avg_confidence":      round(sum(confidences) / len(confidences), 4),
+        "avg_latency_ms":      round(sum(latencies) / len(latencies), 2),
         "n_test":              len(X_test),
         "classification_report": report,
     }
@@ -88,7 +94,7 @@ def run_evaluation(mlflow_uri: str = None):
     print("\n" + "=" * 70)
     print("  PERBANDINGAN GATE CLASSIFIER")
     print("=" * 70)
-    print(f"{'Gate':<20} {'Acc':>6} {'F1-W':>6} {'F1-SOP':>7} {'P-BUKAN':>8} {'R-BUKAN':>8}")
+    print(f"{'Gate':<20} {'Acc':>6} {'F1-W':>6} {'F1-SOP':>7} {'P-BUKAN':>8} {'R-BUKAN':>8} {'ms':>8}")
     print("-" * 70)
     for r in results:
         if r.get("status") == "not_available":
@@ -100,7 +106,8 @@ def run_evaluation(mlflow_uri: str = None):
                 f"{r['f1_weighted']:>6.4f} "
                 f"{r['f1_sop']:>7.4f} "
                 f"{r['precision_bukan_sop']:>8.4f} "
-                f"{r['recall_bukan_sop']:>8.4f}"
+                f"{r['recall_bukan_sop']:>8.4f} "
+                f"{r['avg_latency_ms']:>8.2f}"
             )
     print("=" * 70)
     print("Target: precision_bukan_sop >= 0.95 (hindari false reject klausa SOP)")

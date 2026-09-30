@@ -46,7 +46,7 @@ Jika tidak ada → jalankan R3: `python src/ingest.py --force`.
 | T3 | R6b | Ablation retrieval `dense` ×3 dan `rrf_equal` ×3 | Wajib | [x] |
 | T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib — GPT selesai, Haiku menunggu T2 | [~] |
 | T5 | R7 | Audit ulang T&C GoPay (121 klausul) | Wajib, butuh user | [ ] |
-| T6 | R5 | GPT fine-tuned gate: latih ulang + evaluasi 3 gate | Opsional (berbiaya) | [ ] |
+| T6 | R5 | GPT fine-tuned gate: latih ulang + evaluasi 3 gate | Opsional | [x] |
 | T7 | D1 | Perbaiki test backend lama (3 gagal + 15 error) | Opsional | [ ] |
 | T8 | — | Isi semua `\menunggu{...}` di Bab 4/5 (branch `semhas`) | Wajib, setelah T2–T5 | [ ] |
 | T9 | — | Kompilasi PDF laporan | Wajib, terakhir | [ ] |
@@ -212,7 +212,7 @@ Periksa manual: tidak ada teks merah `[MENUNGGU: ...]` kecuali yang disengaja, d
 | T3 | 2026-09-27 | dense: MRR 0,590 · Hit@3 0,60 · Hit@5 0,80 · acc 0,972. rrf_equal: MRR 0,525 · Hit@3 0,60 · Hit@5 0,70 · acc 0,972. query_aware ≈ dense > rrf_equal untuk retrieval; akurasi tidak berbeda bermakna (CI tumpang-tindih). Jalankan dengan conda base (`/opt/anaconda3/bin/python`) — venv punya llama-index-llms-openai lama yang tidak kenal gpt-5.4-mini. | `eval_openai_gpt-5.4-mini_{dense_20260927_174015..,rrf_equal_20260927_174307..}.json` |
 | T4 | 2026-09-27 (GPT) | `scripts/reliability_diagram.py`; GPT-5.4-mini ECE 0,0575, n = 36, semua di bin 0,9–1,0 (akurasi 0,917 vs conf 0,974). Haiku menyusul setelah T2. Belum disalin ke repo proposal. | `data/audit_results/figures/reliability_gpt-5.4-mini.png` |
 | T5 | | | |
-| T6 | | | |
+| T6 | 2026-09-30 | Job `ftjob-XLWWg2La4XhmHkaRcOo71ATW` (3 epoch, 127/16). n uji 16: rule-based 0,875 (0,03 ms) · IndoBERT 0,938 (53 ms) · **GPT FT 1,000 (6.890 ms)**; CI95 tumpang-tindih. IndoBERT dilatih ulang (bobot hilang) → metrik identik. | `data/classifier/{gpt_finetune_metrics.json,gate_evaluation_results.json}` |
 | T7 | | | |
 | T8 | | | |
 | T9 | | | |
