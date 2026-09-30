@@ -79,10 +79,15 @@ def plot(confs, corrects, label, out_path):
     filled = [s for s in stats if s["n"]]
     ax.bar([s["bin"] * width for s in filled], [s["acc"] for s in filled], width=width,
            align="edge", color="#1B5CB0", edgecolor="white", label="Akurasi per bin")
+    # Selisih digambar dari nilai terkecil ke terbesar agar tidak menimpa batang akurasi
+    # (overconfident: di atas akurasi; underconfident: di atas confidence, akurasi tetap terlihat)
     ax.bar([s["bin"] * width for s in filled],
-           [s["conf"] - s["acc"] for s in filled], bottom=[s["acc"] for s in filled],
-           width=width, align="edge", color="#B03A2E", alpha=0.35, edgecolor="white",
-           label="Selisih confidence − akurasi")
+           [abs(s["conf"] - s["acc"]) for s in filled],
+           bottom=[min(s["conf"], s["acc"]) for s in filled],
+           width=width, align="edge", color="none", edgecolor="#B03A2E", hatch="///",
+           linewidth=0.8, label="Selisih |confidence − akurasi|")
+    ax.scatter([s["bin"] * width + width / 2 for s in filled], [s["conf"] for s in filled],
+               marker="_", s=260, color="#B03A2E", zorder=3, label="Rerata confidence bin")
     ax.set_ylim(0, 1.02)
     ax.set_yticks([i / 5 for i in range(6)])
     ax.set_yticklabels([id_num(i / 5, 1) for i in range(6)])

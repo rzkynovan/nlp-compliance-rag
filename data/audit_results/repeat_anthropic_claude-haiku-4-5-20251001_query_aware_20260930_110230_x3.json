@@ -1,0 +1,101 @@
+{
+  "n_runs": 3,
+  "runs": [
+    "anthropic_claude-haiku-4-5-20251001_query_aware_20260930_110230",
+    "anthropic_claude-haiku-4-5-20251001_query_aware_20260930_110650",
+    "anthropic_claude-haiku-4-5-20251001_query_aware_20260930_111106"
+  ],
+  "metrics": {
+    "accuracy_6class": {
+      "mean": 0.9722,
+      "sd": 0.0481,
+      "min": 0.9167,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.9167
+      ]
+    },
+    "macro_f1_6class": {
+      "mean": 0.9899,
+      "sd": 0.0175,
+      "min": 0.9697,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        0.9697
+      ]
+    },
+    "recall_non_compliant_strict": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "f1_non_compliant": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "f1_partially_compliant": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "mrr": {
+      "mean": 0.5833,
+      "sd": 0.0,
+      "min": 0.5833,
+      "max": 0.5833,
+      "values": [
+        0.5833,
+        0.5833,
+        0.5833
+      ]
+    },
+    "hit_rate_at_5": {
+      "mean": 0.8,
+      "sd": 0.0,
+      "min": 0.8,
+      "max": 0.8,
+      "values": [
+        0.8,
+        0.8,
+        0.8
+      ]
+    },
+    "avg_latency_ms": {
+      "mean": 21434.3333,
+      "sd": 159.6757,
+      "min": 21298.0,
+      "max": 21610.0,
+      "values": [
+        21395.0,
+        21610.0,
+        21298.0
+      ]
+    }
+  },
+  "unstable_clauses": [
+    "BAB3-03"
+  ]
+}

@@ -42,9 +42,9 @@ Jika tidak ada → jalankan R3: `python src/ingest.py --force`.
 | # | ID | Tugas | Wajib? | Status |
 |---|---|---|---|---|
 | T1 | D6 | `evaluation_runner.py` gagal cepat saat error API | Wajib, **kerjakan pertama** | [x] |
-| T2 | R6 | Claude Haiku 4.5 ×3 | Wajib — **ditunda: saldo Anthropic habis** | [ ] |
+| T2 | R6 | Claude Haiku 4.5 ×3 | Wajib | [x] |
 | T3 | R6b | Ablation retrieval `dense` ×3 dan `rrf_equal` ×3 | Wajib | [x] |
-| T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib — GPT selesai, Haiku menunggu T2 | [~] |
+| T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib | [x] |
 | T5 | R7 | Audit ulang T&C GoPay (121 klausul) | Wajib, butuh user | [ ] |
 | T6 | R5 | GPT fine-tuned gate: latih ulang + evaluasi 3 gate | Opsional | [x] |
 | T7 | D1 | Perbaiki test backend lama (3 gagal + 15 error) | Opsional | [ ] |
@@ -208,9 +208,9 @@ Periksa manual: tidak ada teks merah `[MENUNGGU: ...]` kecuali yang disengaja, d
 | # | Tanggal | Ringkasan hasil | File / commit |
 |---|---|---|---|
 | T1 | 2026-09-27 | Cek key di awal (exit 1 tanpa file), stop pada error fatal (auth/saldo/kuota), run ber-error → `invalid_eval_*.json` + `invalid`/`n_errors`, tanpa MLflow, exit 1; `summarize_repeats` menolak run invalid. 12 test baru, `src/tests` 97 lulus. | `src/evaluation_runner.py`, `src/tests/test_evaluation_runner.py` |
-| T2 | | | |
+| T2 | 2026-09-30 | 6 kelas: acc 0,972 ± 0,048 · recall NC ketat 0,944 ± 0,096 · F1 NC 0,970 · F1 PC 1,000 · deferral 0,028 · grounding 41/42 · cit. acc 0,833 · ECE 0,070 · latensi 21,4 dtk (GPT 3,2). Retrieval identik GPT. Tidak stabil: BAB3-03 (NC/NC/NEEDS_REVIEW). Run 16:43 lama dihapus (`git rm`). Butuh `brotli>=1.2`. | `eval_anthropic_claude-haiku-4-5-20251001_query_aware_20260930_*.json` |
 | T3 | 2026-09-27 | dense: MRR 0,590 · Hit@3 0,60 · Hit@5 0,80 · acc 0,972. rrf_equal: MRR 0,525 · Hit@3 0,60 · Hit@5 0,70 · acc 0,972. query_aware ≈ dense > rrf_equal untuk retrieval; akurasi tidak berbeda bermakna (CI tumpang-tindih). Jalankan dengan conda base (`/opt/anaconda3/bin/python`) — venv punya llama-index-llms-openai lama yang tidak kenal gpt-5.4-mini. | `eval_openai_gpt-5.4-mini_{dense_20260927_174015..,rrf_equal_20260927_174307..}.json` |
-| T4 | 2026-09-27 (GPT) | `scripts/reliability_diagram.py`; GPT-5.4-mini ECE 0,0575, n = 36, semua di bin 0,9–1,0 (akurasi 0,917 vs conf 0,974). Haiku menyusul setelah T2. Belum disalin ke repo proposal. | `data/audit_results/figures/reliability_gpt-5.4-mini.png` |
+| T4 | 2026-09-30 | GPT ECE 0,0575 (36/36 di bin 0,9–1,0; conf benar 0,975 vs salah 0,970). Haiku ECE 0,0703 (35 di bin 0,9–1,0 akurasi 1,000 conf 0,948 → underconfident; 1 salah conf 0,72). Disalin ke `gambar/` repo proposal. | `data/audit_results/figures/reliability_{gpt-5.4-mini,claude-haiku-4.5}.png` |
 | T5 | | | |
 | T6 | 2026-09-30 | Job `ftjob-XLWWg2La4XhmHkaRcOo71ATW` (3 epoch, 127/16). n uji 16: rule-based 0,875 (0,03 ms) · IndoBERT 0,938 (53 ms) · **GPT FT 1,000 (6.890 ms)**; CI95 tumpang-tindih. IndoBERT dilatih ulang (bobot hilang) → metrik identik. | `data/classifier/{gpt_finetune_metrics.json,gate_evaluation_results.json}` |
 | T7 | | | |
