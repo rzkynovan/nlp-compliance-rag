@@ -229,7 +229,7 @@ Hasil yang belum ada ditandai makro `\menunggu{...}` (merah) — **cari `\menung
 confusion matrix gabungan NC→NC 15, NC→PC 3, PC→PC 12, NA→NA 6; akurasi gabungan 33/36 (Wilson 0,78–0,97);
 **citation accuracy 12/18 = 0,667** (Wilson 0,44–0,84); grounding 24/24; **ECE = 0,060** (10 bin, semua 36 prediksi di bin 0,9–1,0).
 Bab 4/5 **sudah diperbarui ke hasil pasca-B7 + IndoBERT** (commit `a528392`): MRR 0,583, Hit@3 0,60, citation accuracy 0,833, ECE 0,058, latensi 3,2 dtk. Angka R6 pra-B7 di atas diganti.
-`\menunggu` tersisa: GPT FT (R5), dense/rrf_equal (R6b), Claude Haiku ×3 (R6, run pertama gagal auth), GoPay (R7), reliability diagram (R8).
+`\menunggu` tersisa: **tidak ada** (2026-09-30). Seluruh placeholder terisi: gate GPT FT + latensi (R5), ablation retrieval + dampak klasifikasi (R6b), Claude Haiku ×3 (R6), reliability diagram dua model (R8), studi kasus GoPay 136 klausul (R7). Commit `f3ae2f6`, `6882947` di branch `semhas`.
 **Bab 5** menjawab RM1–RM3 + saran (X2-A/B, hold-out, anotasi pakar, reranker, dataset gate terpisah).
 
 ---
