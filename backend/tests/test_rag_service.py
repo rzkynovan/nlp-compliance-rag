@@ -41,6 +41,13 @@ def _make_service(mock_settings, tmp_path, chroma_available: bool = True):
     return service, mock_openai
 
 
+def _bypass_gate(svc):
+    """Lewati Gate Classifier + pre-check scope agar test menyasar logika budget/cache."""
+    svc._run_gate = MagicMock(return_value={"is_sop": True, "confidence": 0.99, "model": "test"})
+    svc._check_query_scope = MagicMock(return_value=None)
+    return svc
+
+
 # ── _parse_llm_response ───────────────────────────────────────────────────────
 
 class TestParseLlmResponse:
@@ -278,6 +285,7 @@ class TestAnalyzeWithRag:
     @pytest.mark.asyncio
     async def test_budget_exceeded_raises(self, mock_settings, tmp_path):
         svc, _ = _make_service(mock_settings, tmp_path, chroma_available=False)
+        _bypass_gate(svc)
         with patch("app.services.rag_service.cost_tracker") as mock_ct:
             mock_ct.estimate_cost.return_value = 10.0      # exceeds $5 budget
             mock_ct.get_today_stats.return_value = {"remaining_usd": 0.001}
@@ -295,6 +303,7 @@ class TestAnalyzeWithRag:
     async def test_cache_hit_returns_cached(self, mock_settings, tmp_path):
         mock_settings.ENABLE_CACHE = True
         svc, _ = _make_service(mock_settings, tmp_path, chroma_available=False)
+        _bypass_gate(svc)
         mock_settings.ENABLE_CACHE = True
 
         cached_result = {

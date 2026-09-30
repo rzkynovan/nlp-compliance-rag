@@ -45,11 +45,11 @@ Jika tidak ada → jalankan R3: `python src/ingest.py --force`.
 | T2 | R6 | Claude Haiku 4.5 ×3 | Wajib | [x] |
 | T3 | R6b | Ablation retrieval `dense` ×3 dan `rrf_equal` ×3 | Wajib | [x] |
 | T4 | R8 | Reliability diagram + ECE (GPT & Haiku) | Wajib | [x] |
-| T5 | R7 | Audit ulang T&C GoPay (121 klausul) | Wajib, butuh user | [ ] |
+| T5 | R7 | Audit ulang T&C GoPay (121 klausul) | Wajib, butuh user | [x] |
 | T6 | R5 | GPT fine-tuned gate: latih ulang + evaluasi 3 gate | Opsional | [x] |
-| T7 | D1 | Perbaiki test backend lama (3 gagal + 15 error) | Opsional | [ ] |
-| T8 | — | Isi semua `\menunggu{...}` di Bab 4/5 (branch `semhas`) | Wajib, setelah T2–T5 | [ ] |
-| T9 | — | Kompilasi PDF laporan | Wajib, terakhir | [ ] |
+| T7 | D1 | Perbaiki test backend lama (3 gagal + 15 error) | Opsional | [x] |
+| T8 | — | Isi semua `\menunggu{...}` di Bab 4/5 (branch `semhas`) | Wajib, setelah T2–T5 | [x] |
+| T9 | — | Kompilasi PDF laporan | Wajib, terakhir | [x] |
 
 ---
 
@@ -211,8 +211,8 @@ Periksa manual: tidak ada teks merah `[MENUNGGU: ...]` kecuali yang disengaja, d
 | T2 | 2026-09-30 | 6 kelas: acc 0,972 ± 0,048 · recall NC ketat 0,944 ± 0,096 · F1 NC 0,970 · F1 PC 1,000 · deferral 0,028 · grounding 41/42 · cit. acc 0,833 · ECE 0,070 · latensi 21,4 dtk (GPT 3,2). Retrieval identik GPT. Tidak stabil: BAB3-03 (NC/NC/NEEDS_REVIEW). Run 16:43 lama dihapus (`git rm`). Butuh `brotli>=1.2`. | `eval_anthropic_claude-haiku-4-5-20251001_query_aware_20260930_*.json` |
 | T3 | 2026-09-27 | dense: MRR 0,590 · Hit@3 0,60 · Hit@5 0,80 · acc 0,972. rrf_equal: MRR 0,525 · Hit@3 0,60 · Hit@5 0,70 · acc 0,972. query_aware ≈ dense > rrf_equal untuk retrieval; akurasi tidak berbeda bermakna (CI tumpang-tindih). Jalankan dengan conda base (`/opt/anaconda3/bin/python`) — venv punya llama-index-llms-openai lama yang tidak kenal gpt-5.4-mini. | `eval_openai_gpt-5.4-mini_{dense_20260927_174015..,rrf_equal_20260927_174307..}.json` |
 | T4 | 2026-09-30 | GPT ECE 0,0575 (36/36 di bin 0,9–1,0; conf benar 0,975 vs salah 0,970). Haiku ECE 0,0703 (35 di bin 0,9–1,0 akurasi 1,000 conf 0,948 → underconfident; 1 salah conf 0,72). Disalin ke `gambar/` repo proposal. | `data/audit_results/figures/reliability_{gpt-5.4-mini,claude-haiku-4.5}.png` |
-| T5 | | | |
+| T5 | 2026-09-30 | PDF versi akses 23 Mar 2026 (pilihan user). 136 klausul (PyMuPDF; lama 121). Gate lolos 136, pre-filter 8. Eks. 1: NC 16 · PC 48 · C 2 · NA 70; eks. 2: NC 15 · PC 50 · C 1 · NA 70; κ 0,714; 14 NC stabil (OJK, Pasal 46 ayat 2 & Pasal 10 ayat 1); 3,5–4,3 dtk/klausul. | `scripts/audit_gopay.py`, `data/audit_results/gopay_20260930_{114307,115211}.json` |
 | T6 | 2026-09-30 | Job `ftjob-XLWWg2La4XhmHkaRcOo71ATW` (3 epoch, 127/16). n uji 16: rule-based 0,875 (0,03 ms) · IndoBERT 0,938 (53 ms) · **GPT FT 1,000 (6.890 ms)**; CI95 tumpang-tindih. IndoBERT dilatih ulang (bobot hilang) → metrik identik. | `data/classifier/{gpt_finetune_metrics.json,gate_evaluation_results.json}` |
-| T7 | | | |
-| T8 | | | |
-| T9 | | | |
+| T7 | 2026-09-30 | Fixture API → SQLite in-memory + override auth; test `_map_status` disesuaikan dengan normalisasi; test budget/cache bypass gate. `backend/tests` 183 lulus, `src/tests` 98 lulus. | `backend/tests/test_audit_api.py`, `backend/tests/test_rag_service.py` |
+| T8 | 2026-09-30 | Semua `\menunggu` terisi: gate GPT FT + latensi, ablation retrieval (+ dampak klasifikasi), Haiku, R8, GoPay (4.6), keterbatasan, Bab 5. Narasi hybrid & PC disesuaikan hasil. | repo proposal branch `semhas` |
+| T9 | 2026-09-30 | `latexmk -xelatex`: 98 hlm, 0 undefined/error, 0 MENUNGGU, 3 overfull lama (Bab 2). | `main.pdf` (branch `semhas`) |

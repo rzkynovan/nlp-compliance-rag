@@ -38,9 +38,14 @@ class TestMapStatus:
     def test_empty_string_defaults_to_unclear(self):
         assert _map_status("") == ComplianceStatus.UNCLEAR
 
-    def test_case_sensitive(self):
-        # "compliant" (lowercase) should NOT match — map is case-sensitive
-        assert _map_status("compliant") == ComplianceStatus.UNCLEAR
+    def test_case_and_hyphen_normalized(self):
+        # _map_status sengaja menormalkan huruf dan varian tanda hubung dari keluaran LLM
+        assert _map_status("compliant") == ComplianceStatus.COMPLIANT
+        assert _map_status("NON-COMPLIANT") == ComplianceStatus.NON_COMPLIANT
+        assert _map_status(" partially_compliant ") == ComplianceStatus.PARTIALLY_COMPLIANT
+
+    def test_gate_rejection_maps_to_not_addressed(self):
+        assert _map_status("NOT_REGULATION_CLAUSE") == ComplianceStatus.NOT_ADDRESSED
 
 
 # ── _map_risk_score ───────────────────────────────────────────────────────────
@@ -190,12 +195,26 @@ def client(mock_settings):
         "model_used": "gpt-4o-mini",
     })
 
-    with patch("app.api.v1.audit.get_rag_service", return_value=mock_service):
+    # Riwayat audit kini disimpan di PostgreSQL (Phase 10) — ganti dengan SQLite in-memory
+    from sqlalchemy import create_engine
+    from sqlalchemy.orm import sessionmaker
+    from sqlalchemy.pool import StaticPool
+    import app.db as db_mod
+    from app.core.auth import get_current_user
+    from app.models.user import UserResponse
+
+    engine = create_engine("sqlite://", connect_args={"check_same_thread": False},
+                           poolclass=StaticPool)
+    db_mod.Base.metadata.create_all(bind=engine)
+    app.dependency_overrides[get_current_user] = lambda: UserResponse(username="tester", role="advanced")
+
+    with patch.object(db_mod, "_engine", engine), \
+         patch.object(db_mod, "_SessionLocal", sessionmaker(bind=engine, autocommit=False, autoflush=False)), \
+         patch("app.api.v1.audit.get_rag_service", return_value=mock_service):
         with TestClient(app) as c:
-            import app.api.v1.audit as audit_mod
-            audit_mod.audit_history.clear()
             yield c
-            audit_mod.audit_history.clear()
+    app.dependency_overrides.pop(get_current_user, None)
+    engine.dispose()
 
 
 class TestAnalyzeEndpoint:

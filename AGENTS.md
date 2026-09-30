@@ -657,7 +657,7 @@ python -m pytest tests/ -v
 | `tests/test_audit_api.py` | FastAPI endpoints via TestClient |
 | `tests/test_rag_service.py` | RAGAuditService with mocked OpenAI |
 
-**Result (Phase 12):** 165 tests, 165 passed. Per 2026-09-25 (sebelum Phase 16), 3 test gagal + 15 error karena test lama masih merujuk `audit_history` in-memory (lihat `SEMHAS_TRACKER.md` §6 D1).
+**Result (Phase 12):** 165 tests, 165 passed. Per 2026-09-25 (sebelum Phase 16), 3 test gagal + 15 error karena test lama masih merujuk `audit_history` in-memory. **Diperbaiki 2026-09-30 (D1):** `backend/tests` 183 lulus, `src/tests` 98 lulus (lihat `SEMHAS_TRACKER.md` §6 D1).
 
 ### Unit Tests `src/` (Phase 16)
 
@@ -829,7 +829,7 @@ docker-compose logs -f backend
 | ChromaDB BI vectors | 1,590 |
 | ChromaDB OJK vectors | 1,031 |
 | BM25 BI index | 1,590 chunks |
-| Unit tests | 165/165 ✅ |
+| Unit tests | backend 183/183 ✅ · src 98/98 ✅ (2026-09-30) |
 | E2E tests | 28/29 ✅ |
 
 ---
