@@ -9,8 +9,13 @@ RUN apt-get update && apt-get install -y \
 
 # Build context is the project root — copy requirements first for layer caching
 COPY backend/requirements.txt .
+COPY docker/constraints.txt .
 
-RUN pip install --no-cache-dir -r requirements.txt
+# torch versi CPU (tanpa paket CUDA/NVIDIA beberapa GB); timeout lebih panjang untuk unduhan besar
+ENV PIP_DEFAULT_TIMEOUT=120 PIP_RETRIES=10
+# Cache pip BuildKit: unduhan yang sudah selesai tidak hilang bila build gagal/diulang
+RUN --mount=type=cache,target=/root/.cache/pip \
+    pip install --extra-index-url https://download.pytorch.org/whl/cpu -r requirements.txt -c constraints.txt
 
 # Copy backend application code
 COPY backend/ .
