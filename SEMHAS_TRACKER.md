@@ -22,7 +22,7 @@
    - **[SEMHAS]**: kode dipertahankan (lebih tepat atau lebih realistis), lalu **laporan
      Semhas/skripsi** menjelaskan perubahan dari proposal beserta alasannya (Bab III revisi dan Bab IV).
    - **[DATA]**: butuh menjalankan ulang pipeline (API key, server, biaya). Tidak bisa diselesaikan di sandbox.
-2. Semua angka hasil lama (Phase 9–13 di `AGENTS.md`/`PROGRESS.md`) **tidak valid lagi** setelah
+2. Semua angka hasil lama (Phase 9–13 di `AGENTS.md`/`docs/archive/PROGRESS.md`) **tidak valid lagi** setelah
    Phase 16. Lihat [§4](#4-hasil-lama-yang-tidak-valid--wajib-dijalankan-ulang). Jangan kutip angka lama di laporan Semhas.
 3. Rujukan "Pers. x.y", "Subbab x.y", dan "Tabel x.y" mengacu ke **PDF proposal final**.
 
@@ -324,7 +324,7 @@ backend/app/config.py, docker/.env.example  default gate indobert / 0.5, RETRIEV
 
 ---
 
-## 8. Keterkaitan dengan TODO Phase 15 di `PROGRESS.md`
+## 8. Keterkaitan dengan TODO Phase 15 di `docs/archive/PROGRESS.md`
 
 | TODO Phase 15 | Status setelah Phase 16 |
 |---|---|

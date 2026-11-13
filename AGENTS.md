@@ -90,9 +90,9 @@ nlp-compliance-rag/
 ├── monitoring/                 # Grafana Dashboards
 ├── KebutuhanTA/               # Thesis Documentation
 ├── AGENTS.md                  # This file
-├── PROGRESS.md                # Implementation tracker
+├── docs/archive/PROGRESS.md   # Implementation tracker (arsip)
 ├── requirements.txt           # Python dependencies (src/)
-├── test_integration.py        # Integration test script
+├── scripts/smoke/             # Skrip uji manual (API, rag_service)
 └── .env.example              # Environment template
 ```
 
@@ -683,7 +683,7 @@ curl http://localhost:8000/api/v1/health
 # Run integration test
 cd nlp-compliance-rag
 source venv/bin/activate
-python test_integration.py
+python scripts/smoke/smoke_rag_service.py
 ```
 
 ---
@@ -1112,7 +1112,7 @@ Total 11 temuan (6 KRITIS + 5 MINOR + 4 SARAN), semua KRITIS dan MINOR ✅ Fixed
 - **M-01..M-05** (MINOR) — Train/val/test split, SOP Gate diagram, IndoBERT embedding, unit test count, Macro F1 inkonsistensi
 - **S-03, S-04** (SARAN) — ConflictResolverAgent diagram, MRR=0 limitasi metodologi
 
-Detail lengkap di [PROGRESS.md](./PROGRESS.md#phase-13-audit-dokumen--sinkronisasi-kode-2026-05-03).
+Detail lengkap di [PROGRESS.md](./docs/archive/PROGRESS.md#phase-13-audit-dokumen--sinkronisasi-kode-2026-05-03).
 
 ### Hasil Evaluasi Final (Setelah Checklist Prompting)
 

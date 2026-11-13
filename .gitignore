@@ -191,3 +191,6 @@ llama_cache/
 *.sqlite3
 src/agents/test_ojk_prompt.py
 src/agents/test_ojk_prompt_results.json
+
+# cadangan index lokal (tidak dipakai)
+data/processed_backup*/

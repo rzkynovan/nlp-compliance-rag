@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-test_integration.py - Test RAG service integration with multi-agent system
-Run: cd backend && source ../venv/bin/activate && python ../test_integration.py
+smoke_rag_service.py - Test RAG service integration with multi-agent system
+Run: python scripts/smoke/smoke_rag_service.py
 """
 
 import asyncio
@@ -9,13 +9,13 @@ import sys
 from pathlib import Path
 
 # Add paths
-backend_path = Path(__file__).parent / "backend"
-src_path = Path(__file__).parent /"src"
+backend_path = Path(__file__).resolve().parents[2] / "backend"
+src_path = Path(__file__).resolve().parents[2] / "src"
 sys.path.insert(0, str(backend_path))
 sys.path.insert(0, str(src_path))
 
 from dotenv import load_dotenv
-load_dotenv(Path(__file__).parent / "docker" / ".env")
+load_dotenv(Path(__file__).resolve().parents[2] / "docker" / ".env")
 
 async def test_rag_service():
     """Test the RAG audit service."""
