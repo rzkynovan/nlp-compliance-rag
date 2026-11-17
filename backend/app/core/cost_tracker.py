@@ -120,6 +120,9 @@ class CostTracker:
             clause_id=clause_id
         )
         
+        from app.core import metrics
+        metrics.record_tokens(model, input_tokens, output_tokens)
+
         usage.total_tokens += input_tokens + output_tokens
         usage.total_cost_usd += cost
         usage.api_calls += 1

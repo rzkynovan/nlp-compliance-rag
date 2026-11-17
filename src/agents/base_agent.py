@@ -76,6 +76,7 @@ class AgentVerdict(BaseModel):
     evidence: List[Dict] = []
     retrieval_mode: str = "dense"            # "hybrid" (RRF berbobot) | "dense" (tanpa BM25 index)
     sparse_boost: Optional[float] = None     # alpha yang dipakai (Persamaan 3.1)
+    token_usage: Dict[str, int] = {}         # {"input": n, "output": m} dari respons LLM (cost tracker)
 
 
 class BaseAgent(ABC):
@@ -192,6 +193,19 @@ class BaseAgent(ABC):
             else:
                 v.grounded = m.group(1) in retrieved
         return violations
+
+    @staticmethod
+    def extract_token_usage(response) -> Dict[str, int]:
+        """Ambil jumlah token dari respons LLM (llama-index OpenAI atau wrapper Anthropic)."""
+        raw = getattr(response, "raw", None)
+        usage = raw.get("usage") if isinstance(raw, dict) else getattr(raw, "usage", None)
+        if usage is None:
+            return {}
+        get = usage.get if isinstance(usage, dict) else (lambda k: getattr(usage, k, None))
+        return {
+            "input": int(get("prompt_tokens") or get("input_tokens") or 0),
+            "output": int(get("completion_tokens") or get("output_tokens") or 0),
+        }
 
     @staticmethod
     def normalize_status(status) -> str:

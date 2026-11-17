@@ -40,6 +40,7 @@ class _AnthropicLLM:
             pass
         r = _Resp()
         r.text = text
+        r.raw = msg
         return r
 
 # Tambahkan src ke path agar retrieval dapat diimport
@@ -217,6 +218,7 @@ class BISpecialistAgent(BaseAgent):
             evidence=evidence,
             retrieval_mode=articles[0].get("retrieval_source", "dense"),
             sparse_boost=articles[0].get("alpha"),
+            token_usage=self.extract_token_usage(response),
         )
     
     # Sub-elemen wajib per topik regulasi — digunakan untuk deteksi PARTIALLY_COMPLIANT

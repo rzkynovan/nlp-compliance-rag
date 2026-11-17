@@ -263,6 +263,13 @@ class RAGAuditService:
             logger.warning(f"Gate prediction failed, allowing through: {e}")
             return {"is_sop": True, "confidence": 0.5, "model": "rule_based"}
 
+    @staticmethod
+    def _stamp_gate(result: dict, gate_result: dict) -> None:
+        """Salin hasil gate ke respons klausul yang lolos gate (dulu default 'rule_based')."""
+        result["is_sop_clause"] = True
+        result["gate_confidence"] = gate_result["confidence"]
+        result["gate_model"] = gate_result["model"]
+
     def _build_not_sop_response(self, clause: str, request_id: str, gate_result: dict) -> dict:
         from app.models.audit import ComplianceStatus
         return {
@@ -327,6 +334,7 @@ class RAGAuditService:
             scope_result["latency_ms"] = 0
             scope_result["model_used"] = self.llm_model
             scope_result["from_cache"] = False
+            self._stamp_gate(scope_result, gate_result)
             return scope_result
 
         # Check cache
@@ -406,7 +414,8 @@ class RAGAuditService:
             }
             result["retrieval_mode"] = "hybrid" if "hybrid" in _sources else "dense"
         result.setdefault("gate_decision", "REGULATION_CLAUSE_VALID")
-        
+        self._stamp_gate(result, gate_result)
+
         # Cache the result
         if use_cache and settings.ENABLE_CACHE:
             self.cache.set(clause, regulator, result)
@@ -440,6 +449,18 @@ class RAGAuditService:
             context={"regulator": regulator, "top_k": top_k}
         )
         
+        # Token per agen dicatat ke cost tracker (budget harian + metrik llm_tokens_used)
+        for verdict in (result.bi_verdict, result.ojk_verdict):
+            usage = (verdict or {}).get("token_usage") or {}
+            if usage:
+                cost_tracker.record_usage(
+                    model=self.llm_model,
+                    input_tokens=usage.get("input", 0),
+                    output_tokens=usage.get("output", 0),
+                    endpoint=f"multi_agent.{verdict.get('agent_id', 'agent')}",
+                    clause_id=request_id,
+                )
+
         # Convert AuditResult to dict format
         return {
             "final_status": result.final_verdict.final_status if result.final_verdict else "UNCLEAR",

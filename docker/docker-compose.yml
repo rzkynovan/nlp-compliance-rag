@@ -23,9 +23,12 @@ services:
       # Source code is baked into the image at build time
       - ../data:/app/data
     depends_on:
-      - db
-      - redis
-      - mlflow
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      mlflow:
+        condition: service_started
     networks:
       - compliance-network
 
@@ -50,6 +53,11 @@ services:
       - POSTGRES_USER=compliance
       - POSTGRES_PASSWORD=compliance123
       - POSTGRES_DB=compliance_db
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U compliance -d compliance_db"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
@@ -80,15 +88,6 @@ services:
     networks:
       - compliance-network
 
-  chromadb:
-    image: chromadb/chroma:latest
-    ports:
-      - "8001:8000"
-    volumes:
-      - chroma_data:/chroma/chroma
-    networks:
-      - compliance-network
-
   celery_worker:
     image: nlp-compliance-backend:${IMAGE_TAG:-latest}
     build:
@@ -99,6 +98,10 @@ services:
       - .env
     environment:
       - REDIS_URL=redis://redis:6379/0
+      - DATABASE_URL=postgresql://compliance:compliance123@db:5432/compliance_db
+      - CHROMADB_PERSIST_DIR=/app/data/processed/chroma_db
+    volumes:
+      - ../data:/app/data
     depends_on:
       - redis
       - backend
@@ -145,7 +148,6 @@ volumes:
   redis_data:
   mlflow_data:
   mlflow_artifacts:
-  chroma_data:
   prometheus_data:
   grafana_data:
 

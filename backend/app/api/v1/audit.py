@@ -18,6 +18,7 @@ from app.models.audit import (
 from app.services.rag_service import get_rag_service
 from app.db import get_db, _to_row, _from_row, AuditHistoryRow
 from app.core.auth import get_current_user
+from app.core import metrics
 from app.models.user import UserResponse
 
 router = APIRouter(prefix="/audit", tags=["audit"])
@@ -179,7 +180,10 @@ async def analyze_sop(request: AuditRequest, current_user: UserResponse = Depend
             analysis_mode=result.get("analysis_mode"),
             retrieval_mode=result.get("retrieval_mode"),
         )
-        
+        metrics.record_audit(
+            response.final_status.value, response.latency_ms, response.gate_model, response.gate_decision
+        )
+
         # Persist to PostgreSQL
         try:
             from app.db import get_session_factory

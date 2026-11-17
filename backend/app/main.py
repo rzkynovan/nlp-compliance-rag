@@ -1,9 +1,10 @@
 from contextlib import asynccontextmanager
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, Response
 from fastapi.exceptions import RequestValidationError
 from app.config import settings
+from app.core import metrics
 from app.api.v1 import audit, regulations, health, experiments, usage, auth as auth_router, evaluation
 from app.core.exceptions import ComplianceAuditError
 import structlog
@@ -130,6 +131,13 @@ app.include_router(usage.router, prefix=settings.API_V1_PREFIX, tags=["usage"])
 app.include_router(regulations.router, prefix=settings.API_V1_PREFIX, tags=["regulations"])
 app.include_router(experiments.router, prefix=settings.API_V1_PREFIX, tags=["experiments"])
 app.include_router(evaluation.router, prefix=settings.API_V1_PREFIX, tags=["evaluation"])
+
+
+# Di-scrape Prometheus (docker/prometheus.yml); tidak diekspos lewat nginx
+@app.get("/metrics", include_in_schema=False)
+async def prometheus_metrics():
+    body, content_type = metrics.render()
+    return Response(content=body, media_type=content_type)
 
 
 if __name__ == "__main__":

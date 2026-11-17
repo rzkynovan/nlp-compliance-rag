@@ -280,7 +280,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "sum by (status) (audit_compliance_status)",
+          "expr": "sum by (status) (audit_compliance_status_total)",
           "legendFormat": "{{status}}",
           "refId": "A"
         }
@@ -367,7 +367,7 @@
             "type": "prometheus",
             "uid": "prometheus"
           },
-          "expr": "llm_tokens_used_total",
+          "expr": "sum by (model, kind) (llm_tokens_used_total)",
           "legendFormat": "tokens",
           "refId": "A"
         }
