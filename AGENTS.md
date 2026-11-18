@@ -93,8 +93,9 @@ COMPOSE_FILE=docker-compose.yml:docker-compose.https.yml
 ```
 
 sehingga `docker compose ...` biasa otomatis memakai `docker-compose.https.yml`
-(nginx + `nginx.https.conf.template`). Isi juga `ALLOWED_ORIGINS=https://<domain>` dan
-`NEXT_PUBLIC_API_URL=https://<domain>/api/v1`, lalu build ulang frontend.
+(nginx + `nginx.https.conf.template`). Di server pakai `NEXT_PUBLIC_API_URL=/api/v1` (relatif,
+satu origin dengan nginx, jadi CORS tidak terlibat dan HTTP/HTTPS memakai build yang sama) dan
+`ALLOWED_ORIGINS=https://<domain>`.
 
 Memperbarui server:
 
