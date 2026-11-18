@@ -1,5 +1,5 @@
 # ─── Stage 1: deps ──────────────────────────────────────────────
-FROM node:20-alpine AS deps
+FROM node:22-alpine AS deps
 
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
@@ -13,7 +13,7 @@ COPY frontend/package.json frontend/pnpm-lock.yaml ./
 RUN pnpm install --frozen-lockfile
 
 # ─── Stage 2: builder ────────────────────────────────────────────
-FROM node:20-alpine AS builder
+FROM node:22-alpine AS builder
 
 RUN corepack enable && corepack prepare pnpm@9.15.9 --activate
 
@@ -25,11 +25,13 @@ COPY --from=deps /app/node_modules ./node_modules
 # Copy semua source frontend (.env.local sudah di .dockerignore, tidak masuk image)
 COPY frontend/ .
 
-# Inject NEXT_PUBLIC_API_URL saat build — nilai dari docker-compose build.args
+# Inject NEXT_PUBLIC_API_URL / NEXT_PUBLIC_MLFLOW_URL saat build — nilai dari docker-compose build.args
 # HARUS pakai ARG+ENV karena NEXT_PUBLIC_* di-bake ke bundle saat pnpm build,
 # bukan saat runtime. .env.local sengaja di-exclude via .dockerignore.
 ARG NEXT_PUBLIC_API_URL
 ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ARG NEXT_PUBLIC_MLFLOW_URL
+ENV NEXT_PUBLIC_MLFLOW_URL=${NEXT_PUBLIC_MLFLOW_URL}
 
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV NODE_ENV=production
@@ -37,7 +39,7 @@ ENV NODE_ENV=production
 RUN pnpm build
 
 # ─── Stage 3: runner ─────────────────────────────────────────────
-FROM node:20-alpine AS runner
+FROM node:22-alpine AS runner
 
 WORKDIR /app
 

@@ -7,7 +7,7 @@ from app.models.regulation import (
 from app.config import settings
 import chromadb
 
-router = APIRouter()
+router = APIRouter(prefix="/regulations")
 
 
 def get_chroma_client():

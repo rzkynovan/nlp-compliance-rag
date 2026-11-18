@@ -111,7 +111,9 @@ def get_golden_dataset():
 
     for gt in GROUND_TRUTH:
         pred = predictions.get(gt["clause_id"], {})
-        predicted_status = pred.get("predicted_status")
+        # evaluation_runner menulis verdik akhir sebagai `predicted_6` (skema 6 kelas);
+        # `predicted_status` adalah nama kunci lama.
+        predicted_status = pred.get("predicted_status") or pred.get("predicted_6") or pred.get("predicted")
         predicted_bi     = pred.get("predicted_bi")
         predicted_ojk    = pred.get("predicted_ojk")
         is_correct       = (predicted_status == gt["expected_status"]) if predicted_status else None

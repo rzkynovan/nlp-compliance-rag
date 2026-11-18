@@ -9,7 +9,8 @@ from app.core.auth import require_advanced
 import os
 from app.config import settings
 
-router = APIRouter(dependencies=[Depends(require_advanced)])
+# Tanpa prefix, GET /list tertimpa router regulations dan tidak pernah terjangkau.
+router = APIRouter(prefix="/experiments", dependencies=[Depends(require_advanced)])
 
 tracker = ExperimentTracker(tracking_uri=settings.MLFLOW_TRACKING_URI)
 

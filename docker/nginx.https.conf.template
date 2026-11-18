@@ -1,0 +1,72 @@
+# Reverse proxy HTTPS (produksi), dipakai lewat docker-compose.https.yml.
+# ${DOMAIN} diisi dari docker/.env saat container start (envsubst bawaan image nginx);
+# variabel nginx seperti $host tidak ikut tersubstitusi.
+# Sertifikat Let's Encrypt diterbitkan certbot di host — lihat scripts/setup_https.sh.
+
+upstream backend {
+    server backend:8000;
+}
+
+upstream frontend {
+    server frontend:3000;
+}
+
+server {
+    listen 80 default_server;
+    server_name _;
+
+    # Tantangan ACME (penerbitan dan perpanjangan sertifikat)
+    location /.well-known/acme-challenge/ {
+        root /var/www/certbot;
+    }
+
+    location / {
+        return 301 https://${DOMAIN}$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl default_server;
+    http2 on;
+    server_name ${DOMAIN};
+
+    ssl_certificate     /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    ssl_protocols TLSv1.2 TLSv1.3;
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    # Upload dokumen dibatasi 10 MB oleh backend
+    client_max_body_size 12m;
+
+    # Frontend
+    location / {
+        proxy_pass http://frontend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Backend API
+    location /api/ {
+        proxy_pass http://backend;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_cache_bypass $http_upgrade;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        # Satu audit bisa melewati batas bawaan nginx (60 detik)
+        proxy_read_timeout 300s;
+        proxy_send_timeout 300s;
+    }
+}

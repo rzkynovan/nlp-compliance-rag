@@ -1,3 +1,5 @@
+# Produksi: hanya nginx (port 80) yang publik; service lain terikat ke 127.0.0.1
+# (akses Grafana/MLflow lewat SSH tunnel, mis. ssh -L 3001:localhost:3001 ...)
 services:
   backend:
     image: nlp-compliance-backend:${IMAGE_TAG:-latest}
@@ -7,7 +9,7 @@ services:
       context: ..
       dockerfile: docker/backend.Dockerfile
     ports:
-      - "8000:8000"
+      - "127.0.0.1:8000:8000"
     env_file:
       - .env
     environment:
@@ -40,8 +42,9 @@ services:
       args:
         # NEXT_PUBLIC_* di-bake saat build, bukan runtime — harus pakai build args
         - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+        - NEXT_PUBLIC_MLFLOW_URL=${NEXT_PUBLIC_MLFLOW_URL:-http://localhost:5001}
     ports:
-      - "3000:3000"
+      - "127.0.0.1:3000:3000"
     depends_on:
       - backend
     networks:
@@ -61,14 +64,14 @@ services:
     volumes:
       - postgres_data:/var/lib/postgresql/data
     ports:
-      - "5432:5432"
+      - "127.0.0.1:5432:5432"
     networks:
       - compliance-network
 
   redis:
     image: redis:7-alpine
     ports:
-      - "6379:6379"
+      - "127.0.0.1:6379:6379"
     volumes:
       - redis_data:/data
     networks:
@@ -77,7 +80,7 @@ services:
   mlflow:
     image: ghcr.io/mlflow/mlflow:v2.9.0
     ports:
-      - "5001:5000"
+      - "127.0.0.1:5001:5000"
     command: mlflow server --host 0.0.0.0 --port 5000 --backend-store-uri sqlite:////mlflow/db/mlflow.db --default-artifact-root /mlflow/artifacts
     environment:
       - MLFLOW_BACKEND_STORE_URI=sqlite:////mlflow/db/mlflow.db
@@ -111,7 +114,7 @@ services:
   prometheus:
     image: prom/prometheus:latest
     ports:
-      - "9090:9090"
+      - "127.0.0.1:9090:9090"
     volumes:
       - ./prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus_data:/prometheus
@@ -121,9 +124,9 @@ services:
   grafana:
     image: grafana/grafana:latest
     ports:
-      - "3001:3000"
+      - "127.0.0.1:3001:3000"
     environment:
-      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_SECURITY_ADMIN_PASSWORD=${GRAFANA_ADMIN_PASSWORD:-admin}
       - GF_USERS_ALLOW_SIGN_UP=false
     volumes:
       - grafana_data:/var/lib/grafana

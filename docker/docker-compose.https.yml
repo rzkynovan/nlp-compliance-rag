@@ -1,0 +1,17 @@
+# Override HTTPS untuk server produksi (butuh Docker Compose >= 2.24.4 untuk tag !override).
+#
+# Aktifkan lewat docker/.env supaya perintah `docker compose ...` biasa ikut memakainya:
+#   DOMAIN=rag.example.com
+#   COMPOSE_FILE=docker-compose.yml:docker-compose.https.yml
+#
+# Sertifikat harus sudah ada di /etc/letsencrypt/live/$DOMAIN — jalankan scripts/setup_https.sh.
+services:
+  nginx:
+    ports:
+      - "443:443"
+    environment:
+      - DOMAIN=${DOMAIN:?isi DOMAIN di docker/.env}
+    volumes: !override
+      - ./nginx.https.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - /etc/letsencrypt:/etc/letsencrypt:ro
+      - /var/www/certbot:/var/www/certbot:ro

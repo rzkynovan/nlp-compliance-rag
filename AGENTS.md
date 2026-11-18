@@ -74,6 +74,38 @@ pnpm install
 pnpm dev
 ```
 
+### 4. Server Produksi (HTTPS)
+
+Di server hanya nginx yang publik (port 80 dan 443); service lain terikat ke `127.0.0.1`
+(Grafana/MLflow lewat SSH tunnel). HTTPS memakai sertifikat Let's Encrypt dari certbot di host.
+
+```bash
+# Sekali saja, setelah DNS domain mengarah ke server dan port 80 + 443 terbuka:
+DOMAIN=rag.example.com scripts/setup_https.sh
+```
+
+Script itu menerbitkan sertifikat (webroot `/var/www/certbot`), memasang deploy hook yang
+me-reload nginx setiap sertifikat diperpanjang (`certbot.timer`), dan menulis ke `docker/.env`:
+
+```
+DOMAIN=rag.example.com
+COMPOSE_FILE=docker-compose.yml:docker-compose.https.yml
+```
+
+sehingga `docker compose ...` biasa otomatis memakai `docker-compose.https.yml`
+(nginx + `nginx.https.conf.template`). Isi juga `ALLOWED_ORIGINS=https://<domain>` dan
+`NEXT_PUBLIC_API_URL=https://<domain>/api/v1`, lalu build ulang frontend.
+
+Memperbarui server:
+
+```bash
+git pull --ff-only
+cd docker
+docker compose build backend frontend
+docker compose up -d
+docker compose restart nginx   # nginx menyimpan IP container lama backend/frontend
+```
+
 ---
 
 ## 📁 Project Structure
@@ -223,71 +255,85 @@ async def analyze_sop(request: AuditRequest):
 
 ## 🎨 Frontend Structure (`frontend/`)
 
+Next.js 16 (App Router, Turbopack, `cacheComponents`) · React 19 · Tailwind CSS 4 · shadcn/ui (style `radix-nova`) · TanStack Query 5 · react-hook-form + zod · zustand · next-themes · sonner.
+
 ### Directory Layout
 
 ```
 frontend/
+├── proxy.ts                    # Gerbang auth (pengganti middleware.ts): semua halaman termasuk "/" wajib login,
+│                               #   /experiments /settings /testing khusus peran advanced, /login → dialihkan bila sudah login
+├── next.config.ts              # output standalone, cacheComponents
+├── components.json             # Konfigurasi shadcn CLI
+├── eslint.config.mjs           # ESLint 9 flat config (`pnpm lint`)
+│
 ├── app/                        # Next.js App Router
-│   ├── layout.tsx              # Root layout (QueryProvider + Toaster)
-│   ├── template.tsx            # Page transitions (Framer Motion)
-│   ├── page.tsx                # Dashboard home (/) — stat cards real data
-│   ├── audit/page.tsx          # Audit page (/audit) — tab: Input Teks | Upload Dokumen
-│   ├── history/page.tsx        # Audit history (/history)
-│   ├── experiments/page.tsx    # MLflow experiments (/experiments)
-│   ├── settings/page.tsx       # Settings (/settings) — shadcn Select + toast
+│   ├── layout.tsx              # Root layout (Providers: tema, React Query, Toaster)
+│   ├── globals.css             # Token warna Tailwind 4 (light + dark)
+│   ├── icon.svg                # Favicon
+│   ├── error.tsx               # Error boundary
 │   ├── not-found.tsx           # 404 page
-│   └── error.tsx               # Error boundary
+│   ├── (auth)/
+│   │   ├── layout.tsx
+│   │   └── login/page.tsx      # Halaman login (/login)
+│   └── (dashboard)/
+│       ├── layout.tsx          # Suspense → getSession() → SessionProvider → shell sidebar
+│       ├── page.tsx            # Dashboard (/) — stat cards, quick audit, distribusi status
+│       ├── audit/page.tsx      # Audit (/audit) — tab: Input Teks | Upload Dokumen
+│       ├── history/page.tsx    # Riwayat audit (/history) — cari, filter, ekspor CSV
+│       ├── experiments/page.tsx# Eksperimen MLflow (/experiments) — advanced
+│       ├── testing/page.tsx    # Golden dataset vs prediksi (/testing) — advanced
+│       └── settings/page.tsx   # Pengaturan (/settings) — advanced
 │
 ├── components/
-│   ├── ui/                     # shadcn/ui primitives
-│   │   ├── button.tsx          # Primary variant: bg-[hsl(var(--primary))] (ITS Blue)
-│   │   ├── input.tsx
-│   │   ├── textarea.tsx
-│   │   ├── form.tsx
-│   │   ├── select.tsx
-│   │   ├── card.tsx
-│   │   ├── switch.tsx
-│   │   ├── skeleton.tsx
-│   │   └── loading-spinner.tsx
-│   │
-│   ├── layout/                 # Layout components
-│   │   ├── Sidebar.tsx         # Collapsible nav (state di Zustand ui-store)
-│   │   └── DashboardLayout.tsx # Animated layout, margin responsif ke sidebar
-│   │
-│   ├── providers/              # Context providers
-│   │   ├── QueryProvider.tsx   # TanStack Query v5 setup
-│   │   └── LenisProvider.tsx   # Lenis smooth scroll
-│   │
-│   ├── motion/                 # Animasi komponen
-│   │   ├── FadeIn.tsx
-│   │   ├── MagneticButton.tsx
-│   │   └── TextReveal.tsx
-│   │
-│   ├── common/                 # Shared components
-│   │   └── ErrorBoundary.tsx   # Error handling
-│   │
-│   └── audit/                  # Audit feature components
-│       ├── AuditForm.tsx       # SOP text input form (react-hook-form + zod)
-│       ├── FileUploadZone.tsx  # Drag & drop PDF/TXT/MD upload → ekstrak klausa ⭐
-│       └── ResultCard.tsx      # Audit result (6 status, AgentVerdictCard, evidence trail)
+│   ├── ui/                     # Primitif shadcn/ui (button, card, dialog, sidebar, table, tabs, …)
+│   ├── Providers.tsx           # ThemeProvider + QueryClientProvider + Toaster
+│   ├── SessionProvider.tsx     # Context sesi (username, role) + useSession()
+│   ├── layout/
+│   │   ├── nav.ts              # Daftar menu + aturan peran
+│   │   ├── AppSidebar.tsx      # Sidebar shadcn (collapsible, menu user + logout)
+│   │   ├── AppHeader.tsx       # Trigger sidebar, breadcrumb, toggle tema
+│   │   └── ThemeToggle.tsx
+│   ├── auth/
+│   │   └── LoginForm.tsx       # Login → simpan cookie → navigasi penuh ke `from` / halaman default
+│   ├── common/                 # PageHeader, StatCard, StatusBadge, BackButton
+│   └── audit/
+│       ├── AuditForm.tsx       # Form klausa (react-hook-form + zod)
+│       ├── FileUploadZone.tsx  # Drag & drop PDF/TXT/MD upload → ekstrak klausa → audit batch ⭐
+│       └── ResultCard.tsx      # Hasil audit (6 status, verdik BI/OJK, evidence trail, dialog penalaran)
+│
+├── hooks/
+│   ├── use-mobile.ts           # Breakpoint mobile (useSyncExternalStore)
+│   └── use-mounted.ts          # Guard hidrasi
 │
 ├── lib/
-│   ├── api.ts                  # API functions: analyzeCompliance, uploadDocument, getUsageStats
+│   ├── config.ts               # API_URL, MLFLOW_URL (dari NEXT_PUBLIC_*)
+│   ├── auth/
+│   │   ├── session.ts          # Satu cookie `access_token` (JWT); saveSession/clearSession/redirectToLogin
+│   │   └── server.ts           # getSession() sisi server (baca cookie, parse payload)
 │   ├── api/
-│   │   ├── client.ts           # ky instance (timeout: 120_000ms)
-│   │   ├── query-keys.ts       # TanStack Query keys
-│   │   └── index.ts
-│   ├── query-client.ts         # QueryClient config
+│   │   ├── client.ts           # Wrapper fetch: header Bearer, timeout dari settings, 401 global → /login
+│   │   ├── index.ts            # Fungsi API: login, analyzeSop, uploadDocument, getAuditHistory, getUsageStats, …
+│   │   ├── types.ts            # Tipe respons backend
+│   │   └── query-keys.ts       # TanStack Query keys
 │   ├── stores/
-│   │   └── ui-store.ts         # Zustand: sidebar collapse state
-│   └── utils.ts                # Utilities (cn, etc.)
+│   │   └── settings-store.ts   # zustand persist `settings-storage` (regulator, top_k, timeout, notifikasi)
+│   ├── compliance.ts           # Label, warna, urutan 6 status kepatuhan
+│   ├── notify.ts               # Notifikasi audit selesai
+│   └── utils.ts                # cn, formatDateTime, formatPercent, formatLatency, downloadFile, csvCell
 │
 ├── package.json
-├── tailwind.config.ts
-├── tsconfig.json
-├── postcss.config.js
-└── .env.local
+├── pnpm-lock.yaml
+└── tsconfig.json
 ```
+
+### Alur autentikasi
+
+1. `proxy.ts` membaca cookie `access_token`; tanpa token yang masih berlaku, halaman apa pun dialihkan ke `/login?from=<path>`.
+2. `LoginForm` memanggil `POST /api/v1/auth/login`, menyimpan token sebagai cookie, lalu melakukan navigasi penuh
+   (`window.location.assign`) ke `from` atau halaman default peran. Navigasi penuh dipakai agar cache router
+   tidak memutar ulang redirect lama ke `/login`.
+3. Respons 401 dari API mana pun menghapus sesi dan mengembalikan pengguna ke `/login`.
 
 ---
 
@@ -481,7 +527,7 @@ src/agents/conflict_resolver.py
 ### Backend ↔ Frontend
 
 ```
-frontend/lib/api.ts
+frontend/lib/api/index.ts
     ↓ HTTP requests
 backend/app/api/v1/audit.py
     ↓ calls
@@ -752,7 +798,7 @@ docker-compose logs -f backend
 
 ```
 ┌──────────────────────────────────────────────────────────────────────┐
-│                      Frontend (Next.js 14)                           │
+│                      Frontend (Next.js 16)                           │
 │                    http://localhost:3000                              │
 │                                                                      │
 │  ┌──────────────────┐  ┌──────────────┐  ┌───────────────────────┐  │
