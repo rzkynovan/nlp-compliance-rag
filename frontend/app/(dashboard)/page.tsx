@@ -1,231 +1,229 @@
 "use client";
 
 import { useState } from "react";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import { motion } from "framer-motion";
-import { toast } from "sonner";
-import {
-  FileSearch,
-  ShieldCheck,
-  Timer,
-  Coins,
-  TrendingUp,
-  TrendingDown,
-  Minus,
-  ArrowRight,
-} from "lucide-react";
 import Link from "next/link";
-import { analyzeSop, getAuditHistory, getUsageStats, type AuditResponse } from "@/lib/api";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { ArrowRight, Coins, FileSearch, ShieldCheck, Timer, TrendingDown, TrendingUp, XCircle } from "lucide-react";
+import { toast } from "sonner";
 import { AuditForm } from "@/components/audit/AuditForm";
 import { ResultCard } from "@/components/audit/ResultCard";
+import { PageHeader } from "@/components/common/PageHeader";
+import { StatCard } from "@/components/common/StatCard";
+import { useSession } from "@/components/SessionProvider";
+import { Button } from "@/components/ui/button";
+import { Card, CardAction, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Spinner } from "@/components/ui/spinner";
+import {
+  analyzeSop,
+  type AuditHistoryStats,
+  type AuditResponse,
+  errorMessage,
+  getAuditHistoryStats,
+  getUsageStats,
+  queryKeys,
+} from "@/lib/api";
+import { resultMeta, statusMeta, toneClasses } from "@/lib/compliance";
+import { notifyAuditDone } from "@/lib/notify";
+import { cn, formatLatency } from "@/lib/utils";
 
-const container = {
-  hidden: { opacity: 0 },
-  show: { opacity: 1, transition: { staggerChildren: 0.08 } },
-};
-const item = {
-  hidden: { opacity: 0, y: 16 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.4, ease: [0.16, 1, 0.3, 1] } },
-};
+const REFETCH_INTERVAL = 30_000;
 
-export default function HomePage() {
+function StatusDistribution({ stats }: { stats: AuditHistoryStats }) {
+  const counted = stats.compliant + stats.non_compliant + stats.partially_compliant + stats.not_addressed + stats.unclear;
+  const rows = [
+    { meta: statusMeta.COMPLIANT, count: stats.compliant },
+    { meta: statusMeta.PARTIALLY_COMPLIANT, count: stats.partially_compliant },
+    { meta: statusMeta.NON_COMPLIANT, count: stats.non_compliant },
+    { meta: statusMeta.NOT_ADDRESSED, count: stats.not_addressed },
+    { meta: statusMeta.UNCLEAR, count: stats.unclear },
+    // Statistik backend tidak memecah NEEDS_REVIEW; sisanya ditampilkan di sini.
+    { meta: statusMeta.NEEDS_REVIEW, count: Math.max(0, stats.total - counted) },
+  ].filter((row) => row.count > 0);
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle>Distribusi Status</CardTitle>
+        <CardDescription>Seluruh riwayat audit ({stats.total})</CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3">
+        {rows.map(({ meta, count }) => {
+          const share = stats.total > 0 ? (count / stats.total) * 100 : 0;
+          return (
+            <div key={meta.label} className="flex flex-col gap-1">
+              <div className="flex items-center justify-between text-sm">
+                <span>{meta.label}</span>
+                <span className="text-muted-foreground tabular-nums">
+                  {count} · {share.toFixed(0)}%
+                </span>
+              </div>
+              <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className={cn("h-full rounded-full", toneClasses[meta.tone].dot)} style={{ width: `${share}%` }} />
+              </div>
+            </div>
+          );
+        })}
+      </CardContent>
+    </Card>
+  );
+}
+
+export default function DashboardPage() {
+  const session = useSession();
+  const queryClient = useQueryClient();
   const [result, setResult] = useState<AuditResponse | null>(null);
+  const isAdvanced = session.role === "advanced";
 
   const mutation = useMutation({
     mutationFn: analyzeSop,
     onSuccess: (data) => {
       setResult(data);
-      toast.success("Audit selesai", {
-        description: `Status: ${data.final_status} · ${data.latency_ms.toFixed(0)}ms`,
-      });
+      notifyAuditDone("Audit selesai", `Status: ${resultMeta(data).label} · ${formatLatency(data.latency_ms)}`);
+      void queryClient.invalidateQueries({ queryKey: queryKeys.audits.all });
+      void queryClient.invalidateQueries({ queryKey: queryKeys.usage });
     },
-    onError: (err) => {
-      toast.error("Audit gagal", {
-        description: err instanceof Error ? err.message : "Terjadi kesalahan.",
-      });
+    onError: (error) => {
+      toast.error("Audit gagal", { description: errorMessage(error) });
     },
   });
 
-  // Live stats
-  const { data: usageStats } = useQuery({
-    queryKey: ["usage-stats"],
+  const { data: stats, isPending: statsPending } = useQuery({
+    queryKey: queryKeys.audits.stats(),
+    queryFn: getAuditHistoryStats,
+    refetchInterval: REFETCH_INTERVAL,
+  });
+
+  // Endpoint usage khusus role advanced; untuk basic tidak dipanggil sama sekali.
+  const { data: usage, isPending: usagePending } = useQuery({
+    queryKey: queryKeys.usage,
     queryFn: getUsageStats,
-    refetchInterval: 30_000,
+    refetchInterval: REFETCH_INTERVAL,
+    enabled: isAdvanced,
   });
 
-  const { data: history } = useQuery({
-    queryKey: ["audit-history-summary"],
-    queryFn: () => getAuditHistory(0, 100) as Promise<
-      { final_status: string; latency_ms: number }[]
-    >,
-    refetchInterval: 30_000,
-  });
-
-  const historyList = Array.isArray(history) ? history : [];
-  const totalAudits = historyList.length;
-  const compliantCount = historyList.filter(
-    (h) => h.final_status === "COMPLIANT",
-  ).length;
-  const complianceRate =
-    totalAudits > 0 ? Math.round((compliantCount / totalAudits) * 100) : null;
-  const avgLatency =
-    totalAudits > 0
-      ? (historyList.reduce((s, h) => s + (h.latency_ms || 0), 0) / totalAudits / 1000).toFixed(1)
-      : null;
+  const total = stats?.total ?? 0;
+  const complianceRate = stats && total > 0 ? Math.round((stats.compliant / total) * 100) : null;
 
   return (
-    <motion.div variants={container} initial="hidden" animate="show" className="space-y-8">
-      {/* Header */}
-      <motion.header variants={item}>
-        <h1 className="text-2xl font-semibold text-gray-900">Dashboard</h1>
-        <p className="text-gray-500 mt-1 text-sm">
-          Multi-Agent RAG untuk audit kepatuhan regulasi BI & OJK
-        </p>
-      </motion.header>
+    <>
+      <PageHeader title="Dashboard" description="Multi-Agent RAG untuk audit kepatuhan regulasi BI & OJK" />
 
-      {/* Stat cards */}
-      <motion.div variants={item} className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
-          title="Total Audit"
-          value={totalAudits > 0 ? String(totalAudits) : "—"}
-          description="Sesi ini"
-          icon={<FileSearch className="h-5 w-5 text-blue-500" />}
-          iconBg="bg-blue-50"
+          label="Total Audit"
+          value={total > 0 ? total.toLocaleString("id-ID") : "—"}
+          hint="Seluruh riwayat"
+          icon={FileSearch}
+          iconClassName={toneClasses.info.soft}
+          loading={statsPending}
         />
         <StatCard
-          title="Compliance Rate"
-          value={complianceRate !== null ? `${complianceRate}%` : "—"}
-          description={`${compliantCount} patuh dari ${totalAudits}`}
-          icon={<ShieldCheck className="h-5 w-5 text-emerald-500" />}
-          iconBg="bg-emerald-50"
-          trend={complianceRate !== null ? (complianceRate >= 70 ? "up" : complianceRate >= 40 ? "flat" : "down") : undefined}
+          label="Compliance Rate"
+          value={
+            complianceRate !== null ? (
+              <span className="inline-flex items-center gap-1.5">
+                {complianceRate}%
+                {complianceRate >= 70 ? (
+                  <TrendingUp className={cn("size-4", toneClasses.success.text)} />
+                ) : complianceRate < 40 ? (
+                  <TrendingDown className={cn("size-4", toneClasses.danger.text)} />
+                ) : null}
+              </span>
+            ) : (
+              "—"
+            )
+          }
+          hint={`${stats?.compliant ?? 0} patuh dari ${total}`}
+          icon={ShieldCheck}
+          iconClassName={toneClasses.success.soft}
+          loading={statsPending}
         />
         <StatCard
-          title="Avg. Latency"
-          value={avgLatency !== null ? `${avgLatency}s` : "—"}
-          description="Per audit"
-          icon={<Timer className="h-5 w-5 text-orange-500" />}
-          iconBg="bg-orange-50"
+          label="Avg. Latency"
+          value={stats && total > 0 ? `${(stats.avg_latency_ms / 1000).toFixed(1)}s` : "—"}
+          hint="Per audit"
+          icon={Timer}
+          iconClassName={toneClasses.warning.soft}
+          loading={statsPending}
         />
-        <StatCard
-          title="Biaya Hari Ini"
-          value={usageStats ? `$${usageStats.today.total_cost_usd.toFixed(4)}` : "—"}
-          description={usageStats ? `${usageStats.today.api_calls} API calls` : "Memuat..."}
-          icon={<Coins className="h-5 w-5 text-violet-500" />}
-          iconBg="bg-violet-50"
-        />
-      </motion.div>
-
-      {/* Main: form + results */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
-        <motion.div
-          variants={item}
-          className="rounded-xl border border-slate-200 bg-white shadow-sm overflow-hidden"
-        >
-          <div className="border-b border-slate-100 px-6 py-4 flex items-center justify-between">
-            <div>
-              <h2 className="text-base font-semibold text-gray-900">Quick Audit</h2>
-              <p className="text-xs text-gray-400 mt-0.5">Analisis cepat satu klausa</p>
-            </div>
-            <Link
-              href="/audit"
-              className="flex items-center gap-1 text-xs text-blue-600 hover:text-blue-700 font-medium"
-            >
-              Audit lengkap
-              <ArrowRight className="h-3.5 w-3.5" />
-            </Link>
-          </div>
-          <div className="p-6">
-            <AuditForm
-              onSubmit={(data) => mutation.mutate(data)}
-              isPending={mutation.isPending}
-            />
-          </div>
-        </motion.div>
-
-        <motion.div variants={item}>
-          {mutation.isPending && (
-            <div className="rounded-xl border border-slate-200 bg-white shadow-sm p-10 flex flex-col items-center gap-3 text-center">
-              <div className="relative h-12 w-12">
-                <div className="absolute inset-0 rounded-full border-4 border-slate-200" />
-                <div className="absolute inset-0 animate-spin rounded-full border-4 border-transparent border-t-blue-600" />
-              </div>
-              <p className="text-sm font-medium text-slate-600">Menganalisis klausa...</p>
-            </div>
-          )}
-
-          {result && !mutation.isPending && (
-            <motion.div
-              initial={{ opacity: 0, scale: 0.97 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ duration: 0.3 }}
-            >
-              <ResultCard data={result} />
-            </motion.div>
-          )}
-
-          {!result && !mutation.isPending && (
-            <div className="rounded-xl border-2 border-dashed border-slate-200 bg-slate-50 p-12 flex flex-col items-center justify-center gap-3 text-center h-full min-h-[200px]">
-              <FileSearch className="h-10 w-10 text-slate-300" />
-              <div>
-                <p className="text-sm font-medium text-slate-500">Hasil audit akan muncul di sini</p>
-                <p className="text-xs text-slate-400 mt-1">
-                  Atau gunakan{" "}
-                  <Link href="/audit" className="text-blue-500 hover:underline">
-                    halaman Audit
-                  </Link>{" "}
-                  untuk upload dokumen
-                </p>
-              </div>
-            </div>
-          )}
-        </motion.div>
+        {isAdvanced ? (
+          <StatCard
+            label="Biaya Hari Ini"
+            value={usage ? `$${usage.today.total_cost_usd.toFixed(4)}` : "—"}
+            hint={
+              usage
+                ? `${usage.today.api_calls} API calls · ${usage.today.budget_percentage.toFixed(0)}% budget`
+                : usagePending
+                  ? "Memuat..."
+                  : "Tidak tersedia"
+            }
+            icon={Coins}
+            iconClassName="bg-violet-500/10 text-violet-700 dark:text-violet-400"
+            loading={usagePending}
+          />
+        ) : (
+          <StatCard
+            label="Tidak Patuh"
+            value={stats ? stats.non_compliant.toLocaleString("id-ID") : "—"}
+            hint="Klausa melanggar regulasi"
+            icon={XCircle}
+            iconClassName={toneClasses.danger.soft}
+            loading={statsPending}
+          />
+        )}
       </div>
-    </motion.div>
-  );
-}
 
-type TrendDir = "up" | "down" | "flat";
+      <div className="grid items-start gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+        <Card>
+          <CardHeader className="border-b">
+            <CardTitle>Quick Audit</CardTitle>
+            <CardDescription>Analisis cepat satu klausa</CardDescription>
+            <CardAction>
+              <Button asChild variant="ghost" size="sm">
+                <Link href="/audit">
+                  Audit lengkap
+                  <ArrowRight data-icon="inline-end" />
+                </Link>
+              </Button>
+            </CardAction>
+          </CardHeader>
+          <CardContent>
+            <AuditForm onSubmit={(data) => mutation.mutate(data)} isPending={mutation.isPending} />
+          </CardContent>
+        </Card>
 
-function StatCard({
-  title,
-  value,
-  description,
-  icon,
-  iconBg,
-  trend,
-}: {
-  title: string;
-  value: string;
-  description: string;
-  icon: React.ReactNode;
-  iconBg: string;
-  trend?: TrendDir;
-}) {
-  const TrendIcon =
-    trend === "up" ? TrendingUp : trend === "down" ? TrendingDown : Minus;
-  const trendColor =
-    trend === "up"
-      ? "text-emerald-600"
-      : trend === "down"
-        ? "text-red-500"
-        : "text-slate-400";
-
-  return (
-    <motion.div
-      whileHover={{ y: -2, boxShadow: "0 6px 20px rgba(0,0,0,0.07)" }}
-      transition={{ duration: 0.15 }}
-      className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm"
-    >
-      <div className="flex items-start justify-between mb-3">
-        <p className="text-xs font-medium text-slate-500 uppercase tracking-wide">{title}</p>
-        <div className={`p-1.5 rounded-lg ${iconBg}`}>{icon}</div>
+        <div className="flex min-w-0 flex-col gap-4" aria-live="polite">
+          {mutation.isPending ? (
+            <Card>
+              <CardContent className="flex flex-col items-center gap-3 py-10 text-center">
+                <Spinner className="size-8 text-primary" />
+                <div>
+                  <p className="text-sm font-medium">Menganalisis klausa...</p>
+                  <p className="mt-0.5 text-xs text-muted-foreground">Multi-agent RAG sedang bekerja</p>
+                </div>
+              </CardContent>
+            </Card>
+          ) : result ? (
+            <ResultCard result={result} />
+          ) : (
+            <>
+              {stats && total > 0 && <StatusDistribution stats={stats} />}
+              <Empty className="border border-dashed">
+                <EmptyHeader>
+                  <EmptyMedia variant="icon">
+                    <FileSearch />
+                  </EmptyMedia>
+                  <EmptyTitle>Hasil audit akan muncul di sini</EmptyTitle>
+                  <EmptyDescription>
+                    Untuk upload dokumen dan batch audit, buka <Link href="/audit">halaman Audit</Link>.
+                  </EmptyDescription>
+                </EmptyHeader>
+              </Empty>
+            </>
+          )}
+        </div>
       </div>
-      <p className="text-2xl font-bold text-slate-900 tabular-nums">{value}</p>
-      <div className="mt-2 flex items-center gap-1.5">
-        {trend && <TrendIcon className={`h-3.5 w-3.5 ${trendColor}`} />}
-        <p className="text-xs text-slate-400">{description}</p>
-      </div>
-    </motion.div>
+    </>
   );
 }

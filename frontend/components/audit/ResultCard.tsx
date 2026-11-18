@@ -1,168 +1,250 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
-import { createPortal } from "react-dom";
-import { motion, AnimatePresence } from "framer-motion";
-import { cn } from "@/lib/utils";
-import type { AuditResponse, AgentVerdict } from "@/lib/api/client";
+import { AlertTriangle, ArrowRight, BookOpen, Clock, Coins, Database, Lightbulb, ShieldAlert } from "lucide-react";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
-  CheckCircle2, XCircle, AlertTriangle, HelpCircle,
-  FileText, Clock, Zap, MessageSquare, Ban,
-  Search, GitMerge, Layers, ChevronRight, X,
-  BookOpen, ShieldAlert, Lightbulb,
-} from "lucide-react";
+  Dialog,
+  DialogClose,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Separator } from "@/components/ui/separator";
+import type { AgentVerdict, AuditResponse } from "@/lib/api";
+import {
+  queryTypeMeta,
+  retrievalModeLabel,
+  riskTone,
+  skippedModeMeta,
+  statusMeta,
+  toneClasses,
+  verdictMeta,
+} from "@/lib/compliance";
+import { cn, formatLatency, formatPercent } from "@/lib/utils";
 
-interface ResultCardProps {
-  data: AuditResponse;
+type Regulator = "BI" | "OJK";
+
+interface EvidenceRow {
+  regulator: string;
+  title: string;
+  text?: string;
+  score?: number;
 }
 
-// ── Status config (6 kelas) ────────────────────────────────────────────
-const statusConfig: Record<string, {
-  icon: React.ElementType;
-  label: string;
-  color: string;
-  bg: string;
-  border: string;
-}> = {
-  COMPLIANT:          { icon: CheckCircle2,  label: "Patuh",           color: "text-emerald-600", bg: "bg-emerald-50",  border: "border-emerald-200" },
-  NON_COMPLIANT:      { icon: XCircle,       label: "Tidak Patuh",     color: "text-red-600",     bg: "bg-red-50",      border: "border-red-200" },
-  PARTIALLY_COMPLIANT:{ icon: AlertTriangle, label: "Sebagian Patuh",  color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200" },
-  NEEDS_REVIEW:       { icon: AlertTriangle, label: "Perlu Review",    color: "text-amber-600",   bg: "bg-amber-50",    border: "border-amber-200" },
-  NOT_ADDRESSED:      { icon: HelpCircle,    label: "Tidak Diatur",    color: "text-slate-500",   bg: "bg-slate-50",    border: "border-slate-200" },
-  UNCLEAR:            { icon: HelpCircle,    label: "Tidak Jelas",     color: "text-slate-500",   bg: "bg-slate-50",    border: "border-slate-200" },
+const regulatorBadgeClass: Record<string, string> = {
+  BI: "bg-sky-500/10 text-sky-700 dark:text-sky-400",
+  OJK: "bg-violet-500/10 text-violet-700 dark:text-violet-400",
 };
 
-// ── Query type badge ───────────────────────────────────────────────────
-const queryTypeConfig: Record<string, { label: string; icon: React.ElementType; color: string }> = {
-  exact_regulation:   { label: "Exact Match",   icon: Search,       color: "text-blue-700 bg-blue-100" },
-  hybrid_regulation:  { label: "Hybrid Search", icon: GitMerge,     color: "text-violet-700 bg-violet-100" },
-  semantic_compliance:{ label: "Semantic",       icon: Layers,       color: "text-sky-700 bg-sky-100" },
-  greeting:           { label: "Sapaan",         icon: MessageSquare,color: "text-teal-700 bg-teal-100" },
-  out_of_scope:       { label: "Di Luar Scope",  icon: Ban,          color: "text-rose-700 bg-rose-100" },
-  noise:              { label: "Header/Noise",   icon: FileText,     color: "text-slate-500 bg-slate-100" },
-};
+function RegulatorBadge({ regulator }: { regulator: string }) {
+  return (
+    <Badge variant="outline" className={cn("border-transparent", regulatorBadgeClass[regulator])}>
+      {regulator || "—"}
+    </Badge>
+  );
+}
 
-const retrievalModeLabel: Record<string, string> = {
-  exact:      "BM25 Exact",
-  hybrid:     "Hybrid (BM25+Dense)",
-  dense:      "Dense",
-  dense_only: "Dense Only",
-  none:       "—",
-};
+function SectionTitle({
+  icon: Icon,
+  children,
+  className,
+}: {
+  icon: React.ComponentType<{ className?: string }>;
+  children: React.ReactNode;
+  className?: string;
+}) {
+  return (
+    <h4 className={cn("flex items-center gap-2 text-sm font-medium", className)}>
+      <Icon className="size-4" />
+      {children}
+    </h4>
+  );
+}
 
-// ── Agent Detail Modal ─────────────────────────────────────────────────
-function AgentDetailModal({
+function ClauseBox({ clause, clauseId }: { clause: string; clauseId?: string | null }) {
+  return (
+    <div className="rounded-lg border bg-muted/40 p-3">
+      <p className="mb-1 flex items-center gap-2 text-xs font-medium text-muted-foreground">
+        Klausa yang diaudit
+        {clauseId && <Badge variant="outline">{clauseId}</Badge>}
+      </p>
+      <p className="text-sm leading-relaxed whitespace-pre-wrap">{clause}</p>
+    </div>
+  );
+}
+
+function Metric({ label, value, className }: { label: string; value: string; className?: string }) {
+  return (
+    <div className="min-w-0">
+      <p className="text-xs text-muted-foreground">{label}</p>
+      <p className={cn("text-sm font-semibold tabular-nums", className)}>{value}</p>
+    </div>
+  );
+}
+
+function EvidenceList({ rows, clamp }: { rows: EvidenceRow[]; clamp?: boolean }) {
+  return (
+    <ul className="flex flex-col gap-2">
+      {rows.map((row, index) => (
+        <li key={index} className="rounded-lg border p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            <RegulatorBadge regulator={row.regulator} />
+            <span className="min-w-0 flex-1 truncate text-sm font-medium">{row.title}</span>
+            {row.score !== undefined && (
+              <span className="text-xs text-muted-foreground tabular-nums">
+                Relevansi: {formatPercent(row.score)}
+              </span>
+            )}
+          </div>
+          {row.text && (
+            <p className={cn("mt-1.5 text-xs leading-relaxed text-muted-foreground", clamp && "line-clamp-2")}>
+              {row.text}
+            </p>
+          )}
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+function verdictEvidence(verdict: AgentVerdict | null, regulator: Regulator): EvidenceRow[] {
+  return (verdict?.evidence ?? []).map((item) => ({
+    regulator,
+    title: [item.regulation, item.article].filter(Boolean).join(" · "),
+    text: item.article_text,
+    score: item.relevance_score,
+  }));
+}
+
+/** Evidence dari verdik agen (membawa teks pasal); bila kosong pakai evidence_trail. */
+function collectEvidence(result: AuditResponse): EvidenceRow[] {
+  const rows = [...verdictEvidence(result.bi_verdict, "BI"), ...verdictEvidence(result.ojk_verdict, "OJK")];
+  if (rows.length > 0) return rows;
+  return (result.evidence_trail ?? []).map((item) => ({
+    regulator: item.regulator ?? "",
+    title: [item.document, item.bab, item.pasal].filter(Boolean).join(" · "),
+    score: item.relevance_score,
+  }));
+}
+
+function hasDetail(verdict: AgentVerdict): boolean {
+  return (
+    verdict.violations.length > 0 ||
+    verdict.evidence.length > 0 ||
+    (verdict.checklist_covered?.length ?? 0) > 0 ||
+    (verdict.missing_elements?.length ?? 0) > 0 ||
+    (!!verdict.reasoning && verdict.reasoning !== "No verdict available")
+  );
+}
+
+function AgentDetailDialog({
   verdict,
-  title,
-  onClose,
+  regulator,
+  children,
 }: {
   verdict: AgentVerdict;
-  title: string;
-  onClose: () => void;
+  regulator: Regulator;
+  children: React.ReactNode;
 }) {
-  const cfg = statusConfig[verdict.status] ?? statusConfig.UNCLEAR;
-  const StatusIcon = cfg.icon;
-  const isBI = title.includes("BI");
+  const meta = verdictMeta(verdict.status);
+  const covered = verdict.checklist_covered ?? [];
+  const missing = verdict.missing_elements ?? [];
+  const empty =
+    !verdict.reasoning && verdict.violations.length === 0 && verdict.evidence.length === 0 && covered.length === 0 && missing.length === 0;
 
-  // Close on Escape key
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    document.addEventListener("keydown", handler);
-    return () => document.removeEventListener("keydown", handler);
-  }, [onClose]);
-
-  const modal = (
-    <AnimatePresence>
-      {/* Backdrop — flex container centers the panel */}
-      <motion.div
-        key="backdrop"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        onClick={onClose}
-        className="fixed inset-0 z-[9998] bg-black/50 backdrop-blur-sm flex items-center justify-center p-4"
-      >
-        {/* Panel — stop propagation so clicking inside doesn't close */}
-        <motion.div
-          key="panel"
-          initial={{ opacity: 0, y: 16, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 8, scale: 0.98 }}
-          transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-          onClick={(e) => e.stopPropagation()}
-          className="relative w-full max-w-xl overflow-hidden rounded-2xl bg-white shadow-2xl flex flex-col z-[9999]"
-          style={{ maxHeight: "min(680px, 85vh)" }}
-        >
-        {/* Header */}
-        <div className={cn(
-          "flex items-center justify-between px-6 py-4 border-b",
-          isBI ? "bg-blue-50 border-blue-100" : "bg-violet-50 border-violet-100"
-        )}>
+  return (
+    <Dialog>
+      <DialogTrigger asChild>{children}</DialogTrigger>
+      <DialogContent className="flex max-h-[85svh] flex-col gap-0 p-0 sm:max-w-2xl">
+        <DialogHeader className="border-b p-4 pr-12">
           <div className="flex items-center gap-3">
-            <div className={cn(
-              "h-9 w-9 rounded-full flex items-center justify-center font-bold text-sm",
-              isBI ? "bg-blue-600 text-white" : "bg-violet-600 text-white"
-            )}>
-              {isBI ? "BI" : "OJK"}
+            <div
+              className={cn(
+                "flex size-10 shrink-0 items-center justify-center rounded-lg text-xs font-semibold",
+                regulatorBadgeClass[regulator],
+              )}
+            >
+              {regulator}
             </div>
-            <div>
-              <h2 className="font-semibold text-slate-900">{title}</h2>
-              <div className={cn("flex items-center gap-1.5 mt-0.5", cfg.color)}>
-                <StatusIcon className="h-3.5 w-3.5" />
-                <span className="text-xs font-medium">{cfg.label}</span>
-                <span className="text-xs text-slate-400">·</span>
-                <span className="text-xs text-slate-500">
-                  Confidence: {(verdict.confidence * 100).toFixed(0)}%
-                </span>
-              </div>
+            <div className="min-w-0 text-left">
+              <DialogTitle>{regulator} Specialist</DialogTitle>
+              <DialogDescription asChild>
+                <div className="mt-1 flex flex-wrap items-center gap-2">
+                  <StatusBadge meta={meta} />
+                  <span className="text-xs">Confidence {formatPercent(verdict.confidence)}</span>
+                </div>
+              </DialogDescription>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="h-8 w-8 rounded-full flex items-center justify-center text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
-          >
-            <X className="h-4 w-4" />
-          </button>
-        </div>
+        </DialogHeader>
 
-        {/* Scrollable body */}
-        <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto p-4">
+          {empty && <p className="py-6 text-center text-sm text-muted-foreground">Tidak ada detail tambahan tersedia</p>}
 
-          {/* Reasoning */}
           {verdict.reasoning && (
-            <section>
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-                <BookOpen className="h-4 w-4 text-slate-400" />
-                Penalaran Agent
-              </h3>
-              <p className="text-sm text-slate-600 leading-relaxed whitespace-pre-wrap bg-slate-50 rounded-lg p-4 border border-slate-100">
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={Lightbulb}>Penalaran Agent</SectionTitle>
+              <p className="rounded-lg bg-muted/50 p-3 text-sm leading-relaxed whitespace-pre-wrap">
                 {verdict.reasoning}
               </p>
             </section>
           )}
 
-          {/* Violations */}
-          {(verdict.violations ?? []).length > 0 && (
-            <section>
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-                <ShieldAlert className="h-4 w-4 text-red-500" />
+          {(verdict.checklist_topic || covered.length > 0 || missing.length > 0) && (
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={BookOpen}>
+                Checklist Regulasi{verdict.checklist_topic ? `: ${verdict.checklist_topic}` : ""}
+              </SectionTitle>
+              <div className="grid gap-3 sm:grid-cols-2">
+                {covered.length > 0 && (
+                  <div className="rounded-lg border p-3">
+                    <p className={cn("mb-1.5 text-xs font-medium", toneClasses.success.text)}>
+                      Tercakup ({covered.length})
+                    </p>
+                    <ul className="flex list-disc flex-col gap-1 pl-4 text-xs leading-relaxed">
+                      {covered.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {missing.length > 0 && (
+                  <div className="rounded-lg border p-3">
+                    <p className={cn("mb-1.5 text-xs font-medium", toneClasses.danger.text)}>
+                      Belum tercakup ({missing.length})
+                    </p>
+                    <ul className="flex list-disc flex-col gap-1 pl-4 text-xs leading-relaxed">
+                      {missing.map((item, index) => (
+                        <li key={index}>{item}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+            </section>
+          )}
+
+          {verdict.violations.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={ShieldAlert} className={toneClasses.danger.text}>
                 Pelanggaran ({verdict.violations.length})
-              </h3>
-              <ul className="space-y-2">
-                {verdict.violations.map((v, i) => {
-                  // Parse format: "Regulasi — Pasal X: detail"
-                  const colonIdx = v.indexOf(":");
-                  const header   = colonIdx > -1 ? v.slice(0, colonIdx).trim() : v;
-                  const detail   = colonIdx > -1 ? v.slice(colonIdx + 1).trim() : "";
+              </SectionTitle>
+              <ul className="flex flex-col gap-2">
+                {verdict.violations.map((violation, index) => {
+                  // Format backend: "<regulasi pasal>: <uraian>"
+                  const separator = violation.indexOf(":");
+                  const heading = separator > 0 ? violation.slice(0, separator).trim() : "";
+                  const detail = separator > 0 ? violation.slice(separator + 1).trim() : violation;
                   return (
-                    <li key={i} className="rounded-lg border border-red-100 bg-red-50 overflow-hidden">
-                      <div className="flex items-center gap-2 px-3 py-2 border-b border-red-100 bg-red-100/60">
-                        <XCircle className="h-3.5 w-3.5 text-red-600 shrink-0" />
-                        <span className="text-xs font-semibold text-red-800">{header}</span>
-                      </div>
-                      {detail && (
-                        <p className="px-3 py-2 text-xs text-red-700 leading-relaxed">{detail}</p>
-                      )}
+                    <li key={index} className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
+                      {heading && <p className={cn("text-xs font-semibold", toneClasses.danger.text)}>{heading}</p>}
+                      <p className="text-sm leading-relaxed">{detail}</p>
                     </li>
                   );
                 })}
@@ -170,352 +252,245 @@ function AgentDetailModal({
             </section>
           )}
 
-          {/* Evidence */}
-          {(verdict.evidence ?? []).length > 0 && (
-            <section>
-              <h3 className="flex items-center gap-2 text-sm font-semibold text-slate-700 mb-2">
-                <FileText className="h-4 w-4 text-slate-400" />
-                Evidence ({verdict.evidence.length} pasal)
-              </h3>
-              <div className="space-y-2">
-                {verdict.evidence.map((ev, i) => (
-                  <div key={i} className="rounded-lg bg-white border border-slate-200 p-3">
-                    <div className="flex items-center justify-between mb-1.5">
-                      <span className="text-xs font-semibold text-slate-800">
-                        {ev.regulation} · {ev.article}
-                      </span>
-                      <span className={cn(
-                        "text-xs px-2 py-0.5 rounded-full font-medium",
-                        isBI ? "bg-blue-100 text-blue-700" : "bg-violet-100 text-violet-700"
-                      )}>
-                        {isBI ? "BI" : "OJK"}
-                      </span>
-                    </div>
-                    <p className="text-xs text-slate-600 leading-relaxed">{ev.article_text}</p>
-                    <div className="mt-1.5 text-xs text-slate-400">
-                      Relevansi: {(ev.relevance_score * 100).toFixed(0)}%
-                    </div>
-                  </div>
-                ))}
-              </div>
+          {verdict.evidence.length > 0 && (
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={Database}>Evidence ({verdict.evidence.length} pasal)</SectionTitle>
+              <EvidenceList rows={verdictEvidence(verdict, regulator)} />
             </section>
           )}
-
-          {/* No detail case */}
-          {!verdict.reasoning && (verdict.violations ?? []).length === 0 && (verdict.evidence ?? []).length === 0 && (
-            <div className="text-center py-8 text-slate-400">
-              <HelpCircle className="h-8 w-8 mx-auto mb-2 opacity-40" />
-              <p className="text-sm">Tidak ada detail tambahan tersedia</p>
-            </div>
-          )}
         </div>
 
-          {/* Footer */}
-          <div className="px-6 py-3 border-t border-slate-100 bg-slate-50 flex justify-end">
-            <button
-              onClick={onClose}
-              className="px-4 py-2 text-sm font-medium text-slate-600 hover:text-slate-900 bg-white border border-slate-200 rounded-lg hover:border-slate-300 transition-colors"
-            >
-              Tutup
-            </button>
-          </div>
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
-  );
-
-  return createPortal(modal, document.body);
-}
-
-// ── AgentVerdictCard (clickable) ───────────────────────────────────────
-function AgentVerdictCard({ title, verdict }: { title: string; verdict: AgentVerdict }) {
-  const [open, setOpen] = useState(false);
-  const cfg = statusConfig[verdict.status] ?? statusConfig.UNCLEAR;
-  const StatusIcon = cfg.icon;
-  const hasDetail = verdict.reasoning || (verdict.violations ?? []).length > 0 || (verdict.evidence ?? []).length > 0;
-
-  return (
-    <>
-      <button
-        type="button"
-        onClick={() => hasDetail && setOpen(true)}
-        className={cn(
-          "rounded-lg border border-slate-200 bg-white p-3 space-y-2 text-left w-full transition-all",
-          hasDetail && "hover:border-slate-300 hover:shadow-sm cursor-pointer group",
-          !hasDetail && "cursor-default"
-        )}
-      >
-        <div className="flex items-center justify-between">
-          <span className="text-xs font-semibold text-slate-600 uppercase tracking-wide">{title}</span>
-          <div className="flex items-center gap-1.5">
-            <div className={cn("flex items-center gap-1", cfg.color)}>
-              <StatusIcon className="h-3.5 w-3.5" />
-              <span className="text-xs font-medium">{cfg.label}</span>
-            </div>
-            {hasDetail && (
-              <ChevronRight className="h-3.5 w-3.5 text-slate-300 group-hover:text-slate-500 transition-colors" />
-            )}
-          </div>
-        </div>
-
-        <div className="text-xs text-slate-500">
-          Confidence: <span className="font-medium text-slate-700">
-            {(verdict.confidence * 100).toFixed(0)}%
-          </span>
-        </div>
-
-        {(verdict.violations ?? []).length > 0 && (
-          <div className="text-xs text-red-600 font-medium">
-            {verdict.violations.length} pelanggaran
-          </div>
-        )}
-
-        {verdict.reasoning && (
-          <p className="text-xs text-slate-500 line-clamp-2 italic text-left">
-            "{verdict.reasoning}"
-          </p>
-        )}
-
-        {hasDetail && (
-          <p className="text-xs text-blue-500 font-medium group-hover:text-blue-600 transition-colors">
-            Klik untuk detail lengkap →
-          </p>
-        )}
-      </button>
-
-      {open && (
-        <AgentDetailModal
-          verdict={verdict}
-          title={title}
-          onClose={() => setOpen(false)}
-        />
-      )}
-    </>
+        <DialogFooter className="border-t p-3">
+          <DialogClose asChild>
+            <Button variant="outline">Tutup</Button>
+          </DialogClose>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
 
-// ── EvidenceItem ───────────────────────────────────────────────────────
-function EvidenceItem({
-  evidence,
-  source,
-}: {
-  evidence: { regulation: string; article: string; article_text: string; relevance_score: number };
-  source: "BI" | "OJK";
-}) {
-  return (
-    <div className="rounded-lg bg-white border border-slate-200 p-3">
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-xs font-semibold text-slate-800">
-          {evidence.regulation} · {evidence.article}
-        </span>
-        <span className={cn(
-          "text-xs px-2 py-0.5 rounded-full font-medium",
-          source === "BI" ? "bg-blue-100 text-blue-700" : "bg-violet-100 text-violet-700"
-        )}>
-          {source}
-        </span>
-      </div>
-      <p className="text-xs text-slate-600 line-clamp-2 leading-relaxed">{evidence.article_text}</p>
-      <div className="mt-1.5 text-xs text-slate-400">
-        Relevansi: {(evidence.relevance_score * 100).toFixed(0)}%
-      </div>
-    </div>
-  );
-}
-
-// ── ResultCard ─────────────────────────────────────────────────────────
-export function ResultCard({ data }: ResultCardProps) {
-  const isGreeting     = data.analysis_mode === "greeting";
-  const isOutOfScope   = data.analysis_mode === "out_of_scope";
-  const isNoiseFiltered= data.analysis_mode === "noise_filtered";
-  const isSpecial      = isGreeting || isOutOfScope || isNoiseFiltered;
-
-  const statusInfo = statusConfig[data.final_status] ?? statusConfig.UNCLEAR;
-  const StatusIcon = statusInfo.icon;
-  const qtCfg = data.query_type ? queryTypeConfig[data.query_type] : null;
-
-  // ── GREETING / OUT_OF_SCOPE ──────────────────────────────────────────
-  if (isSpecial) {
+function AgentVerdictCard({ verdict, regulator }: { verdict: AgentVerdict | null; regulator: Regulator }) {
+  if (!verdict) {
     return (
-      <div className={cn(
-        "rounded-xl border p-6",
-        isGreeting ? "bg-teal-50 border-teal-200" : isNoiseFiltered ? "bg-slate-50 border-slate-200" : "bg-rose-50 border-rose-200"
-      )}>
-        <div className="flex items-center gap-3 mb-3">
-          {isGreeting
-            ? <MessageSquare className="h-7 w-7 text-teal-500" />
-            : isNoiseFiltered
-            ? <FileText className="h-7 w-7 text-slate-400" />
-            : <Ban className="h-7 w-7 text-rose-500" />}
-          <div>
-            <h3 className={cn("font-semibold text-base",
-              isGreeting ? "text-teal-800" : isNoiseFiltered ? "text-slate-600" : "text-rose-800"
-            )}>
-              {isGreeting ? "Sapaan Diterima" : isNoiseFiltered ? "Header/Noise — Dilewati" : "Pertanyaan Di Luar Cakupan"}
-            </h3>
-            <p className={cn("text-xs mt-0.5",
-              isGreeting ? "text-teal-600" : isNoiseFiltered ? "text-slate-500" : "text-rose-600"
-            )}>
-              {isGreeting
-                ? "Sistem menerima sapaan — tidak ada retrieval yang dijalankan"
-                : "Pertanyaan tidak berkaitan dengan kepatuhan regulasi BI/OJK"}
-            </p>
-          </div>
-        </div>
-        {data.summary && (
-          <p className={cn("text-sm leading-relaxed rounded-lg p-4 border",
-            isGreeting
-              ? "bg-white border-teal-100 text-teal-900"
-              : "bg-white border-rose-100 text-rose-900"
-          )}>
-            {data.summary}
-          </p>
-        )}
+      <div className="rounded-lg border border-dashed p-3">
+        <p className="text-sm font-medium">{regulator} Specialist</p>
+        <p className="mt-1 text-xs text-muted-foreground">Agen tidak dijalankan</p>
       </div>
     );
   }
 
-  // ── NORMAL audit result ──────────────────────────────────────────────
+  const meta = verdictMeta(verdict.status);
+  const clickable = hasDetail(verdict);
+
+  const body = (
+    <>
+      <div className="flex items-center justify-between gap-2">
+        <div className="flex items-center gap-2">
+          <RegulatorBadge regulator={regulator} />
+          <span className="text-sm font-medium">{regulator} Specialist</span>
+        </div>
+        <span className="text-xs text-muted-foreground tabular-nums">{formatPercent(verdict.confidence)}</span>
+      </div>
+      <div className="mt-2 flex flex-wrap items-center gap-2">
+        <StatusBadge meta={meta} />
+        {verdict.violations.length > 0 && (
+          <span className={cn("text-xs font-medium", toneClasses.danger.text)}>
+            {verdict.violations.length} pelanggaran
+          </span>
+        )}
+      </div>
+      {verdict.reasoning && (
+        <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted-foreground italic">{verdict.reasoning}</p>
+      )}
+      {clickable && (
+        <p className="mt-2 flex items-center gap-1 text-xs font-medium text-primary">
+          Klik untuk detail lengkap
+          <ArrowRight className="size-3 transition-transform group-hover/agent:translate-x-0.5" />
+        </p>
+      )}
+    </>
+  );
+
+  if (!clickable) return <div className="rounded-lg border p-3">{body}</div>;
+
   return (
-    <div className={cn("rounded-xl border p-6 space-y-4", statusInfo.bg, statusInfo.border)}>
+    <AgentDetailDialog verdict={verdict} regulator={regulator}>
+      <button
+        type="button"
+        className="group/agent rounded-lg border p-3 text-left transition-colors outline-none hover:border-primary/40 hover:bg-muted/40 focus-visible:border-ring focus-visible:ring-3 focus-visible:ring-ring/50"
+      >
+        {body}
+      </button>
+    </AgentDetailDialog>
+  );
+}
 
-      {/* ── Header ── */}
-      <div className="flex items-start justify-between gap-3">
-        <div className="flex items-center gap-3">
-          <StatusIcon className={cn("h-8 w-8 shrink-0", statusInfo.color)} />
-          <div>
-            <h3 className="font-semibold text-lg text-slate-900">{statusInfo.label}</h3>
-            <div className="flex items-center gap-2 mt-0.5 flex-wrap">
-              <span className="text-sm text-slate-500">
-                Confidence: <span className="font-medium text-slate-700">
-                  {(data.overall_confidence * 100).toFixed(0)}%
-                </span>
-              </span>
-              {data.risk_score > 0 && (
-                <span className="text-sm text-slate-500">
-                  · Risk: <span className={cn("font-medium",
-                    data.risk_score >= 0.7 ? "text-red-600"
-                    : data.risk_score >= 0.4 ? "text-amber-600"
-                    : "text-emerald-600"
-                  )}>
-                    {(data.risk_score * 100).toFixed(0)}%
-                  </span>
-                </span>
-              )}
-            </div>
+function SkippedCard({ result }: { result: AuditResponse }) {
+  const meta = skippedModeMeta[result.analysis_mode!]!;
+  const Icon = meta.icon;
+  const tone = toneClasses[meta.tone];
+  const showClause = result.analysis_mode !== "greeting";
+
+  return (
+    <Card>
+      <CardContent className="flex flex-col gap-4">
+        <div className="flex items-start gap-3">
+          <div className={cn("flex size-10 shrink-0 items-center justify-center rounded-full", tone.soft)}>
+            <Icon className="size-5" />
+          </div>
+          <div className="min-w-0">
+            <p className="font-medium">{meta.title}</p>
+            <p className="mt-0.5 text-sm text-muted-foreground">{result.summary || meta.description}</p>
           </div>
         </div>
-        <div className="text-right shrink-0 space-y-1">
-          <div className="flex items-center justify-end gap-1 text-xs text-slate-500">
-            <Clock className="h-3.5 w-3.5" />
-            {data.latency_ms.toFixed(0)}ms
-          </div>
-          {data.tokens_used !== undefined && data.tokens_used > 0 && (
-            <div className="flex items-center justify-end gap-1 text-xs text-slate-500">
-              <Zap className="h-3.5 w-3.5" />
-              {data.tokens_used} tokens
-            </div>
+        {showClause && result.clause && <ClauseBox clause={result.clause} clauseId={result.clause_id} />}
+        <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+          {result.analysis_mode === "gate_rejected" && result.gate_model && (
+            <Badge variant="secondary">
+              Gate: {result.gate_model}
+              {result.gate_confidence !== undefined && ` · ${formatPercent(result.gate_confidence)}`}
+            </Badge>
           )}
-          {data.from_cache && (
-            <span className="text-xs px-1.5 py-0.5 rounded bg-slate-200 text-slate-600">cache</span>
+          {result.latency_ms > 0 && (
+            <span className="flex items-center gap-1">
+              <Clock className="size-3" />
+              {formatLatency(result.latency_ms)}
+            </span>
           )}
+          {result.from_cache && <Badge variant="secondary">cache</Badge>}
         </div>
-      </div>
+      </CardContent>
+    </Card>
+  );
+}
 
-      {/* ── Meta badges ── */}
-      {(qtCfg || data.retrieval_mode) && (
-        <div className="flex flex-wrap gap-2">
-          {qtCfg && (
-            <span className={cn("inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full", qtCfg.color)}>
-              <qtCfg.icon className="h-3 w-3" />
-              Query: {qtCfg.label}
-            </span>
+export function ResultCard({ result }: { result: AuditResponse }) {
+  if (result.analysis_mode && skippedModeMeta[result.analysis_mode]) {
+    return <SkippedCard result={result} />;
+  }
+
+  const meta = statusMeta[result.final_status] ?? statusMeta.UNCLEAR;
+  const tone = toneClasses[meta.tone];
+  const StatusIcon = meta.icon;
+  const queryType = result.query_type ? queryTypeMeta[result.query_type] : undefined;
+  const QueryIcon = queryType?.icon;
+  const retrieval = result.retrieval_mode && result.retrieval_mode !== "none" ? retrievalModeLabel[result.retrieval_mode] : null;
+  const evidence = collectEvidence(result);
+
+  return (
+    <Card>
+      <CardHeader className="gap-4">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <div className="flex items-center gap-3">
+            <div className={cn("flex size-11 shrink-0 items-center justify-center rounded-full", tone.soft)}>
+              <StatusIcon className="size-5" />
+            </div>
+            <div>
+              <p className="text-xs text-muted-foreground">Status akhir</p>
+              <p className={cn("text-lg leading-tight font-semibold", tone.text)}>{meta.label}</p>
+            </div>
+          </div>
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
+            <Metric label="Confidence" value={formatPercent(result.overall_confidence)} />
+            {result.risk_score > 0 && (
+              <Metric
+                label="Risk"
+                value={formatPercent(result.risk_score)}
+                className={toneClasses[riskTone(result.risk_score)].text}
+              />
+            )}
+            <Metric label="Latency" value={formatLatency(result.latency_ms)} />
+            {(result.tokens_used ?? 0) > 0 && (
+              <Metric label="Tokens" value={result.tokens_used!.toLocaleString("id-ID")} />
+            )}
+          </div>
+        </div>
+
+        <div className="flex flex-wrap items-center gap-1.5">
+          {result.from_cache && <Badge variant="secondary">cache</Badge>}
+          {queryType && QueryIcon && (
+            <Badge variant="outline">
+              <QueryIcon data-icon="inline-start" />
+              Query: {queryType.label}
+            </Badge>
           )}
-          {data.retrieval_mode && data.retrieval_mode !== "none" && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-slate-600 bg-slate-100">
-              <Search className="h-3 w-3" />
-              Retrieval: {retrievalModeLabel[data.retrieval_mode] ?? data.retrieval_mode}
-            </span>
-          )}
-          {data.analysis_mode === "llm_only" && (
-            <span className="inline-flex items-center gap-1.5 text-xs font-medium px-2.5 py-1 rounded-full text-orange-700 bg-orange-100">
+          {retrieval && <Badge variant="outline">Retrieval: {retrieval}</Badge>}
+          {result.analysis_mode === "llm_only" && (
+            <Badge variant="outline" className={cn("border-transparent", toneClasses.warning.soft)}>
+              <AlertTriangle data-icon="inline-start" />
               LLM Only (no ChromaDB)
-            </span>
+            </Badge>
+          )}
+          {result.gate_model && (
+            <Badge variant="outline">
+              Gate: {result.gate_model}
+              {result.gate_confidence !== undefined && ` · ${formatPercent(result.gate_confidence)}`}
+            </Badge>
+          )}
+          {result.model_used && (
+            <Badge variant="outline">
+              <Coins data-icon="inline-start" />
+              {result.model_used}
+            </Badge>
           )}
         </div>
-      )}
+      </CardHeader>
 
-      {/* ── Clause ── */}
-      <div className="rounded-lg bg-white p-4 border border-slate-200">
-        <p className="text-xs text-slate-400 font-medium mb-1.5 uppercase tracking-wide">Klausa SOP</p>
-        <p className="text-sm text-slate-700 leading-relaxed">{data.clause}</p>
-      </div>
+      <CardContent className="flex flex-col gap-5">
+        <ClauseBox clause={result.clause} clauseId={result.clause_id} />
 
-      {/* ── Agent Verdicts (clickable) ── */}
-      {(data.bi_verdict || data.ojk_verdict) && (
-        <div className="grid grid-cols-2 gap-3">
-          {data.bi_verdict && (
-            <AgentVerdictCard title="BI Specialist" verdict={data.bi_verdict} />
-          )}
-          {data.ojk_verdict && (
-            <AgentVerdictCard title="OJK Specialist" verdict={data.ojk_verdict} />
-          )}
+        <div className="grid gap-3 md:grid-cols-2">
+          <AgentVerdictCard verdict={result.bi_verdict} regulator="BI" />
+          <AgentVerdictCard verdict={result.ojk_verdict} regulator="OJK" />
         </div>
-      )}
 
-      {/* ── Violations ── */}
-      {(data.violations ?? []).length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
-            <XCircle className="h-4 w-4 text-red-500" />
-            Pelanggaran Ditemukan ({data.violations.length})
-          </h4>
-          <ul className="space-y-1.5">
-            {data.violations.map((v, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-red-700 bg-red-50 rounded-lg p-3 border border-red-100">
-                <XCircle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
-                {v}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {result.violations.length > 0 && (
+          <>
+            <Separator />
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={ShieldAlert} className={toneClasses.danger.text}>
+                Pelanggaran Ditemukan ({result.violations.length})
+              </SectionTitle>
+              <ul className="flex flex-col gap-1.5">
+                {result.violations.map((violation, index) => (
+                  <li key={index} className="flex gap-2 text-sm leading-relaxed">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-red-500" />
+                    <span>{violation}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
 
-      {/* ── Recommendations ── */}
-      {(data.recommendations ?? []).length > 0 && (
-        <div>
-          <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
-            <Lightbulb className="h-4 w-4 text-amber-500" />
-            Rekomendasi ({data.recommendations.length})
-          </h4>
-          <ul className="space-y-1.5">
-            {data.recommendations.map((r, i) => (
-              <li key={i} className="flex items-start gap-2 text-sm text-slate-700 bg-white rounded-lg p-3 border border-slate-200">
-                <CheckCircle2 className="h-3.5 w-3.5 mt-0.5 shrink-0 text-emerald-500" />
-                {r}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
+        {result.recommendations.length > 0 && (
+          <>
+            <Separator />
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={Lightbulb}>Rekomendasi ({result.recommendations.length})</SectionTitle>
+              <ul className="flex flex-col gap-1.5">
+                {result.recommendations.map((recommendation, index) => (
+                  <li key={index} className="flex gap-2 text-sm leading-relaxed">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-primary" />
+                    <span>{recommendation}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
 
-      {/* ── Evidence Trail ── */}
-      {((data.bi_verdict?.evidence ?? []).length > 0 || (data.ojk_verdict?.evidence ?? []).length > 0) ? (
-        <div className="pt-3 border-t border-slate-200">
-          <h4 className="font-medium text-sm text-slate-900 mb-2 flex items-center gap-1.5">
-            <FileText className="h-4 w-4 text-slate-500" />
-            Evidence Trail
-          </h4>
-          <div className="space-y-2">
-            {data.bi_verdict?.evidence?.map((ev, i) => (
-              <EvidenceItem key={`bi-${i}`} evidence={ev} source="BI" />
-            ))}
-            {data.ojk_verdict?.evidence?.map((ev, i) => (
-              <EvidenceItem key={`ojk-${i}`} evidence={ev} source="OJK" />
-            ))}
-          </div>
-        </div>
-      ) : null}
-    </div>
+        {evidence.length > 0 && (
+          <>
+            <Separator />
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={Database}>Evidence Trail ({evidence.length})</SectionTitle>
+              <EvidenceList rows={evidence} clamp />
+            </section>
+          </>
+        )}
+      </CardContent>
+    </Card>
   );
 }

@@ -1,149 +1,141 @@
 "use client";
 
-import { useEffect } from "react";
-import { useRouter } from "next/navigation";
 import { useQuery } from "@tanstack/react-query";
+import { AlertCircle, ArrowUpDown, Calendar, CheckCircle2, ExternalLink, FlaskConical, RefreshCw } from "lucide-react";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { FlaskConical, ArrowUpDown, Calendar, CheckCircle2, XCircle } from "lucide-react";
-import { format } from "date-fns";
-import { useAuthStore } from "@/lib/stores/auth-store";
+import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty";
+import { Skeleton } from "@/components/ui/skeleton";
+import { errorMessage, type ExperimentRun, getExperiments, queryKeys } from "@/lib/api";
+import { toneClasses } from "@/lib/compliance";
+import { MLFLOW_URL } from "@/lib/config";
+import { cn, formatDateTime } from "@/lib/utils";
 
-interface Experiment {
-  run_id: string;
-  experiment_name: string;
-  status: string;
-  start_time: string;
-  end_time?: string;
-  metrics?: Record<string, number>;
+const MAX_METRICS = 4;
+
+function ExperimentCard({ run }: { run: ExperimentRun }) {
+  const finished = run.status === "FINISHED";
+  const metrics = Object.entries(run.metrics ?? {}).slice(0, MAX_METRICS);
+
+  return (
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="truncate">{run.experiment_name}</CardTitle>
+        <CardDescription>
+          <Badge variant="outline" className={cn("border-transparent", (finished ? toneClasses.success : toneClasses.warning).soft)}>
+            {finished ? <CheckCircle2 data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
+            {run.status}
+          </Badge>
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col gap-3 text-sm">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          <Calendar className="size-4" />
+          <span>{formatDateTime(run.start_time)}</span>
+        </div>
+        {metrics.length > 0 && (
+          <div className="border-t pt-3">
+            <div className="mb-2 flex items-center gap-1 text-xs font-medium">
+              <ArrowUpDown className="size-3" />
+              Metrics
+            </div>
+            <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
+              {metrics.map(([key, value]) => (
+                <div key={key} className="flex min-w-0 justify-between gap-2">
+                  <dt className="truncate text-muted-foreground">{key}:</dt>
+                  <dd className="font-mono tabular-nums">{typeof value === "number" ? value.toFixed(3) : String(value)}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
 }
 
 export default function ExperimentsPage() {
-  const router = useRouter();
-  const { role, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    if (!isAuthenticated) { router.push("/login"); return; }
-    if (role !== "advanced") router.push("/audit");
-  }, [isAuthenticated, role, router]);
-
-  const { data: experiments, isLoading, error } = useQuery<Experiment[]>({
-    queryKey: ["experiments"],
-    queryFn: async () => {
-      const res = await fetch(`${process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}/experiments/list`);
-      if (!res.ok) return [];
-      return res.json();
-    },
+  const { data, isPending, isFetching, error, refetch } = useQuery({
+    queryKey: queryKeys.experiments.list(),
+    queryFn: () => getExperiments(),
   });
+  const experiments = data?.experiments ?? [];
 
   return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Eksperimen MLflow</h1>
-        <p className="text-gray-600 mt-1">
-          Track dan bandingkan hasil eksperimen model
-        </p>
-      </div>
+    <>
+      <PageHeader title="Eksperimen MLflow" description="Track dan bandingkan hasil eksperimen model">
+        <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw data-icon="inline-start" className={cn(isFetching && "animate-spin")} />
+          Refresh
+        </Button>
+      </PageHeader>
 
-      {isLoading ? (
+      {isPending ? (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {[1, 2, 3].map((i) => (
-            <Card key={i} className="animate-pulse">
-              <CardContent className="p-6">
-                <div className="h-4 bg-gray-200 rounded w-1/2 mb-4" />
-                <div className="h-3 bg-gray-200 rounded w-3/4 mb-2" />
-                <div className="h-3 bg-gray-200 rounded w-1/3" />
-              </CardContent>
-            </Card>
+          {[0, 1, 2].map((i) => (
+            <Skeleton key={i} className="h-36 rounded-xl" />
           ))}
         </div>
       ) : error ? (
-        <Card>
-          <CardContent className="p-6 text-center text-gray-500">
-            <XCircle className="h-8 w-8 mx-auto mb-2" />
-            <p>Gagal memuat eksperimen</p>
-          </CardContent>
-        </Card>
-      ) : experiments && experiments.length > 0 ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {experiments.map((exp) => (
-            <Card key={exp.run_id} className="hover:shadow-md transition-shadow">
-              <CardHeader>
-                <CardTitle className="text-base">{exp.experiment_name}</CardTitle>
-                <CardDescription>
-                  <div className="flex items-center gap-2 mt-1">
-                    {exp.status === "FINISHED" ? (
-                      <CheckCircle2 className="h-4 w-4 text-green-500" />
-                    ) : (
-                      <FlaskConical className="h-4 w-4 text-yellow-500" />
-                    )}
-                    <span>{exp.status}</span>
-                  </div>
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2 text-gray-500">
-                    <Calendar className="h-4 w-4" />
-                    <span>{format(new Date(exp.start_time), "d MMM yyyy, HH:mm")}</span>
-                  </div>
-                  {exp.metrics && Object.keys(exp.metrics).length > 0 && (
-                    <div className="pt-2 border-t mt-2">
-                      <div className="flex items-center gap-1 mb-2">
-                        <ArrowUpDown className="h-3 w-3" />
-                        <span className="text-xs font-medium">Metrics</span>
-                      </div>
-                      <div className="grid grid-cols-2 gap-1">
-                        {Object.entries(exp.metrics).slice(0, 4).map(([key, value]) => (
-                          <div key={key} className="flex justify-between text-xs">
-                            <span className="text-gray-500">{key}:</span>
-                            <span className="font-mono">{typeof value === "number" ? value.toFixed(3) : value}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Gagal memuat eksperimen</AlertTitle>
+          <AlertDescription>{errorMessage(error)}</AlertDescription>
+          <AlertAction>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Coba lagi
+            </Button>
+          </AlertAction>
+        </Alert>
+      ) : experiments.length > 0 ? (
+        <>
+          <p className="text-sm text-muted-foreground">
+            Menampilkan {experiments.length} dari {data?.total ?? experiments.length} run
+          </p>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {experiments.map((run) => (
+              <ExperimentCard key={run.run_id} run={run} />
+            ))}
+          </div>
+        </>
       ) : (
-        <Card>
-          <CardContent className="p-12 text-center text-gray-500">
-            <FlaskConical className="h-12 w-12 mx-auto mb-3 text-gray-400" />
-            <p>Belum ada eksperimen</p>
-            <p className="text-sm mt-1">Eksperimen MLflow akan muncul di sini</p>
-          </CardContent>
-        </Card>
+        <Empty className="border border-dashed">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <FlaskConical />
+            </EmptyMedia>
+            <EmptyTitle>Belum ada eksperimen</EmptyTitle>
+            <EmptyDescription>Eksperimen MLflow akan muncul di sini</EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
 
       <Card>
         <CardHeader>
           <CardTitle>Tentang MLflow Tracking</CardTitle>
         </CardHeader>
-        <CardContent>
-          <p className="text-sm text-gray-600">
-            MLflow digunakan untuk track metrik eksperimen, parameter model, dan artifacts.
-            Setiap audit yang dijalankan akan dicatat sebagai run eksperimen dengan metrics:
+        <CardContent className="flex flex-col gap-3 text-sm text-muted-foreground">
+          <p>
+            MLflow digunakan untuk track metrik eksperimen, parameter model, dan artifacts. Setiap audit yang dijalankan akan
+            dicatat sebagai run eksperimen dengan metrics:
           </p>
-          <ul className="mt-3 text-sm text-gray-600 list-disc list-inside space-y-1">
+          <ul className="list-inside list-disc space-y-1">
             <li>Latency waktu proses</li>
             <li>Confidence score</li>
             <li>Tokens yang digunakan</li>
             <li>Model yang dipakai</li>
           </ul>
-          <p className="mt-3 text-sm">
-            <a
-              href="http://localhost:5001"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-blue-600 hover:underline"
-            >
-              Buka MLflow UI →
+          <Button asChild variant="outline" size="sm" className="self-start">
+            <a href={MLFLOW_URL} target="_blank" rel="noopener noreferrer">
+              Buka MLflow UI
+              <ExternalLink data-icon="inline-end" />
             </a>
-          </p>
+          </Button>
         </CardContent>
       </Card>
-    </div>
+    </>
   );
 }

@@ -1,173 +1,98 @@
-import ky, { type KyInstance, type Options } from "ky";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1";
+import { API_URL } from "@/lib/config";
+import { clearSession, getToken, redirectToLogin } from "@/lib/auth/session";
+import { useSettingsStore } from "@/lib/stores/settings-store";
 
 export class ApiError extends Error {
   constructor(
     public code: string,
     message: string,
-    public status: number
+    public status: number,
   ) {
     super(message);
     this.name = "ApiError";
   }
 }
 
-export interface AuditRequest {
-  clause: string;
-  clause_id?: string;
-  context?: string;
-  top_k?: number;
-  regulator?: "all" | "BI" | "OJK";
-  use_cache?: boolean;
+type Query = Record<string, string | number | boolean | undefined>;
+
+interface RequestOptions {
+  method?: "GET" | "POST" | "DELETE";
+  json?: unknown;
+  body?: FormData;
+  query?: Query;
+  /** false untuk endpoint publik (login): tanpa token dan tanpa redirect saat 401. */
+  auth?: boolean;
 }
 
-export type ComplianceStatus =
-  | "COMPLIANT"
-  | "NON_COMPLIANT"
-  | "PARTIALLY_COMPLIANT"
-  | "NEEDS_REVIEW"
-  | "NOT_ADDRESSED"
-  | "UNCLEAR";
-
-export type QueryType =
-  | "exact_regulation"
-  | "hybrid_regulation"
-  | "semantic_compliance"
-  | "greeting"
-  | "out_of_scope";
-
-export type AnalysisMode = "multi_agent_rag" | "llm_only" | "greeting" | "out_of_scope" | "noise_filtered";
-export type RetrievalMode = "exact" | "hybrid" | "dense" | "dense_only" | "none";
-
-export interface AgentVerdict {
-  agent_name: string;
-  status: string;
-  confidence: number;
-  violations: string[];
-  evidence: {
-    regulation: string;
-    article: string;
-    article_text: string;
-    relevance_score: number;
-  }[];
-  reasoning: string;
+function buildUrl(path: string, query?: Query): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(query ?? {})) {
+    if (value !== undefined && value !== "") params.set(key, String(value));
+  }
+  const qs = params.toString();
+  return `${API_URL}/${path.replace(/^\/+/, "")}${qs ? `?${qs}` : ""}`;
 }
 
-export interface AuditResponse {
-  request_id: string;
-  timestamp: string;
-  clause: string;
-  clause_id?: string;
-  regulator?: string;
-  bi_verdict: AgentVerdict | null;
-  ojk_verdict: AgentVerdict | null;
-  final_status: ComplianceStatus;
-  overall_confidence: number;
-  risk_score: number;
-  violations: string[];
-  recommendations: string[];
-  latency_ms: number;
-  model_used?: string;
-  tokens_used?: number;
-  // Phase 7+: retrieval & query classification
-  analysis_mode?: AnalysisMode;
-  retrieval_mode?: RetrievalMode;
-  query_type?: QueryType;
-  summary?: string; // diisi untuk GREETING dan OUT_OF_SCOPE
-  from_cache?: boolean;
+// Backend punya dua bentuk error: HTTPException → {detail}, handler kustom →
+// {success: false, error: {code, message}}.
+async function toApiError(response: Response): Promise<ApiError> {
+  let code = `HTTP_${response.status}`;
+  let message = `Permintaan gagal (${response.status})`;
+  try {
+    const body = await response.json();
+    if (typeof body?.detail === "string") {
+      message = body.detail;
+    } else if (Array.isArray(body?.detail) && body.detail[0]?.msg) {
+      message = body.detail.map((d: { msg: string }) => d.msg).join("; ");
+    } else if (body?.error?.message) {
+      message = body.error.message;
+      code = body.error.code ?? code;
+    }
+  } catch {
+    // body bukan JSON; pakai pesan bawaan
+  }
+  return new ApiError(code, message, response.status);
 }
 
-const createApiClient = (options?: Options): KyInstance => {
-  return ky.create({
-    prefixUrl: API_URL,
-    timeout: 120_000, // 2 menit — audit RAG bisa butuh waktu
-    ...options,
-    hooks: {
-      beforeRequest: [
-        (request) => {
-          const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-          if (token) {
-            request.headers.set("Authorization", `Bearer ${token}`);
-          }
-        },
-      ],
-      afterResponse: [
-        async (_request, _options, response) => {
-          if (!response.ok) {
-            try {
-              const error = await response.json<{ error?: { code?: string; message?: string } }>();
-              throw new ApiError(
-                error.error?.code || "UNKNOWN_ERROR",
-                error.error?.message || "An error occurred",
-                response.status
-              );
-            } catch {
-              throw new ApiError("NETWORK_ERROR", "Network error occurred", response.status);
-            }
-          }
-        },
-      ],
-    },
-  });
-};
+export async function apiRequest<T>(path: string, options: RequestOptions = {}): Promise<T> {
+  const { method = "GET", json, body, query, auth = true } = options;
 
-export const apiClient = createApiClient();
+  const headers: Record<string, string> = { Accept: "application/json" };
+  if (json !== undefined) headers["Content-Type"] = "application/json";
+  if (auth) {
+    const token = getToken();
+    if (token) headers.Authorization = `Bearer ${token}`;
+  }
 
-export { queryKeys } from "./query-keys";
+  let response: Response;
+  try {
+    response = await fetch(buildUrl(path, query), {
+      method,
+      headers,
+      body: json !== undefined ? JSON.stringify(json) : body,
+      signal: AbortSignal.timeout(useSettingsStore.getState().apiTimeout),
+    });
+  } catch (error) {
+    if (error instanceof DOMException && error.name === "TimeoutError") {
+      throw new ApiError("TIMEOUT", "Permintaan melebihi batas waktu. Coba lagi.", 0);
+    }
+    throw new ApiError("NETWORK_ERROR", "Tidak dapat terhubung ke server.", 0);
+  }
 
-// ── Auth API ──────────────────────────────────────────────────────────────────
+  if (!response.ok) {
+    const apiError = await toApiError(response);
+    if (auth && response.status === 401) {
+      // Sesi kedaluwarsa/dicabut: buang cookie lalu kembali ke login.
+      clearSession();
+      redirectToLogin();
+    }
+    throw apiError;
+  }
 
-export interface LoginResponse {
-  access_token: string;
-  token_type: string;
-  role: "basic" | "advanced";
+  if (response.status === 204) return undefined as T;
+  return (await response.json()) as T;
 }
 
-export interface MeResponse {
-  username: string;
-  role: "basic" | "advanced";
-}
-
-export async function loginApi(username: string, password: string): Promise<LoginResponse> {
-  return apiClient.post("auth/login", { json: { username, password } }).json<LoginResponse>();
-}
-
-export async function getMeApi(): Promise<MeResponse> {
-  return apiClient.get("auth/me").json<MeResponse>();
-}
-
-export async function logoutApi(): Promise<void> {
-  await apiClient.post("auth/logout").json();
-}
-
-// ── Evaluation API ────────────────────────────────────────────────────────────
-
-export interface GoldenDatasetItem {
-  clause_id: string;
-  clause: string;
-  category: string;
-  expected_status: string;
-  expected_bi: string;
-  expected_ojk: string;
-  violated_articles: string[];
-  error_description: string;
-  predicted_status?: string;
-  predicted_bi?: string;
-  predicted_ojk?: string;
-  is_correct?: boolean;
-  latency_ms?: number;
-}
-
-export interface GoldenDatasetResponse {
-  total: number;
-  correct?: number;
-  accuracy?: number;
-  has_predictions: boolean;
-  evaluation_file?: string;
-  items: GoldenDatasetItem[];
-}
-
-export async function getGoldenDataset(): Promise<GoldenDatasetResponse> {
-  return apiClient.get("evaluation/golden-dataset").json<GoldenDatasetResponse>();
+export function errorMessage(error: unknown, fallback = "Terjadi kesalahan"): string {
+  return error instanceof Error && error.message ? error.message : fallback;
 }

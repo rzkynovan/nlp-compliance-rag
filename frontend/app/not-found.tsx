@@ -1,39 +1,30 @@
-"use client";
-
-import { useEffect } from "react";
-import { Button } from "@/components/ui/button";
-import { AlertCircle, Home, ArrowLeft } from "lucide-react";
 import Link from "next/link";
+import { Home } from "lucide-react";
+import { BackButton } from "@/components/common/BackButton";
+import { Button } from "@/components/ui/button";
+import { Empty, EmptyContent, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty";
 
 export default function NotFound() {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="text-center px-4">
-        <div className="flex justify-center mb-6">
-          <div className="h-24 w-24 rounded-full bg-gray-100 flex items-center justify-center">
-            <AlertCircle className="h-12 w-12 text-gray-400" />
-          </div>
-        </div>
-        <h1 className="text-6xl font-bold text-gray-900 mb-2">404</h1>
-        <h2 className="text-xl font-medium text-gray-700 mb-4">
-          Halaman tidak ditemukan
-        </h2>
-        <p className="text-gray-500 mb-8 max-w-md">
-          Halaman yang Anda cari tidak dapat ditemukan. Mungkin halaman telah dipindahkan atau alamat URL salah.
-        </p>
-        <div className="flex items-center justify-center gap-4">
-          <Link href="/">
-            <Button variant="primary">
-              <Home className="h-4 w-4 mr-2" />
+    <div className="flex min-h-svh items-center justify-center p-4">
+      <Empty>
+        <EmptyHeader>
+          <p className="text-6xl font-semibold tracking-tight">404</p>
+          <EmptyTitle>Halaman tidak ditemukan</EmptyTitle>
+          <EmptyDescription>
+            Halaman yang Anda cari tidak dapat ditemukan. Mungkin halaman telah dipindahkan atau alamat URL salah.
+          </EmptyDescription>
+        </EmptyHeader>
+        <EmptyContent className="flex-row justify-center">
+          <Button asChild>
+            <Link href="/">
+              <Home data-icon="inline-start" />
               Ke Dashboard
-            </Button>
-          </Link>
-          <Button variant="outline" onClick={() => window.history.back()}>
-            <ArrowLeft className="h-4 w-4 mr-2" />
-            Kembali
+            </Link>
           </Button>
-        </div>
-      </div>
+          <BackButton />
+        </EmptyContent>
+      </Empty>
     </div>
   );
 }

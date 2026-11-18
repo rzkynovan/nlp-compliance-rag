@@ -1,191 +1,179 @@
-import { useState } from "react";
-import { Checkbox } from "@/components/ui/checkbox";
-import { useForm } from "react-hook-form";
+"use client";
+
+import { useEffect } from "react";
+import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Play } from "lucide-react";
 import { z } from "zod";
 import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Field, FieldContent, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import {
-  Form,
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Spinner } from "@/components/ui/spinner";
+import { Textarea } from "@/components/ui/textarea";
+import type { AuditRequest } from "@/lib/api";
+import { regulatorOptions } from "@/lib/compliance";
+import { TOP_K_MAX, TOP_K_MIN, useSettingsStore } from "@/lib/stores/settings-store";
 
-const auditFormSchema = z.object({
-  clause: z.string().min(10, "Klausa minimal 10 karakter"),
+const auditSchema = z.object({
+  clause: z.string().trim().min(10, "Klausa minimal 10 karakter"),
+  regulator: z.enum(["all", "BI", "OJK"]),
+  top_k: z
+    .number({ error: "Top-K harus berupa angka" })
+    .int("Top-K harus bilangan bulat")
+    .min(TOP_K_MIN, `Minimal ${TOP_K_MIN}`)
+    .max(TOP_K_MAX, `Maksimal ${TOP_K_MAX}`),
   clause_id: z.string().optional(),
   context: z.string().optional(),
-  top_k: z.number().min(1).max(20).default(5),
-  regulator: z.enum(["all", "BI", "OJK"]).default("all"),
-  use_cache: z.boolean().default(true),
+  use_cache: z.boolean(),
 });
 
-type AuditFormValues = z.infer<typeof auditFormSchema>;
+type AuditFormValues = z.infer<typeof auditSchema>;
 
 interface AuditFormProps {
-  onSubmit: (data: AuditFormValues) => void;
+  onSubmit: (data: AuditRequest) => void;
   isPending?: boolean;
   defaultValues?: Partial<AuditFormValues>;
 }
 
-export function AuditForm({ onSubmit, isPending = false, defaultValues }: AuditFormProps) {
-  const form = useForm<AuditFormValues>({
-    resolver: zodResolver(auditFormSchema),
+export function AuditForm({ onSubmit, isPending, defaultValues }: AuditFormProps) {
+  const defaultRegulator = useSettingsStore((s) => s.defaultRegulator);
+  const defaultTopK = useSettingsStore((s) => s.defaultTopK);
+  const enableCache = useSettingsStore((s) => s.enableCache);
+
+  const {
+    control,
+    register,
+    handleSubmit,
+    reset,
+    getValues,
+    formState: { errors, isDirty },
+  } = useForm<AuditFormValues>({
+    resolver: zodResolver(auditSchema),
     defaultValues: {
-      clause: defaultValues?.clause || "",
-      clause_id: defaultValues?.clause_id || "",
-      context: defaultValues?.context || "",
-      top_k: defaultValues?.top_k || 5,
-      regulator: defaultValues?.regulator || "all",
-      use_cache: true,
+      clause: "",
+      regulator: defaultRegulator,
+      top_k: defaultTopK,
+      clause_id: "",
+      context: "",
+      use_cache: enableCache,
+      ...defaultValues,
     },
   });
 
-  return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="clause"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Klausa SOP</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Masukkan klausa SOP yang ingin diaudit..."
-                  className="min-h-[120px] max-h-[300px] resize-y overflow-y-auto scrollbar-thin"
-                  style={{
-                    WebkitOverflowScrolling: 'touch',
-                  }}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+  // Pengaturan tersimpan baru terbaca setelah hidrasi; samakan form yang belum disentuh.
+  useEffect(() => {
+    if (isDirty) return;
+    reset({ ...getValues(), regulator: defaultRegulator, top_k: defaultTopK, use_cache: enableCache });
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- hanya saat nilai pengaturan berubah
+  }, [defaultRegulator, defaultTopK, enableCache]);
 
-        <div className="grid grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="regulator"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Regulator</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Pilih regulator" />
-                    </SelectTrigger>
-                  </FormControl>
+  function submit(values: AuditFormValues) {
+    onSubmit({
+      clause: values.clause,
+      regulator: values.regulator,
+      top_k: values.top_k,
+      clause_id: values.clause_id?.trim() || undefined,
+      context: values.context?.trim() || undefined,
+      use_cache: values.use_cache,
+    });
+  }
+
+  return (
+    <form onSubmit={handleSubmit(submit)} noValidate>
+      <FieldGroup className="gap-5">
+        <Field data-invalid={!!errors.clause}>
+          <FieldLabel htmlFor="clause">Klausa</FieldLabel>
+          <Textarea
+            id="clause"
+            rows={5}
+            placeholder="Masukkan klausa yang ingin diaudit..."
+            aria-invalid={!!errors.clause}
+            className="min-h-28"
+            {...register("clause")}
+          />
+          <FieldError errors={[errors.clause]} />
+        </Field>
+
+        <div className="grid gap-5 sm:grid-cols-2">
+          <Field>
+            <FieldLabel htmlFor="regulator">Regulator</FieldLabel>
+            <Controller
+              control={control}
+              name="regulator"
+              render={({ field }) => (
+                <Select value={field.value} onValueChange={field.onChange}>
+                  <SelectTrigger id="regulator" className="w-full">
+                    <SelectValue />
+                  </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Semua Regulator</SelectItem>
-                    <SelectItem value="BI">Bank Indonesia</SelectItem>
-                    <SelectItem value="OJK">OJK</SelectItem>
+                    {regulatorOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+              )}
+            />
+          </Field>
 
-          <FormField
-            control={form.control}
-            name="top_k"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Jumlah Pasal (Top-K)</FormLabel>
-                <FormControl>
-                  <Input
-                    type="number"
-                    min={1}
-                    max={20}
-                    {...field}
-                    onChange={(e) => field.onChange(parseInt(e.target.value) || 5)}
-                  />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          <Field data-invalid={!!errors.top_k}>
+            <FieldLabel htmlFor="top_k">Jumlah Pasal (Top-K)</FieldLabel>
+            <Input
+              id="top_k"
+              type="number"
+              inputMode="numeric"
+              min={TOP_K_MIN}
+              max={TOP_K_MAX}
+              aria-invalid={!!errors.top_k}
+              {...register("top_k", { valueAsNumber: true })}
+            />
+            <FieldError errors={[errors.top_k]} />
+          </Field>
         </div>
 
-        <FormField
-          control={form.control}
-          name="clause_id"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>ID Klausa (Opsional)</FormLabel>
-              <FormControl>
-                <Input placeholder="e.g., SOP-001" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Field>
+          <FieldLabel htmlFor="clause_id">ID Klausa (Opsional)</FieldLabel>
+          <Input id="clause_id" placeholder="mis. KLAUSA-001" {...register("clause_id")} />
+        </Field>
 
-        <FormField
-          control={form.control}
-          name="context"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Konteks Tambahan (Opsional)</FormLabel>
-              <FormControl>
-                <Textarea
-                  placeholder="Informasi tambahan yang membantu analisis..."
-                  className="min-h-[60px] max-h-[200px] resize-y overflow-y-auto scrollbar-thin"
-                  style={{
-                    WebkitOverflowScrolling: 'touch',
-                  }}
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
+        <Field>
+          <FieldLabel htmlFor="context">Konteks Tambahan (Opsional)</FieldLabel>
+          <Textarea
+            id="context"
+            rows={2}
+            placeholder="Informasi tambahan yang membantu analisis..."
+            {...register("context")}
+          />
+        </Field>
 
-        <FormField
-          control={form.control}
-          name="use_cache"
-          render={({ field }) => (
-            <FormItem className="flex items-center gap-2">
-              <FormControl>
-                <Checkbox
-                  checked={field.value}
-                  onCheckedChange={field.onChange}
-                />
-              </FormControl>
-              <FormLabel className="!mt-0 text-sm font-normal text-slate-600 cursor-pointer">
-                Gunakan cache (nonaktifkan untuk paksa re-run)
-              </FormLabel>
-            </FormItem>
-          )}
-        />
+        <Field orientation="horizontal">
+          <Controller
+            control={control}
+            name="use_cache"
+            render={({ field }) => (
+              <Checkbox
+                id="use_cache"
+                checked={field.value}
+                onCheckedChange={(checked) => field.onChange(checked === true)}
+              />
+            )}
+          />
+          <FieldContent>
+            <FieldLabel htmlFor="use_cache" className="font-normal">
+              Gunakan cache
+            </FieldLabel>
+            <FieldDescription>Nonaktifkan untuk memaksa audit dijalankan ulang.</FieldDescription>
+          </FieldContent>
+        </Field>
 
-        <Button type="submit" disabled={isPending} className="w-full">
-          {isPending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Menganalisis...
-            </>
-          ) : (
-            "Jalankan Audit"
-          )}
+        <Button type="submit" size="lg" className="w-full" disabled={isPending}>
+          {isPending ? <Spinner data-icon="inline-start" /> : <Play data-icon="inline-start" />}
+          {isPending ? "Menganalisis..." : "Jalankan Audit"}
         </Button>
-      </form>
-    </Form>
+      </FieldGroup>
+    </form>
   );
 }

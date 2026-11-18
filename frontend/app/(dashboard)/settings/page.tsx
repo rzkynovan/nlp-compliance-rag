@@ -1,253 +1,261 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { Settings, Database, Bell, Shield, Palette, Save } from "lucide-react";
+import { useState } from "react";
+import { useTheme } from "next-themes";
+import { Bell, Palette, RotateCcw, Save, Settings as SettingsIcon, Shield, SlidersHorizontal } from "lucide-react";
 import { toast } from "sonner";
+import { PageHeader } from "@/components/common/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldContent, FieldDescription, FieldGroup, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Switch } from "@/components/ui/switch";
+import { useMounted } from "@/hooks/use-mounted";
+import { regulatorOptions } from "@/lib/compliance";
+import { API_URL, MLFLOW_URL } from "@/lib/config";
+import {
+  API_TIMEOUT_MIN,
+  DEFAULT_SETTINGS,
+  type Regulator,
+  type Settings,
+  TOP_K_MAX,
+  TOP_K_MIN,
+  useSettingsStore,
+} from "@/lib/stores/settings-store";
 
-export default function SettingsPage() {
-  const router = useRouter();
-  const { role, isAuthenticated } = useAuthStore();
+const SETTING_KEYS = Object.keys(DEFAULT_SETTINGS) as (keyof Settings)[];
 
-  useEffect(() => {
-    if (!isAuthenticated) { router.push("/login"); return; }
-    if (role !== "advanced") router.push("/audit");
-  }, [isAuthenticated, role, router]);
+function currentSettings(): Settings {
+  const state = useSettingsStore.getState();
+  return Object.fromEntries(SETTING_KEYS.map((key) => [key, state[key]])) as unknown as Settings;
+}
 
-  const [settings, setSettings] = useState({
-    enableCache: true,
-    enableNotifications: false,
-    darkMode: false,
-    autoSaveResults: true,
-    defaultRegulator: "all",
-    defaultTopK: 5,
-    apiTimeout: 30000,
-  });
+function SectionTitle({ icon: Icon, children }: { icon: typeof SettingsIcon; children: React.ReactNode }) {
+  return (
+    <CardTitle className="flex items-center gap-2">
+      <Icon className="size-4 text-muted-foreground" />
+      {children}
+    </CardTitle>
+  );
+}
+
+function SwitchField({
+  id,
+  label,
+  description,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  description: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <Field orientation="horizontal">
+      <FieldContent>
+        <FieldLabel htmlFor={id}>{label}</FieldLabel>
+        <FieldDescription>{description}</FieldDescription>
+      </FieldContent>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </Field>
+  );
+}
+
+function SettingsForm() {
+  const { resolvedTheme, setTheme } = useTheme();
+  // Draf lokal: perubahan baru berlaku setelah "Simpan Pengaturan".
+  const [saved, setSaved] = useState<Settings>(currentSettings);
+  const [draft, setDraft] = useState<Settings>(saved);
+
+  const set = <K extends keyof Settings>(key: K, value: Settings[K]) => setDraft((prev) => ({ ...prev, [key]: value }));
+  const isDirty = SETTING_KEYS.some((key) => draft[key] !== saved[key]);
 
   const handleSave = () => {
-    localStorage.setItem("auditSettings", JSON.stringify(settings));
+    useSettingsStore.getState().update(draft);
+    const next = currentSettings();
+    setSaved(next);
+    setDraft(next);
     toast.success("Pengaturan disimpan!");
   };
 
-  return (
-    <div className="space-y-6">
-      <div>
-        <h1 className="text-2xl font-semibold text-gray-900">Pengaturan</h1>
-        <p className="text-gray-600 mt-1">
-          Konfigurasi aplikasi dan preferensi pengguna
-        </p>
-      </div>
+  const handleReset = () => {
+    useSettingsStore.getState().reset();
+    setSaved(DEFAULT_SETTINGS);
+    setDraft(DEFAULT_SETTINGS);
+    toast.success("Pengaturan dikembalikan ke default");
+  };
 
+  return (
+    <>
       <div className="grid gap-6 md:grid-cols-2">
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Settings className="h-5 w-5" />
-              <CardTitle>General</CardTitle>
-            </div>
+            <SectionTitle icon={SettingsIcon}>General</SectionTitle>
             <CardDescription>Pengaturan umum aplikasi</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="cache" className="flex-1">
-                <div className="font-medium">Enable Cache</div>
-                <div className="text-sm text-gray-500">
-                  Cache hasil audit untuk performa lebih cepat
-                </div>
-              </Label>
-              <Switch
+          <CardContent>
+            <FieldGroup>
+              <SwitchField
                 id="cache"
-                checked={settings.enableCache}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, enableCache: checked })
-                }
+                label="Enable Cache"
+                description="Cache hasil audit untuk performa lebih cepat"
+                checked={draft.enableCache}
+                onCheckedChange={(checked) => set("enableCache", checked)}
               />
-            </div>
-
-            <div className="flex items-center justify-between">
-              <Label htmlFor="autoSave" className="flex-1">
-                <div className="font-medium">Auto Save Results</div>
-                <div className="text-sm text-gray-500">
-                  Simpan hasil audit secara otomatis
-                </div>
-              </Label>
-              <Switch
+              <SwitchField
                 id="autoSave"
-                checked={settings.autoSaveResults}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, autoSaveResults: checked })
-                }
+                label="Auto Save Results"
+                description="Simpan hasil audit secara otomatis. Catatan: backend selalu menyimpan setiap audit ke riwayat, jadi opsi ini belum mengubah perilaku."
+                checked={draft.autoSaveResults}
+                onCheckedChange={(checked) => set("autoSaveResults", checked)}
               />
-            </div>
+            </FieldGroup>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Database className="h-5 w-5" />
-              <CardTitle>Audit Defaults</CardTitle>
-            </div>
+            <SectionTitle icon={SlidersHorizontal}>Audit Defaults</SectionTitle>
             <CardDescription>Default nilai untuk form audit</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-2">
-              <Label htmlFor="defaultRegulator">Default Regulator</Label>
-              <Select
-                value={settings.defaultRegulator}
-                onValueChange={(value) =>
-                  setSettings({ ...settings, defaultRegulator: value })
-                }
-              >
-                <SelectTrigger id="defaultRegulator">
-                  <SelectValue placeholder="Pilih regulator" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">Semua Regulator</SelectItem>
-                  <SelectItem value="BI">Bank Indonesia</SelectItem>
-                  <SelectItem value="OJK">OJK</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="defaultTopK">Default Top-K</Label>
-              <Input
-                id="defaultTopK"
-                type="number"
-                min={1}
-                max={20}
-                value={settings.defaultTopK}
-                onChange={(e) =>
-                  setSettings({ ...settings, defaultTopK: parseInt(e.target.value) || 5 })
-                }
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="apiTimeout">API Timeout (ms)</Label>
-              <Input
-                id="apiTimeout"
-                type="number"
-                value={settings.apiTimeout}
-                onChange={(e) =>
-                  setSettings({ ...settings, apiTimeout: parseInt(e.target.value) || 30000 })
-                }
-              />
-            </div>
+          <CardContent>
+            <FieldGroup>
+              <Field>
+                <FieldLabel htmlFor="defaultRegulator">Default Regulator</FieldLabel>
+                <Select value={draft.defaultRegulator} onValueChange={(value) => set("defaultRegulator", value as Regulator)}>
+                  <SelectTrigger id="defaultRegulator" className="w-full">
+                    <SelectValue placeholder="Pilih regulator" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {regulatorOptions.map((option) => (
+                      <SelectItem key={option.value} value={option.value}>
+                        {option.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="defaultTopK">Default Top-K</FieldLabel>
+                <Input
+                  id="defaultTopK"
+                  type="number"
+                  min={TOP_K_MIN}
+                  max={TOP_K_MAX}
+                  value={Number.isNaN(draft.defaultTopK) ? "" : draft.defaultTopK}
+                  onChange={(event) => set("defaultTopK", event.target.valueAsNumber)}
+                />
+                <FieldDescription>
+                  Jumlah pasal yang diambil per agen ({TOP_K_MIN}–{TOP_K_MAX}).
+                </FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="apiTimeout">API Timeout (ms)</FieldLabel>
+                <Input
+                  id="apiTimeout"
+                  type="number"
+                  min={API_TIMEOUT_MIN}
+                  step={1000}
+                  value={Number.isNaN(draft.apiTimeout) ? "" : draft.apiTimeout}
+                  onChange={(event) => set("apiTimeout", event.target.valueAsNumber)}
+                />
+                <FieldDescription>
+                  Batas waktu setiap permintaan ke backend (minimal {API_TIMEOUT_MIN.toLocaleString("id-ID")} ms).
+                </FieldDescription>
+              </Field>
+            </FieldGroup>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Palette className="h-5 w-5" />
-              <CardTitle>Appearance</CardTitle>
-            </div>
+            <SectionTitle icon={Palette}>Appearance</SectionTitle>
             <CardDescription>Tampilan dan tema aplikasi</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="darkMode" className="flex-1">
-                <div className="font-medium">Dark Mode</div>
-                <div className="text-sm text-gray-500">
-                  Gunakan tema gelap
-                </div>
-              </Label>
-              <Switch
-                id="darkMode"
-                checked={settings.darkMode}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, darkMode: checked })
-                }
-              />
-            </div>
+          <CardContent>
+            <SwitchField
+              id="darkMode"
+              label="Dark Mode"
+              description="Gunakan tema gelap"
+              checked={resolvedTheme === "dark"}
+              onCheckedChange={(checked) => setTheme(checked ? "dark" : "light")}
+            />
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Bell className="h-5 w-5" />
-              <CardTitle>Notifications</CardTitle>
-            </div>
+            <SectionTitle icon={Bell}>Notifications</SectionTitle>
             <CardDescription>Pengaturan notifikasi</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-center justify-between">
-              <Label htmlFor="notifications" className="flex-1">
-                <div className="font-medium">Enable Notifications</div>
-                <div className="text-sm text-gray-500">
-                  Tampilkan notifikasi untuk audit selesai
-                </div>
-              </Label>
-              <Switch
-                id="notifications"
-                checked={settings.enableNotifications}
-                onCheckedChange={(checked) =>
-                  setSettings({ ...settings, enableNotifications: checked })
-                }
-              />
-            </div>
+          <CardContent>
+            <SwitchField
+              id="notifications"
+              label="Enable Notifications"
+              description="Tampilkan notifikasi untuk audit selesai"
+              checked={draft.enableNotifications}
+              onCheckedChange={(checked) => set("enableNotifications", checked)}
+            />
           </CardContent>
         </Card>
 
         <Card className="md:col-span-2">
           <CardHeader>
-            <div className="flex items-center gap-2">
-              <Shield className="h-5 w-5" />
-              <CardTitle>API Configuration</CardTitle>
-            </div>
+            <SectionTitle icon={Shield}>API Configuration</SectionTitle>
             <CardDescription>Konfigurasi koneksi API backend</CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>Backend URL</Label>
-                <Input
-                  value={process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000/api/v1"}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-xs text-gray-500">
-                  Set via NEXT_PUBLIC_API_URL environment variable
-                </p>
-              </div>
-              <div className="space-y-2">
-                <Label>MLflow URL</Label>
-                <Input
-                  value={process.env.NEXT_PUBLIC_MLFLOW_URL || "http://localhost:5001"}
-                  disabled
-                  className="bg-gray-50"
-                />
-                <p className="text-xs text-gray-500">
-                  Set via NEXT_PUBLIC_MLFLOW_URL environment variable
-                </p>
-              </div>
-            </div>
+            <FieldGroup className="md:grid md:grid-cols-2">
+              <Field>
+                <FieldLabel htmlFor="apiUrl">Backend URL</FieldLabel>
+                <Input id="apiUrl" value={API_URL} disabled readOnly className="font-mono text-xs" />
+                <FieldDescription>Set via NEXT_PUBLIC_API_URL environment variable</FieldDescription>
+              </Field>
+              <Field>
+                <FieldLabel htmlFor="mlflowUrl">MLflow URL</FieldLabel>
+                <Input id="mlflowUrl" value={MLFLOW_URL} disabled readOnly className="font-mono text-xs" />
+                <FieldDescription>Set via NEXT_PUBLIC_MLFLOW_URL environment variable</FieldDescription>
+              </Field>
+            </FieldGroup>
           </CardContent>
         </Card>
       </div>
 
-      <div className="flex justify-end">
+      <div className="flex flex-wrap items-center justify-end gap-2">
+        {isDirty && <p className="mr-auto text-sm text-muted-foreground">Ada perubahan yang belum disimpan.</p>}
+        <Button variant="outline" onClick={handleReset}>
+          <RotateCcw data-icon="inline-start" />
+          Reset ke Default
+        </Button>
         <Button onClick={handleSave}>
-          <Save className="h-4 w-4 mr-2" />
+          <Save data-icon="inline-start" />
           Simpan Pengaturan
         </Button>
       </div>
-    </div>
+    </>
+  );
+}
+
+export default function SettingsPage() {
+  // Pengaturan tersimpan di localStorage, jadi form baru dirender setelah hidrasi.
+  const mounted = useMounted();
+
+  return (
+    <>
+      <PageHeader title="Pengaturan" description="Konfigurasi aplikasi dan preferensi pengguna" />
+      {mounted ? (
+        <SettingsForm />
+      ) : (
+        <div className="grid gap-6 md:grid-cols-2">
+          {[0, 1, 2, 3].map((i) => (
+            <Skeleton key={i} className="h-44 rounded-xl" />
+          ))}
+        </div>
+      )}
+    </>
   );
 }

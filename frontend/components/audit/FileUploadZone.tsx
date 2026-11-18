@@ -1,357 +1,282 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import {
-  Upload,
-  FileText,
-  X,
-  AlertCircle,
-  CheckCircle2,
-  Loader2,
-  ListChecks,
-  Square,
-  CheckSquare,
-} from "lucide-react";
+import { useRef, useState } from "react";
+import { AlertCircle, FileText, Play, UploadCloud, X } from "lucide-react";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Label } from "@/components/ui/label";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Spinner } from "@/components/ui/spinner";
+import { Switch } from "@/components/ui/switch";
+import { errorMessage, uploadDocument, type UploadDocumentResult } from "@/lib/api";
+import { useSettingsStore } from "@/lib/stores/settings-store";
 import { cn } from "@/lib/utils";
 
-interface UploadResult {
-  filename: string;
-  file_size_kb: number;
-  text: string;
-  clauses: string[];
-  clause_count: number;
-  parsed_from_cache: boolean;
-}
+const ACCEPTED_EXTENSIONS = [".pdf", ".txt", ".md"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024;
 
 interface FileUploadZoneProps {
   onClausesSelect: (clauses: string[], useCache: boolean) => void;
-  apiUrl: string;
+  disabled?: boolean;
 }
 
-export function FileUploadZone({ onClausesSelect, apiUrl }: FileUploadZoneProps) {
-  const token = useAuthStore((s) => s.token);
-  const [isDragOver, setIsDragOver] = useState(false);
-  const [isUploading, setIsUploading] = useState(false);
-  const [uploadResult, setUploadResult] = useState<UploadResult | null>(null);
-  const [selectedIndices, setSelectedIndices] = useState<Set<number>>(new Set());
+function CacheSwitch({
+  id,
+  label,
+  hint,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  checked: boolean;
+  onCheckedChange: (checked: boolean) => void;
+}) {
+  return (
+    <div className="flex items-start gap-3">
+      <Switch id={id} size="sm" checked={checked} onCheckedChange={onCheckedChange} className="mt-0.5" />
+      <Label htmlFor={id} className="flex flex-col items-start gap-0.5 font-normal">
+        <span>{label}</span>
+        <span className="text-xs text-muted-foreground">{hint}</span>
+      </Label>
+    </div>
+  );
+}
+
+export function FileUploadZone({ onClausesSelect, disabled }: FileUploadZoneProps) {
+  const inputRef = useRef<HTMLInputElement>(null);
+  const [dragging, setDragging] = useState(false);
+  const [uploadingName, setUploadingName] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
-  const [file, setFile] = useState<File | null>(null);
-  const [useLlamaparseCache, setUseLlamaparseCache] = useState(true);
-  const [useAuditCache, setUseAuditCache] = useState(true);
+  const [result, setResult] = useState<UploadDocumentResult | null>(null);
+  const [selected, setSelected] = useState<Set<number>>(new Set());
+  const [useLlamaCache, setUseLlamaCache] = useState(true);
+  const [useAuditCache, setUseAuditCache] = useState(() => useSettingsStore.getState().enableCache);
 
-  const isPdf = file?.name.toLowerCase().endsWith(".pdf") ?? false;
-
-  const handleUpload = useCallback(async (selectedFile: File) => {
-    setError(null);
-    setUploadResult(null);
-    setSelectedIndices(new Set());
-    setFile(selectedFile);
-    setIsUploading(true);
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-    const isPdfFile = selectedFile.name.toLowerCase().endsWith(".pdf");
-
-    try {
-      const url = new URL(`${apiUrl}/audit/upload`);
-      if (isPdfFile) url.searchParams.set("use_llamaparse_cache", String(useLlamaparseCache));
-
-      const headers: Record<string, string> = {};
-      if (token) headers["Authorization"] = `Bearer ${token}`;
-
-      const res = await fetch(url.toString(), {
-        method: "POST",
-        headers,
-        body: formData,
-      });
-
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.detail || `Upload gagal (${res.status})`);
-      }
-
-      const data: UploadResult = await res.json();
-      setUploadResult(data);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : "Upload gagal. Coba lagi.");
-      setFile(null);
-    } finally {
-      setIsUploading(false);
+  async function handleFile(file: File) {
+    const extension = file.name.slice(file.name.lastIndexOf(".")).toLowerCase();
+    if (!ACCEPTED_EXTENSIONS.includes(extension)) {
+      setError(`Format file tidak didukung (${extension}). Gunakan: ${ACCEPTED_EXTENSIONS.join(", ")}`);
+      return;
     }
-  }, [apiUrl, useLlamaparseCache]);
+    if (file.size > MAX_FILE_SIZE) {
+      setError("Ukuran file melebihi 10 MB.");
+      return;
+    }
 
-  const onDrop = useCallback(
-    (e: React.DragEvent<HTMLDivElement>) => {
-      e.preventDefault();
-      setIsDragOver(false);
-      const dropped = e.dataTransfer.files[0];
-      if (dropped) handleUpload(dropped);
-    },
-    [handleUpload],
-  );
-
-  const onFileInput = useCallback(
-    (e: React.ChangeEvent<HTMLInputElement>) => {
-      const selected = e.target.files?.[0];
-      if (selected) handleUpload(selected);
-      e.target.value = "";
-    },
-    [handleUpload],
-  );
-
-  const reset = () => {
-    setFile(null);
-    setUploadResult(null);
-    setSelectedIndices(new Set());
     setError(null);
-  };
+    setUploadingName(file.name);
+    try {
+      // Cache LlamaParse hanya relevan untuk PDF.
+      const data = await uploadDocument(file, extension === ".pdf" ? useLlamaCache : undefined);
+      setResult(data);
+      setSelected(new Set());
+    } catch (err) {
+      setError(errorMessage(err, "Upload gagal"));
+    } finally {
+      setUploadingName(null);
+    }
+  }
 
-  const toggleIndex = (idx: number) => {
-    setSelectedIndices((prev) => {
+  function resetUpload() {
+    setResult(null);
+    setSelected(new Set());
+    setError(null);
+  }
+
+  function toggleClause(index: number, checked: boolean) {
+    setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(idx)) next.delete(idx);
-      else next.add(idx);
+      if (checked) next.add(index);
+      else next.delete(index);
       return next;
     });
-  };
+  }
 
-  const toggleAll = () => {
-    if (!uploadResult) return;
-    if (selectedIndices.size === uploadResult.clauses.length) {
-      setSelectedIndices(new Set());
-    } else {
-      setSelectedIndices(new Set(uploadResult.clauses.map((_, i) => i)));
-    }
-  };
-
-  const handleAudit = () => {
-    if (selectedIndices.size === 0 || !uploadResult) return;
-    const clauses = Array.from(selectedIndices).sort((a, b) => a - b).map((i) => uploadResult.clauses[i]);
+  function submitSelection() {
+    if (!result || selected.size === 0) return;
+    const clauses = [...selected].sort((a, b) => a - b).map((index) => result.clauses[index]);
     onClausesSelect(clauses, useAuditCache);
-  };
+  }
 
-  // ── Empty / drag-drop state ────────────────────────────────────────
-  if (!uploadResult && !isUploading) {
+  if (uploadingName) {
     return (
-      <div className="space-y-3">
-        <div
-          onDragOver={(e) => { e.preventDefault(); setIsDragOver(true); }}
-          onDragLeave={() => setIsDragOver(false)}
-          onDrop={onDrop}
-          className={cn(
-            "relative flex flex-col items-center justify-center gap-3 rounded-xl border-2 border-dashed p-10 text-center transition-all duration-200",
-            isDragOver
-              ? "border-blue-500 bg-blue-50"
-              : "border-slate-200 bg-slate-50 hover:border-slate-300 hover:bg-white",
-          )}
-        >
-          <div className={cn(
-            "flex h-14 w-14 items-center justify-center rounded-full transition-colors",
-            isDragOver ? "bg-blue-100" : "bg-white border border-slate-200",
-          )}>
-            <Upload className={cn("h-6 w-6", isDragOver ? "text-blue-500" : "text-slate-400")} />
-          </div>
+      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-12 text-center">
+        <Spinner className="size-6 text-primary" />
+        <div>
+          <p className="text-sm font-medium">Membaca dokumen...</p>
+          <p className="mt-0.5 max-w-xs truncate text-xs text-muted-foreground">{uploadingName}</p>
+        </div>
+      </div>
+    );
+  }
 
-          <div>
-            <p className="text-sm font-medium text-slate-700">
-              {isDragOver ? "Lepaskan file di sini" : "Seret & lepaskan dokumen"}
+  if (result) {
+    const count = selected.size;
+    return (
+      <div className="flex flex-col gap-4">
+        <div className="flex items-center gap-3 rounded-lg border bg-muted/40 p-3">
+          <div className="flex size-9 shrink-0 items-center justify-center rounded-md bg-primary/10 text-primary">
+            <FileText className="size-4" />
+          </div>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-medium">{result.filename}</p>
+            <p className="flex flex-wrap items-center gap-x-2 text-xs text-muted-foreground">
+              <span>{result.file_size_kb.toFixed(1)} KB</span>
+              <span>·</span>
+              <span>{result.clause_count} klausa ditemukan</span>
+              {result.parsed_from_cache && <Badge variant="secondary">cache</Badge>}
             </p>
-            <p className="mt-0.5 text-xs text-slate-400">PDF, TXT, MD · Maks. 10 MB</p>
           </div>
-
-          <label className="cursor-pointer">
-            <input
-              type="file"
-              accept=".pdf,.txt,.md"
-              onChange={onFileInput}
-              className="sr-only"
-            />
-            <Button type="button" variant="outline" size="sm" className="pointer-events-none">
-              Pilih File
-            </Button>
-          </label>
+          <Button variant="ghost" size="icon-sm" aria-label="Upload ulang" title="Upload ulang" onClick={resetUpload}>
+            <X />
+          </Button>
         </div>
 
-        {/* Cache toggles */}
-        <label className="flex items-center gap-2 cursor-pointer select-none px-1">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 accent-blue-600"
-            checked={useLlamaparseCache}
-            onChange={e => setUseLlamaparseCache(e.target.checked)}
-          />
-          <span className="text-xs text-slate-500">
-            Gunakan cache LlamaParse untuk PDF (nonaktifkan untuk paksa re-parse)
-          </span>
-        </label>
-        <label className="flex items-center gap-2 cursor-pointer select-none px-1">
-          <input
-            type="checkbox"
-            className="h-4 w-4 rounded border-slate-300 accent-blue-600"
-            checked={useAuditCache}
-            onChange={e => setUseAuditCache(e.target.checked)}
-          />
-          <span className="text-xs text-slate-500">
-            Gunakan cache hasil audit (nonaktifkan untuk paksa re-run)
-          </span>
-        </label>
+        {result.clauses.length === 0 ? (
+          <Alert>
+            <AlertCircle />
+            <AlertTitle>Tidak ada klausa yang terdeteksi</AlertTitle>
+            <AlertDescription>Coba dokumen lain atau tempel klausa langsung di tab Input Teks.</AlertDescription>
+          </Alert>
+        ) : (
+          <>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <p className="text-sm text-muted-foreground">
+                {count === 0 ? "Pilih satu atau lebih klausa untuk diaudit" : `${count} klausa dipilih`}
+              </p>
+              <div className="flex gap-1">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelected(new Set(result.clauses.map((_, index) => index)))}
+                >
+                  Pilih Semua
+                </Button>
+                <Button variant="ghost" size="sm" disabled={count === 0} onClick={() => setSelected(new Set())}>
+                  Hapus Semua
+                </Button>
+              </div>
+            </div>
 
-        {error && (
-          <div className="flex items-start gap-2 rounded-lg bg-red-50 border border-red-200 p-3 text-sm text-red-700">
-            <AlertCircle className="h-4 w-4 mt-0.5 shrink-0" />
-            <span>{error}</span>
-          </div>
+            <ScrollArea className="h-[280px] rounded-lg border">
+              <ul className="divide-y">
+                {result.clauses.map((clause, index) => {
+                  const checked = selected.has(index);
+                  return (
+                    <li key={index}>
+                      <label
+                        className={cn(
+                          "flex cursor-pointer items-start gap-3 px-3 py-2.5 text-sm transition-colors hover:bg-muted/50",
+                          checked && "bg-primary/5",
+                        )}
+                      >
+                        <Checkbox
+                          checked={checked}
+                          onCheckedChange={(value) => toggleClause(index, value === true)}
+                          className="mt-0.5"
+                        />
+                        <span className="font-mono text-xs leading-5 text-muted-foreground tabular-nums">
+                          {String(index + 1).padStart(2, "0")}
+                        </span>
+                        <span className="line-clamp-3 min-w-0 flex-1 leading-5">{clause}</span>
+                      </label>
+                    </li>
+                  );
+                })}
+              </ul>
+            </ScrollArea>
+
+            <CacheSwitch
+              id="audit-cache"
+              label="Gunakan cache hasil audit"
+              hint="Nonaktifkan untuk paksa re-run."
+              checked={useAuditCache}
+              onCheckedChange={setUseAuditCache}
+            />
+
+            <Button size="lg" className="w-full" disabled={count === 0 || disabled} onClick={submitSelection}>
+              <Play data-icon="inline-start" />
+              {count === 0
+                ? "Pilih Klausa untuk Diaudit"
+                : count === 1
+                  ? "Audit 1 Klausa"
+                  : `Audit ${count} Klausa Sekaligus`}
+            </Button>
+          </>
         )}
       </div>
     );
   }
 
-  // ── Loading state ──────────────────────────────────────────────────
-  if (isUploading) {
-    return (
-      <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-slate-200 bg-slate-50 p-10 text-center">
-        <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        <div>
-          <p className="text-sm font-medium text-slate-700">Membaca dokumen...</p>
-          <p className="text-xs text-slate-400 mt-0.5">{file?.name}</p>
-        </div>
-      </div>
-    );
-  }
-
-  // ── Result: clause list ────────────────────────────────────────────
-  const allSelected = uploadResult!.clauses.length > 0 &&
-    selectedIndices.size === uploadResult!.clauses.length;
-
   return (
-    <div className="space-y-3">
-      {/* File info bar */}
-      <div className="flex items-center justify-between rounded-lg border border-slate-200 bg-white px-4 py-2.5">
-        <div className="flex items-center gap-2.5">
-          <FileText className="h-4 w-4 text-blue-500 shrink-0" />
-          <div>
-            <p className="text-sm font-medium text-slate-800 leading-none">
-              {uploadResult!.filename}
-            </p>
-            <p className="text-xs text-slate-400 mt-0.5 flex items-center gap-1.5">
-              {uploadResult!.file_size_kb} KB · {uploadResult!.clause_count} klausa ditemukan
-              {uploadResult!.parsed_from_cache && (
-                <span className="inline-flex items-center px-1.5 py-0.5 rounded bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-medium">
-                  cache
-                </span>
-              )}
-            </p>
-          </div>
-        </div>
-        <button
-          onClick={reset}
-          className="rounded-md p-1 hover:bg-slate-100 text-slate-400 hover:text-slate-600 transition-colors"
-          title="Upload ulang"
-        >
-          <X className="h-4 w-4" />
-        </button>
-      </div>
-
-      {/* Selection controls */}
-      <div className="flex items-center justify-between px-1">
-        <p className="text-xs text-slate-500">
-          {selectedIndices.size === 0
-            ? "Pilih satu atau lebih klausa untuk diaudit"
-            : `${selectedIndices.size} klausa dipilih`}
-        </p>
-        <button
-          type="button"
-          onClick={toggleAll}
-          className="flex items-center gap-1.5 text-xs font-medium text-blue-600 hover:text-blue-700 transition-colors"
-        >
-          {allSelected ? (
-            <><CheckSquare className="h-3.5 w-3.5" /> Hapus Semua</>
-          ) : (
-            <><Square className="h-3.5 w-3.5" /> Pilih Semua</>
-          )}
-        </button>
-      </div>
-
-      {/* Clause list */}
+    <div className="flex flex-col gap-4">
       <div
-        className="h-[280px] overflow-y-auto overflow-x-hidden rounded-lg border border-slate-200 bg-white"
-        style={{ WebkitOverflowScrolling: "touch" }}
+        onDragOver={(event) => {
+          event.preventDefault();
+          setDragging(true);
+        }}
+        onDragLeave={() => setDragging(false)}
+        onDrop={(event) => {
+          event.preventDefault();
+          setDragging(false);
+          const file = event.dataTransfer.files[0];
+          if (file) void handleFile(file);
+        }}
+        className={cn(
+          "flex flex-col items-center justify-center gap-3 rounded-xl border border-dashed px-6 py-10 text-center transition-colors",
+          dragging ? "border-primary bg-primary/5" : "hover:border-muted-foreground/40",
+        )}
       >
-        <div className="p-2 space-y-1">
-          {uploadResult!.clauses.map((clause, idx) => {
-            const isSelected = selectedIndices.has(idx);
-            return (
-              <div
-                key={idx}
-                role="checkbox"
-                aria-checked={isSelected}
-                tabIndex={0}
-                onClick={() => toggleIndex(idx)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") toggleIndex(idx);
-                }}
-                className={cn(
-                  "w-full text-left rounded-md px-3 py-2.5 text-sm transition-all border select-none cursor-pointer",
-                  isSelected
-                    ? "bg-blue-50 border-blue-300 text-blue-900"
-                    : "bg-white border-transparent hover:border-slate-200 hover:bg-slate-50 text-slate-700",
-                )}
-              >
-                <div className="flex items-start gap-2.5">
-                  {/* Checkbox */}
-                  <div className={cn(
-                    "mt-0.5 shrink-0 h-4 w-4 rounded border-2 flex items-center justify-center transition-colors",
-                    isSelected
-                      ? "bg-blue-600 border-blue-600"
-                      : "border-slate-300 bg-white",
-                  )}>
-                    {isSelected && <CheckCircle2 className="h-3 w-3 text-white" />}
-                  </div>
-                  {/* Number */}
-                  <span className={cn(
-                    "shrink-0 text-xs font-mono mt-0.5",
-                    isSelected ? "text-blue-500" : "text-slate-300",
-                  )}>
-                    {String(idx + 1).padStart(2, "0")}
-                  </span>
-                  {/* Text */}
-                  <span className="line-clamp-3 leading-relaxed flex-1">{clause}</span>
-                </div>
-              </div>
-            );
-          })}
+        <div className="flex size-11 items-center justify-center rounded-full bg-muted text-muted-foreground">
+          <UploadCloud className="size-5" />
         </div>
+        <div>
+          <p className="text-sm font-medium">{dragging ? "Lepaskan file di sini" : "Seret & lepaskan dokumen"}</p>
+          <p className="mt-0.5 text-xs text-muted-foreground">PDF, TXT, MD · Maks. 10 MB</p>
+        </div>
+        <Button variant="outline" size="sm" onClick={() => inputRef.current?.click()}>
+          Pilih File
+        </Button>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ACCEPTED_EXTENSIONS.join(",")}
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(event) => {
+            const file = event.target.files?.[0];
+            if (file) void handleFile(file);
+            event.target.value = "";
+          }}
+        />
       </div>
 
-      {/* Audit cache toggle */}
-      <label className="flex items-center gap-2 cursor-pointer select-none px-1">
-        <input
-          type="checkbox"
-          className="h-4 w-4 rounded border-slate-300 accent-blue-600"
-          checked={useAuditCache}
-          onChange={e => setUseAuditCache(e.target.checked)}
-        />
-        <span className="text-xs text-slate-500">
-          Gunakan cache hasil audit (nonaktifkan untuk paksa re-run)
-        </span>
-      </label>
+      {error && (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Upload gagal</AlertTitle>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
 
-      {/* Action button */}
-      <Button
-        type="button"
-        onClick={handleAudit}
-        disabled={selectedIndices.size === 0}
-        className="w-full"
-      >
-        <ListChecks className="h-4 w-4 mr-1.5" />
-        {selectedIndices.size === 0
-          ? "Pilih Klausa untuk Diaudit"
-          : selectedIndices.size === 1
-            ? `Audit 1 Klausa`
-            : `Audit ${selectedIndices.size} Klausa Sekaligus`}
-      </Button>
+      <CacheSwitch
+        id="llama-cache"
+        label="Gunakan cache LlamaParse untuk PDF"
+        hint="Nonaktifkan untuk paksa re-parse."
+        checked={useLlamaCache}
+        onCheckedChange={setUseLlamaCache}
+      />
+      <CacheSwitch
+        id="audit-cache-initial"
+        label="Gunakan cache hasil audit"
+        hint="Nonaktifkan untuk paksa re-run."
+        checked={useAuditCache}
+        onCheckedChange={setUseAuditCache}
+      />
     </div>
   );
 }

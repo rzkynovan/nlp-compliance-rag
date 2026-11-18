@@ -1,211 +1,221 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
-import { CheckCircle2, XCircle, MinusCircle, Download, RefreshCw } from "lucide-react";
-import { useAuthStore } from "@/lib/stores/auth-store";
-import { getGoldenDataset, type GoldenDatasetItem } from "@/lib/api/client";
-import { cn } from "@/lib/utils";
+import { AlertCircle, CheckCircle2, Database, Download, ListChecks, MinusCircle, RefreshCw, Target, XCircle } from "lucide-react";
+import { PageHeader } from "@/components/common/PageHeader";
+import { StatCard } from "@/components/common/StatCard";
+import { StatusBadge } from "@/components/common/StatusBadge";
+import { Alert, AlertAction, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { errorMessage, getGoldenDataset, type GoldenDatasetItem, queryKeys } from "@/lib/api";
+import { toneClasses, verdictMeta } from "@/lib/compliance";
+import { cn, csvCell, downloadFile } from "@/lib/utils";
 
-const STATUS_COLORS: Record<string, string> = {
-  NON_COMPLIANT:      "bg-red-100 text-red-700 border-red-200",
-  PARTIALLY_COMPLIANT:"bg-yellow-100 text-yellow-700 border-yellow-200",
-  NOT_ADDRESSED:      "bg-gray-100 text-gray-600 border-gray-200",
-  COMPLIANT:          "bg-green-100 text-green-700 border-green-200",
-};
-
-function StatusBadge({ status }: { status: string }) {
-  return (
-    <span className={cn("inline-flex px-2 py-0.5 rounded text-xs font-medium border", STATUS_COLORS[status] ?? "bg-gray-100 text-gray-500")}>
-      {status.replace(/_/g, " ")}
-    </span>
-  );
-}
-
-function ExpandableClause({ text }: { text: string }) {
-  const [expanded, setExpanded] = useState(false);
-  const short = text.length > 100 ? text.slice(0, 100) + "..." : text;
-  return (
-    <div className="text-sm text-gray-700">
-      {expanded ? text : short}
-      {text.length > 100 && (
-        <button onClick={() => setExpanded(!expanded)} className="ml-1 text-blue-600 hover:underline text-xs">
-          {expanded ? "Sembunyikan" : "Lihat lengkap"}
-        </button>
-      )}
-    </div>
-  );
-}
+const CLAUSE_PREVIEW_LENGTH = 100;
 
 function exportCSV(items: GoldenDatasetItem[]) {
-  const headers = ["ID", "Kategori", "Klausa SOP", "Kesalahan yang Dirancang", "Label Benar", "Prediksi Sistem", "Benar?", "Latency (ms)"];
-  const rows = items.map(item => [
+  const headers = [
+    "ID",
+    "Kategori",
+    "Klausa SOP",
+    "Kesalahan yang Dirancang",
+    "Label Benar",
+    "Prediksi Sistem",
+    "Benar?",
+    "Latency (ms)",
+  ];
+  const rows = items.map((item) => [
     item.clause_id,
     item.category,
-    `"${item.clause.replace(/"/g, '""')}"`,
-    `"${item.error_description.replace(/"/g, '""')}"`,
+    item.clause,
+    item.error_description,
     item.expected_status,
     item.predicted_status ?? "N/A",
     item.is_correct == null ? "N/A" : item.is_correct ? "Ya" : "Tidak",
     item.latency_ms ?? "N/A",
   ]);
-  const csv = [headers, ...rows].map(r => r.join(",")).join("\n");
-  const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-  const url = URL.createObjectURL(blob);
-  const a = document.createElement("a");
-  a.href = url;
-  a.download = "golden_dataset_testing.csv";
-  a.click();
-  URL.revokeObjectURL(url);
+  const csv = [headers, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
+  downloadFile(`﻿${csv}`, "golden_dataset_testing.csv", "text/csv;charset=utf-8;");
+}
+
+function ExpandableClause({ text }: { text: string }) {
+  const [expanded, setExpanded] = useState(false);
+  const isLong = text.length > CLAUSE_PREVIEW_LENGTH;
+
+  return (
+    <p className="text-sm leading-relaxed">
+      {expanded || !isLong ? text : `${text.slice(0, CLAUSE_PREVIEW_LENGTH)}...`}
+      {isLong && (
+        <Button
+          variant="link"
+          size="xs"
+          className="ml-1 h-auto p-0 align-baseline"
+          aria-expanded={expanded}
+          onClick={() => setExpanded((value) => !value)}
+        >
+          {expanded ? "Sembunyikan" : "Lihat lengkap"}
+        </Button>
+      )}
+    </p>
+  );
+}
+
+function CorrectIcon({ value }: { value: boolean | null | undefined }) {
+  if (value == null) return <MinusCircle className="mx-auto size-4.5 text-muted-foreground/50" aria-label="Belum ada prediksi" />;
+  return value ? (
+    <CheckCircle2 className={cn("mx-auto size-4.5", toneClasses.success.text)} aria-label="Benar" />
+  ) : (
+    <XCircle className={cn("mx-auto size-4.5", toneClasses.danger.text)} aria-label="Salah" />
+  );
 }
 
 export default function TestingPage() {
-  const router = useRouter();
-  const { role, isAuthenticated } = useAuthStore();
-
-  useEffect(() => {
-    if (!isAuthenticated) { router.push("/login"); return; }
-    if (role !== "advanced") router.push("/audit");
-  }, [isAuthenticated, role, router]);
-
-  const { data, isLoading, refetch } = useQuery({
-    queryKey: ["golden-dataset"],
+  const { data, isPending, isFetching, error, refetch } = useQuery({
+    queryKey: queryKeys.evaluation.goldenDataset,
     queryFn: getGoldenDataset,
     staleTime: 60_000,
   });
 
-  if (!isAuthenticated || role !== "advanced") return null;
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-gray-900">Dokumen Testing</h1>
-          <p className="text-sm text-gray-500 mt-1">
-            Golden dataset SOP Dummy NusantaraPay — 12 klausul dengan ground truth dan prediksi sistem
-          </p>
-        </div>
-        <div className="flex gap-2">
-          <button
-            onClick={() => refetch()}
-            className="flex items-center gap-1.5 px-3 py-2 text-sm border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
-          >
-            <RefreshCw size={14} /> Refresh
-          </button>
-          {data && (
-            <button
-              onClick={() => exportCSV(data.items)}
-              className="flex items-center gap-1.5 px-3 py-2 text-sm bg-[hsl(var(--primary))] text-white rounded-lg hover:opacity-90 transition-opacity"
-            >
-              <Download size={14} /> Export CSV
-            </button>
-          )}
-        </div>
+    <>
+      <PageHeader
+        title="Dokumen Testing"
+        description={`Golden dataset dummy NusantaraPay — ${data?.total ?? 12} klausul dengan ground truth dan prediksi sistem`}
+      >
+        <Button variant="outline" onClick={() => refetch()} disabled={isFetching}>
+          <RefreshCw data-icon="inline-start" className={cn(isFetching && "animate-spin")} />
+          Refresh
+        </Button>
+        {data && (
+          <Button onClick={() => exportCSV(data.items)}>
+            <Download data-icon="inline-start" />
+            Export CSV
+          </Button>
+        )}
+      </PageHeader>
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <StatCard label="Total Klausul" value={data?.total ?? "—"} icon={ListChecks} loading={isPending} />
+        <StatCard
+          label="Prediksi Benar"
+          value={data?.correct ?? "—"}
+          icon={CheckCircle2}
+          iconClassName={toneClasses.success.soft}
+          loading={isPending}
+        />
+        <StatCard
+          label="Akurasi"
+          value={data?.accuracy != null ? `${(data.accuracy * 100).toFixed(1)}%` : "—"}
+          icon={Target}
+          iconClassName={toneClasses.info.soft}
+          loading={isPending}
+        />
+        <StatCard
+          label="Data Prediksi"
+          value={data ? (data.has_predictions ? "Ada" : "Belum") : "—"}
+          icon={Database}
+          iconClassName={data?.has_predictions ? toneClasses.success.soft : undefined}
+          loading={isPending}
+        />
       </div>
 
-      {/* Summary stats */}
-      {data && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="bg-white rounded-xl border p-4">
-            <div className="text-2xl font-bold text-gray-900">{data.total}</div>
-            <div className="text-xs text-gray-500 mt-1">Total Klausul</div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="text-2xl font-bold text-green-600">{data.correct ?? "—"}</div>
-            <div className="text-xs text-gray-500 mt-1">Prediksi Benar</div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className="text-2xl font-bold text-blue-600">
-              {data.accuracy != null ? `${(data.accuracy * 100).toFixed(1)}%` : "—"}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">Akurasi</div>
-          </div>
-          <div className="bg-white rounded-xl border p-4">
-            <div className={cn("text-2xl font-bold", data.has_predictions ? "text-green-600" : "text-gray-400")}>
-              {data.has_predictions ? "Ada" : "Belum"}
-            </div>
-            <div className="text-xs text-gray-500 mt-1">Data Prediksi</div>
-          </div>
-        </div>
-      )}
-
       {data?.evaluation_file && (
-        <div className="text-xs text-gray-400 bg-gray-50 rounded-lg px-3 py-2">
-          Sumber prediksi: <span className="font-mono">{data.evaluation_file}</span>
-        </div>
+        <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          Sumber prediksi: <span className="font-mono break-all">{data.evaluation_file}</span>
+        </p>
       )}
 
-      {/* Table */}
-      <div className="bg-white rounded-xl border overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b bg-gray-50 text-left">
-                <th className="px-4 py-3 font-medium text-gray-600 w-20">ID</th>
-                <th className="px-4 py-3 font-medium text-gray-600 w-24">Kategori</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Klausa SOP</th>
-                <th className="px-4 py-3 font-medium text-gray-600">Kesalahan yang Dirancang</th>
-                <th className="px-4 py-3 font-medium text-gray-600 w-36">Label Benar</th>
-                <th className="px-4 py-3 font-medium text-gray-600 w-36">Prediksi Sistem</th>
-                <th className="px-4 py-3 font-medium text-gray-600 w-20 text-center">Benar?</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y">
-              {isLoading && (
-                <tr>
-                  <td colSpan={7} className="px-4 py-8 text-center text-gray-400">Memuat data...</td>
-                </tr>
+      {error ? (
+        <Alert variant="destructive">
+          <AlertCircle />
+          <AlertTitle>Gagal memuat golden dataset</AlertTitle>
+          <AlertDescription>{errorMessage(error)}</AlertDescription>
+          <AlertAction>
+            <Button variant="outline" size="sm" onClick={() => refetch()}>
+              Coba lagi
+            </Button>
+          </AlertAction>
+        </Alert>
+      ) : (
+        <Card className="overflow-hidden py-0">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="w-20">ID</TableHead>
+                <TableHead className="w-24">Kategori</TableHead>
+                <TableHead className="min-w-64">Klausa</TableHead>
+                <TableHead className="min-w-56">Kesalahan yang Dirancang</TableHead>
+                <TableHead className="w-36">Label Benar</TableHead>
+                <TableHead className="w-36">Prediksi Sistem</TableHead>
+                <TableHead className="w-20 text-center">Benar?</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {isPending &&
+                [0, 1, 2, 3].map((i) => (
+                  <TableRow key={i}>
+                    <TableCell colSpan={7}>
+                      <Skeleton className="h-8 w-full" />
+                    </TableCell>
+                  </TableRow>
+                ))}
+              {data?.items.length === 0 && (
+                <TableRow>
+                  <TableCell colSpan={7} className="py-8 text-center text-muted-foreground">
+                    Golden dataset kosong
+                  </TableCell>
+                </TableRow>
               )}
               {data?.items.map((item) => (
-                <tr key={item.clause_id} className={cn("hover:bg-gray-50", item.is_correct === false && "bg-red-50/30")}>
-                  <td className="px-4 py-3 font-mono text-xs text-gray-500">{item.clause_id}</td>
-                  <td className="px-4 py-3">
-                    <span className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">{item.category}</span>
-                  </td>
-                  <td className="px-4 py-3 max-w-xs">
+                <TableRow key={item.clause_id} className={cn("align-top", item.is_correct === false && "bg-red-500/5")}>
+                  <TableCell className="font-mono text-xs text-muted-foreground">{item.clause_id}</TableCell>
+                  <TableCell>
+                    <Badge variant="secondary">{item.category}</Badge>
+                  </TableCell>
+                  <TableCell className="max-w-sm whitespace-normal">
                     <ExpandableClause text={item.clause} />
                     {item.violated_articles.length > 0 && (
-                      <div className="mt-1 flex flex-wrap gap-1">
-                        {item.violated_articles.map((a) => (
-                          <span key={a} className="text-xs bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded border border-blue-100">{a}</span>
+                      <div className="mt-1.5 flex flex-wrap gap-1">
+                        {item.violated_articles.map((article) => (
+                          <Badge key={article} variant="outline" className={cn("border-transparent", toneClasses.info.soft)}>
+                            {article}
+                          </Badge>
                         ))}
                       </div>
                     )}
-                  </td>
-                  <td className="px-4 py-3 max-w-xs">
-                    <p className="text-xs text-gray-600 leading-relaxed">{item.error_description}</p>
-                  </td>
-                  <td className="px-4 py-3">
-                    <StatusBadge status={item.expected_status} />
-                  </td>
-                  <td className="px-4 py-3">
-                    {item.predicted_status
-                      ? <StatusBadge status={item.predicted_status} />
-                      : <span className="text-xs text-gray-400">Belum ada</span>
-                    }
-                  </td>
-                  <td className="px-4 py-3 text-center">
-                    {item.is_correct == null ? (
-                      <MinusCircle size={18} className="text-gray-300 mx-auto" />
-                    ) : item.is_correct ? (
-                      <CheckCircle2 size={18} className="text-green-500 mx-auto" />
+                  </TableCell>
+                  <TableCell className="max-w-xs whitespace-normal text-xs leading-relaxed text-muted-foreground">
+                    {item.error_description}
+                  </TableCell>
+                  <TableCell>
+                    <StatusBadge meta={verdictMeta(item.expected_status)} />
+                  </TableCell>
+                  <TableCell>
+                    {item.predicted_status ? (
+                      <StatusBadge meta={verdictMeta(item.predicted_status)} />
                     ) : (
-                      <XCircle size={18} className="text-red-500 mx-auto" />
+                      <span className="text-xs text-muted-foreground">Belum ada</span>
                     )}
-                  </td>
-                </tr>
+                  </TableCell>
+                  <TableCell className="text-center">
+                    <CorrectIcon value={item.is_correct} />
+                  </TableCell>
+                </TableRow>
               ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            </TableBody>
+          </Table>
+        </Card>
+      )}
 
-      <p className="text-xs text-gray-400">
-        Prediksi diambil dari file evaluasi terbaru GPT-5.4-mini.
-        Jalankan <code className="bg-gray-100 px-1 rounded">run_ablation.sh</code> untuk memperbarui.
+      <p className="text-xs text-muted-foreground">
+        Prediksi diambil dari file evaluasi terbaru GPT-5.4-mini. Jalankan{" "}
+        <code className="rounded bg-muted px-1 py-0.5 font-mono">run_ablation.sh</code> untuk memperbarui.
       </p>
-    </div>
+    </>
   );
 }

@@ -85,6 +85,7 @@ out/
 frontend/dist/
 frontend/.next/
 frontend/node_modules/
+frontend/tsconfig.tsbuildinfo
 frontend/.pnpm-store/
 
 # ===================
