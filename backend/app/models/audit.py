@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, computed_field
 from typing import List, Optional
 from datetime import datetime
 from enum import Enum
@@ -20,11 +20,28 @@ class EvidenceItem(BaseModel):
     relevance_score: float = Field(..., ge=0.0, le=1.0, description="Relevance score")
 
 
+# Tingkat risiko ordinal (Subbab 3.2 variabel perantara) dan pemetaan numeriknya
+RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75, "CRITICAL": 1.0}
+RISK_LEVEL_BY_SCORE = {v: k for k, v in RISK_SCORE_MAP.items()}
+
+
+class ViolatedArticle(BaseModel):
+    regulation: str = ""
+    article: str = ""
+    violation_detail: str = ""
+    required_value: Optional[str] = None
+    actual_value: Optional[str] = None
+    # True = pasal yang dikutip ada di Top-K hasil retrieval; False = ungrounded;
+    # None = tidak dapat diperiksa (Subbab 3.3.3)
+    grounded: Optional[bool] = None
+
+
 class AgentVerdict(BaseModel):
     agent_name: str = Field(..., description="Agent name (BI/OJK)")
     status: ComplianceStatus
     confidence: float = Field(..., ge=0.0, le=1.0)
     violations: List[str] = Field(default_factory=list)
+    violated_articles: List[ViolatedArticle] = Field(default_factory=list, description="Pelanggaran per pasal beserta flag grounded")
     evidence: List[EvidenceItem] = Field(default_factory=list)
     reasoning: str = Field(..., description="Agent reasoning")
     checklist_topic: Optional[str] = Field(None, description="Regulatory checklist topic used")
@@ -52,9 +69,10 @@ class AuditResponse(BaseModel):
     
     final_status: ComplianceStatus = Field(..., description="Final compliance status")
     overall_confidence: float = Field(..., ge=0.0, le=1.0)
-    risk_score: float = Field(..., ge=0.0, le=1.0, description="Risk score (0=low, 1=high)")
-    
-    violations: List[str] = Field(default_factory=list, description="All violations found")
+    risk_score: float = Field(..., ge=0.0, le=1.0, description="Pemetaan numerik tingkat risiko (LOW 0,25 · MEDIUM 0,5 · HIGH 0,75 · CRITICAL 1,0); 0 = tidak dinilai")
+
+    violations: List[str] = Field(default_factory=list, description="Pelanggaran pasal dari agen BI dan OJK")
+    regulatory_conflicts: List[str] = Field(default_factory=list, description="Konflik antar-regulator yang dicatat Conflict Resolver")
     recommendations: List[str] = Field(default_factory=list, description="Recommendations")
     
     latency_ms: float = Field(..., description="Processing time in milliseconds")
@@ -71,6 +89,12 @@ class AuditResponse(BaseModel):
     evidence_trail: List[dict] = Field(default_factory=list, description="Rujukan pasal Top-K (regulator, dokumen, pasal, relevance_score)")
     analysis_mode: Optional[str] = Field(None, description="multi_agent_rag | llm_only | gate_rejected | noise_filtered | unclear_text | ...")
     retrieval_mode: Optional[str] = Field(None, description="hybrid | dense | none")
+
+    @computed_field
+    @property
+    def risk_level(self) -> Optional[str]:
+        """Tingkat risiko ordinal; None bila risiko tidak dinilai (gate menolak, mode LLM-only)."""
+        return RISK_LEVEL_BY_SCORE.get(round(self.risk_score, 2))
 
 
 class AuditHistoryItem(BaseModel):

@@ -468,7 +468,7 @@ class RAGAuditService:
             "risk_score": self._calculate_risk_score(result),
             "bi_verdict": result.bi_verdict or None,
             "ojk_verdict": result.ojk_verdict or None,
-            "violations": self._extract_violations(result),
+            "regulatory_conflicts": self._extract_conflicts(result),
             "recommendations": result.final_verdict.recommendations if result.final_verdict else [],
             "evidence_trail": self._build_evidence_trail(result),
             "analysis_mode": "multi_agent_rag"
@@ -525,7 +525,8 @@ class RAGAuditService:
         return {
             "final_status": verdict["status"],
             "overall_confidence": verdict["confidence"],
-            "risk_score": 1 - verdict["confidence"],
+            # Tanpa Conflict Resolver tidak ada tingkat risiko (bukan 1 − confidence)
+            "risk_score": None,
             "bi_verdict": verdict if regulator in ["all", "BI"] else None,
             "ojk_verdict": verdict if regulator in ["all", "OJK"] else None,
             "violations": verdict.get("violations", []),
@@ -637,8 +638,8 @@ RESPON DALAM FORMAT JSON:
             return result.final_verdict.risk_score
         return "LOW"
     
-    def _extract_violations(self, result) -> List[str]:
-        """Extract violations from audit result."""
+    def _extract_conflicts(self, result) -> List[str]:
+        """Konflik antar-regulator dari Conflict Resolver (bukan pelanggaran pasal)."""
         violations = []
         if result.final_verdict:
             for conflict in result.final_verdict.regulatory_conflicts:

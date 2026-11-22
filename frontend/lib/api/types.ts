@@ -44,11 +44,24 @@ export interface EvidenceItem {
   relevance_score: number;
 }
 
+/** Pelanggaran per pasal; grounded=false = pasal tidak ada di Top-K retrieval. */
+export interface ViolatedArticle {
+  regulation: string;
+  article: string;
+  violation_detail: string;
+  required_value?: string | null;
+  actual_value?: string | null;
+  grounded?: boolean | null;
+}
+
+export type RiskLevel = "LOW" | "MEDIUM" | "HIGH" | "CRITICAL";
+
 export interface AgentVerdict {
   agent_name: string;
   status: ComplianceStatus;
   confidence: number;
   violations: string[];
+  violated_articles?: ViolatedArticle[];
   evidence: EvidenceItem[];
   reasoning: string;
   checklist_topic?: string | null;
@@ -77,7 +90,10 @@ export interface AuditResponse {
   final_status: ComplianceStatus;
   overall_confidence: number;
   risk_score: number;
+  /** Tingkat risiko ordinal; null bila tidak dinilai (gate menolak, mode LLM-only). */
+  risk_level?: RiskLevel | null;
   violations: string[];
+  regulatory_conflicts?: string[];
   recommendations: string[];
   latency_ms: number;
   model_used?: string;
@@ -129,8 +145,9 @@ export interface UsageStats {
 
 export interface ExperimentRun {
   run_id: string;
+  run_name?: string | null;
   experiment_id: string;
-  experiment_name: string;
+  experiment_name?: string | null;
   status: string;
   start_time: string;
   end_time?: string | null;
@@ -178,5 +195,16 @@ export interface GoldenDatasetResponse {
   accuracy?: number | null;
   has_predictions: boolean;
   evaluation_file?: string | null;
+  evaluation_timestamp?: string | null;
+  model?: string | null;
+  retrieval_strategy?: string | null;
+  /** Ringkasan ulangan (repeat_*_xN.json) yang memuat run ini. */
+  repeat?: {
+    file: string;
+    n_runs?: number | null;
+    run_index: number;
+    accuracy_mean?: number | null;
+    accuracy_sd?: number | null;
+  } | null;
   items: GoldenDatasetItem[];
 }

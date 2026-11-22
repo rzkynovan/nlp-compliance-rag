@@ -20,7 +20,7 @@ import type { AgentVerdict, AuditResponse } from "@/lib/api";
 import {
   queryTypeMeta,
   retrievalModeLabel,
-  riskTone,
+  riskMeta,
   skippedModeMeta,
   statusMeta,
   toneClasses,
@@ -241,9 +241,22 @@ function AgentDetailDialog({
                   const separator = violation.indexOf(":");
                   const heading = separator > 0 ? violation.slice(0, separator).trim() : "";
                   const detail = separator > 0 ? violation.slice(separator + 1).trim() : violation;
+                  const grounded = verdict.violated_articles?.[index]?.grounded;
                   return (
                     <li key={index} className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
-                      {heading && <p className={cn("text-xs font-semibold", toneClasses.danger.text)}>{heading}</p>}
+                      <div className="flex flex-wrap items-center gap-1.5">
+                        {heading && <p className={cn("text-xs font-semibold", toneClasses.danger.text)}>{heading}</p>}
+                        {grounded === false && (
+                          <Badge
+                            variant="outline"
+                            className={cn("border-transparent", toneClasses.warning.soft)}
+                            title="Pasal yang dikutip tidak ada di Top-K hasil retrieval"
+                          >
+                            <AlertTriangle data-icon="inline-start" />
+                            ungrounded
+                          </Badge>
+                        )}
+                      </div>
                       <p className="text-sm leading-relaxed">{detail}</p>
                     </li>
                   );
@@ -393,11 +406,11 @@ export function ResultCard({ result }: { result: AuditResponse }) {
           </div>
           <div className="flex flex-wrap items-center gap-x-6 gap-y-2">
             <Metric label="Confidence" value={formatPercent(result.overall_confidence)} />
-            {result.risk_score > 0 && (
+            {result.risk_level && (
               <Metric
-                label="Risk"
-                value={formatPercent(result.risk_score)}
-                className={toneClasses[riskTone(result.risk_score)].text}
+                label="Risiko"
+                value={riskMeta[result.risk_level].label}
+                className={toneClasses[riskMeta[result.risk_level].tone].text}
               />
             )}
             <Metric label="Latency" value={formatLatency(result.latency_ms)} />
@@ -457,6 +470,25 @@ export function ResultCard({ result }: { result: AuditResponse }) {
                   <li key={index} className="flex gap-2 text-sm leading-relaxed">
                     <span className="mt-2 size-1.5 shrink-0 rounded-full bg-red-500" />
                     <span>{violation}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          </>
+        )}
+
+        {(result.regulatory_conflicts?.length ?? 0) > 0 && (
+          <>
+            <Separator />
+            <section className="flex flex-col gap-2">
+              <SectionTitle icon={AlertTriangle} className={toneClasses.warning.text}>
+                Konflik Antar-Regulator ({result.regulatory_conflicts!.length})
+              </SectionTitle>
+              <ul className="flex flex-col gap-1.5">
+                {result.regulatory_conflicts!.map((conflict, index) => (
+                  <li key={index} className="flex gap-2 text-sm leading-relaxed">
+                    <span className="mt-2 size-1.5 shrink-0 rounded-full bg-amber-500" />
+                    <span>{conflict}</span>
                   </li>
                 ))}
               </ul>

@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { errorMessage, getGoldenDataset, type GoldenDatasetItem, queryKeys } from "@/lib/api";
 import { toneClasses, verdictMeta } from "@/lib/compliance";
-import { cn, csvCell, downloadFile } from "@/lib/utils";
+import { cn, csvCell, downloadFile, formatDateTime } from "@/lib/utils";
 
 const CLAUSE_PREVIEW_LENGTH = 100;
 
@@ -125,9 +125,31 @@ export default function TestingPage() {
       </div>
 
       {data?.evaluation_file && (
-        <p className="rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
-          Sumber prediksi: <span className="font-mono break-all">{data.evaluation_file}</span>
-        </p>
+        <div className="flex flex-col gap-1 rounded-lg bg-muted px-3 py-2 text-xs text-muted-foreground">
+          <p>
+            Prediksi dari satu run evaluasi
+            {data.model && <> · {data.model}</>}
+            {data.retrieval_strategy && <> · {data.retrieval_strategy}</>}
+            {data.evaluation_timestamp && <> · {formatDateTime(data.evaluation_timestamp)}</>}
+            {data.repeat && (
+              <>
+                {" "}
+                (ulangan ke-{data.repeat.run_index} dari {data.repeat.n_runs})
+              </>
+            )}
+          </p>
+          {data.repeat?.accuracy_mean != null && (
+            <p>
+              Akurasi rerata {data.repeat.n_runs} ulangan (angka di laporan):{" "}
+              <span className="font-medium text-foreground tabular-nums">
+                {data.repeat.accuracy_mean.toFixed(3)} ± {(data.repeat.accuracy_sd ?? 0).toFixed(3)}
+              </span>
+            </p>
+          )}
+          <p>
+            Sumber: <span className="font-mono break-all">{data.evaluation_file}</span>
+          </p>
+        </div>
       )}
 
       {error ? (

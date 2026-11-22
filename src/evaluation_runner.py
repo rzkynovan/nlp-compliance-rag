@@ -549,9 +549,10 @@ def summarize_repeats(outputs: List[Dict]) -> Dict:
     getters = {
         "accuracy_6class":             lambda o: o["metrics_6class"]["accuracy"],
         "macro_f1_6class":             lambda o: o["metrics_6class"]["macro_f1"],
-        "recall_non_compliant_strict": lambda o: o["metrics"]["recall_non_compliant_strict"],
-        "f1_non_compliant":            lambda o: o["metrics"]["per_class"]["NON_COMPLIANT"]["f1"],
-        "f1_partially_compliant":      lambda o: o["metrics"]["per_class"]["PARTIALLY_COMPLIANT"]["f1"],
+        "recall_non_compliant_strict": lambda o: o["metrics_6class"]["recall_non_compliant_strict"],
+        "recall_non_compliant_broad":  lambda o: o["metrics_6class"]["recall_non_compliant_broad"],
+        "f1_non_compliant":            lambda o: o["metrics_6class"]["per_class"]["NON_COMPLIANT"]["f1"],
+        "f1_partially_compliant":      lambda o: o["metrics_6class"]["per_class"]["PARTIALLY_COMPLIANT"]["f1"],
         "mrr":                         lambda o: o["retrieval"]["mrr"],
         "hit_rate_at_5":               lambda o: o["retrieval"].get("hit_rate_at_5", 0.0),
         "avg_latency_ms":              lambda o: o["avg_latency_ms"],
@@ -576,58 +577,75 @@ def summarize_repeats(outputs: List[Dict]) -> Dict:
     }
 
 
-def _log_to_mlflow(output: Dict, run_name: str, tracking_uri: str = None):
+def _mlflow_payload(output: Dict) -> Dict:
+    """Param, metrik, dan tag satu run evaluasi untuk MLflow.
+
+    Metrik utama memakai skema 6 kelas (dipakai laporan Semhas); skema 4 kelas lama
+    tetap dicatat dengan akhiran ``_4class``.
+    """
+    m6 = output.get("metrics_6class") or output["metrics"]
+    m4 = output["metrics"]
+    r = output["retrieval"]
+    params = {
+        "provider":       output["provider"],
+        "model":          output["model"],
+        "n_samples":      m6["total"],
+        "retrieval_mode": ",".join(f"{k}={v}" for k, v in output.get("retrieval_setup", {}).items()),
+    }
+    metrics = {
+        "accuracy":                    m6["accuracy"],
+        "macro_precision":             m6["macro_precision"],
+        "macro_recall":                m6["macro_recall"],
+        "macro_f1":                    m6["macro_f1"],
+        "recall_non_compliant_strict": m6["recall_non_compliant_strict"],
+        "recall_non_compliant_broad":  m6["recall_non_compliant_broad"],
+        "accuracy_4class":             m4["accuracy"],
+        "macro_f1_4class":             m4["macro_f1"],
+        "avg_latency_ms":              output["avg_latency_ms"],
+        "citation_grounding_rate":     output.get("citation_grounding", {}).get("citation_grounding_rate") or 0,
+        "mrr":                         r["mrr"],
+        "hit_rate_at_3":               r.get("hit_rate_at_3", 0),
+        "hit_rate_at_5":               r.get("hit_rate_at_5", 0),
+    }
+    for cls, cm in m6["per_class"].items():
+        if cm["tp"] + cm["fn"] > 0:
+            key = cls.lower()
+            metrics.update({
+                f"{key}_precision": cm["precision"],
+                f"{key}_recall":    cm["recall"],
+                f"{key}_f1":        cm["f1"],
+            })
+    tags = {
+        "source": "evaluation_runner",
+        "eval_timestamp": output.get("timestamp", ""),
+        "strategy": output.get("retrieval_setup", {}).get("strategy", ""),
+    }
+    return {"params": params, "metrics": metrics, "tags": tags}
+
+
+def _log_to_mlflow(output: Dict, run_name: str, tracking_uri: str = None,
+                   start_time_ms: int = None, extra_tags: Dict = None):
+    """Catat satu run evaluasi ke MLflow. ``start_time_ms`` dipakai saat backfill
+    (scripts/backfill_mlflow.py) agar urutan run mengikuti waktu evaluasi aslinya."""
     try:
         import mlflow
+        from mlflow.tracking import MlflowClient
 
         uri = tracking_uri or os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5001")
         mlflow.set_tracking_uri(uri)
-        mlflow.set_experiment("compliance_evaluation")
+        exp = mlflow.set_experiment("compliance_evaluation")
+        payload = _mlflow_payload(output)
+        tags = {**payload["tags"], **(extra_tags or {})}
 
-        with mlflow.start_run(run_name=run_name):
-            # Parameters
-            mlflow.log_params({
-                "provider":       output["provider"],
-                "model":          output["model"],
-                "n_samples":      output["metrics"]["total"],
-                "retrieval_mode": ",".join(f"{k}={v}" for k, v in output.get("retrieval_setup", {}).items()),
-            })
+        run_id = None
+        if start_time_ms is not None:
+            run_id = MlflowClient(uri).create_run(
+                exp.experiment_id, start_time=start_time_ms, run_name=run_name, tags=tags,
+            ).info.run_id
 
-            # Metrics — classification
-            m = output["metrics"]
-            mlflow.log_metrics({
-                "accuracy":                    m["accuracy"],
-                "macro_precision":             m["macro_precision"],
-                "macro_recall":                m["macro_recall"],
-                "macro_f1":                    m["macro_f1"],
-                "recall_non_compliant_strict": m["recall_non_compliant_strict"],
-                "recall_non_compliant_broad":  m["recall_non_compliant_broad"],
-                "avg_latency_ms":              output["avg_latency_ms"],
-            })
-
-            # Metrics — retrieval
-            r = output["retrieval"]
-            m6 = output.get("metrics_6class", {})
-            mlflow.log_metrics({
-                "accuracy_6class": m6.get("accuracy", 0),
-                "macro_f1_6class": m6.get("macro_f1", 0),
-                "citation_grounding_rate": output.get("citation_grounding", {}).get("citation_grounding_rate") or 0,
-            })
-            mlflow.log_metrics({
-                "mrr":           r["mrr"],
-                "hit_rate_at_3": r.get("hit_rate_at_3", 0),
-                "hit_rate_at_5": r.get("hit_rate_at_5", 0),
-            })
-
-            # Per-class
-            for cls, cm in m["per_class"].items():
-                if cm["tp"] + cm["fn"] > 0:
-                    key = cls.lower()
-                    mlflow.log_metrics({
-                        f"{key}_precision": cm["precision"],
-                        f"{key}_recall":    cm["recall"],
-                        f"{key}_f1":        cm["f1"],
-                    })
+        with mlflow.start_run(run_id=run_id, run_name=None if run_id else run_name, tags=tags):
+            mlflow.log_params(payload["params"])
+            mlflow.log_metrics(payload["metrics"])
 
             # Artifact
             import tempfile, os as _os

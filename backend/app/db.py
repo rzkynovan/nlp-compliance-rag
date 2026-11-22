@@ -187,8 +187,12 @@ def _from_row(row: AuditHistoryRow, response_class, verdict_class, evidence_clas
             status      = status_class(d["status"]) if "status" in d else status_class.UNCLEAR,
             confidence  = d.get("confidence", 0.5),
             violations  = d.get("violations", []),
+            violated_articles = d.get("violated_articles", []),
             evidence    = evidence,
             reasoning   = d.get("reasoning", ""),
+            checklist_topic   = d.get("checklist_topic"),
+            checklist_covered = d.get("checklist_covered", []),
+            missing_elements  = d.get("missing_elements", []),
         )
 
     return response_class(

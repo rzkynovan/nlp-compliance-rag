@@ -1,7 +1,7 @@
 from fastapi import APIRouter, HTTPException, Depends
 from typing import List, Optional
 from app.models.experiment import (
-    ExperimentRun, ExperimentMetrics, ExperimentParams,
+    ExperimentRun, ExperimentRunSummary, ExperimentMetrics, ExperimentParams,
     ExperimentListResponse, ExperimentCreate, ExperimentComparison
 )
 from app.ml.tracking import ExperimentTracker
@@ -51,7 +51,7 @@ async def complete_experiment(run_id: str, metrics: ExperimentMetrics):
     return {"status": "completed", "run_id": run_id}
 
 
-@router.get("/{run_id}", response_model=ExperimentRun)
+@router.get("/{run_id}", response_model=ExperimentRunSummary)
 async def get_experiment(run_id: str):
     run = tracker.get_run(run_id)
     

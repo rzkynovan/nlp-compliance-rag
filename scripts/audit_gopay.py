@@ -75,7 +75,7 @@ async def audit_all(clauses, regulator, top_k):
                 "risk_score": r.get("risk_score"),
                 "bi": _agent(r.get("bi_verdict")),
                 "ojk": _agent(r.get("ojk_verdict")),
-                "conflicts": r.get("violations") or [],
+                "conflicts": r.get("regulatory_conflicts") or [],
                 "evidence_trail": r.get("evidence_trail") or [],
                 "latency_ms": r.get("latency_ms", round((time.time() - t0) * 1000)),
             }

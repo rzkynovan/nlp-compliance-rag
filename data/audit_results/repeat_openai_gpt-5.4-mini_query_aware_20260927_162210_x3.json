@@ -39,6 +39,17 @@
         0.8333
       ]
     },
+    "recall_non_compliant_broad": {
+      "mean": 1.0,
+      "sd": 0.0,
+      "min": 1.0,
+      "max": 1.0,
+      "values": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
     "f1_non_compliant": {
       "mean": 0.903,
       "sd": 0.1001,

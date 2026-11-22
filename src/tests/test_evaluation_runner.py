@@ -92,17 +92,36 @@ def test_citation_grounding_rate():
 
 def test_summarize_repeats_mean_sd_and_unstable():
     def out(acc, pred):
-        per = {c: {"f1": 0.5} for c in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT")}
+        per6 = {c: {"f1": 0.5} for c in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT")}
+        per4 = {c: {"f1": 1.0} for c in ("NON_COMPLIANT", "PARTIALLY_COMPLIANT")}
         return {"run_name": f"r{acc}", "avg_latency_ms": 1000,
-                "metrics_6class": {"accuracy": acc, "macro_f1": acc},
-                "metrics": {"recall_non_compliant_strict": acc, "per_class": per},
+                "metrics_6class": {"accuracy": acc, "macro_f1": acc, "recall_non_compliant_strict": acc,
+                                   "recall_non_compliant_broad": 1.0, "per_class": per6},
+                # Skema 4 kelas lama sengaja berbeda: ringkasan harus memakai skema 6 kelas
+                "metrics": {"recall_non_compliant_strict": 1.0, "per_class": per4},
                 "retrieval": {"mrr": 0.5, "hit_rate_at_5": 0.8},
                 "results": [{"clause_id": "BAB4-01", "predicted_6": pred},
                             {"clause_id": "BAB1-01", "predicted_6": "NOT_ADDRESSED"}]}
     s = er.summarize_repeats([out(0.5, "NON_COMPLIANT"), out(1.0, "PARTIALLY_COMPLIANT")])
     assert s["metrics"]["accuracy_6class"]["mean"] == 0.75
     assert s["metrics"]["accuracy_6class"]["sd"] == pytest.approx(0.3536, abs=1e-4)
+    assert s["metrics"]["recall_non_compliant_strict"]["mean"] == 0.75
+    assert s["metrics"]["f1_non_compliant"]["mean"] == 0.5
     assert s["unstable_clauses"] == ["BAB4-01"]
+
+
+def test_mlflow_payload_uses_six_class_metrics():
+    out = {"provider": "openai", "model": "m", "avg_latency_ms": 10, "timestamp": "t",
+           "retrieval_setup": {"strategy": "dense"}, "retrieval": {"mrr": 0.5},
+           "metrics": {"accuracy": 1.0, "macro_f1": 1.0, "total": 12},
+           "metrics_6class": {"accuracy": 0.9, "macro_precision": 0.8, "macro_recall": 0.8, "macro_f1": 0.8,
+                              "recall_non_compliant_strict": 0.7, "recall_non_compliant_broad": 1.0, "total": 12,
+                              "per_class": {"NON_COMPLIANT": {"tp": 1, "fn": 0, "precision": 1, "recall": 1, "f1": 1},
+                                            "UNCLEAR": {"tp": 0, "fn": 0, "precision": 0, "recall": 0, "f1": 0}}}}
+    p = er._mlflow_payload(out)
+    assert p["metrics"]["accuracy"] == 0.9 and p["metrics"]["accuracy_4class"] == 1.0
+    assert "non_compliant_f1" in p["metrics"] and "unclear_f1" not in p["metrics"]
+    assert p["tags"]["strategy"] == "dense"
 
 
 def test_build_result_has_agent_diagnostics():

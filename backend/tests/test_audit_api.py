@@ -68,8 +68,9 @@ class TestMapRiskScore:
         assert _map_risk_score(0.8) == 0.8
         assert _map_risk_score(0.0) == 0.0
 
-    def test_none_returns_half(self):
-        assert _map_risk_score(None) == 0.5
+    def test_none_means_not_assessed(self):
+        # None = mode LLM-only tanpa Conflict Resolver → risiko tidak dinilai
+        assert _map_risk_score(None) == 0.0
 
     def test_unknown_string_returns_half(self):
         assert _map_risk_score("EXTREME") == 0.5

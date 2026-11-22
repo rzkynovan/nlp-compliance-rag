@@ -182,26 +182,26 @@ class TestCalculateRiskScore:
         assert service._calculate_risk_score(result) == "LOW"
 
 
-# ── _extract_violations ───────────────────────────────────────────────────────
+# ── _extract_conflicts ────────────────────────────────────────────────────────
 
-class TestExtractViolations:
+class TestExtractConflicts:
     @pytest.fixture
     def service(self, mock_settings, tmp_path):
         svc, _ = _make_service(mock_settings, tmp_path)
         return svc
 
-    def test_no_violations(self, service):
+    def test_no_conflicts(self, service):
         result = MagicMock()
         result.final_verdict.regulatory_conflicts = []
-        assert service._extract_violations(result) == []
+        assert service._extract_conflicts(result) == []
 
-    def test_violations_formatted(self, service):
+    def test_conflicts_formatted(self, service):
         conflict = MagicMock()
         conflict.type = "DIRECT_CONFLICT"
         conflict.description = "Saldo melebihi batas"
         result = MagicMock()
         result.final_verdict.regulatory_conflicts = [conflict]
-        violations = service._extract_violations(result)
+        violations = service._extract_conflicts(result)
         assert len(violations) == 1
         assert "DIRECT_CONFLICT" in violations[0]
         assert "Saldo melebihi batas" in violations[0]
@@ -253,6 +253,8 @@ class TestAnalyzeWithRag:
         assert "final_status" in result
         assert "overall_confidence" in result
         assert result["analysis_mode"] == "llm_only"
+        # Tanpa Conflict Resolver risiko tidak dinilai
+        assert result["risk_score"] is None
 
     @pytest.mark.asyncio
     async def test_llm_only_bi_verdict_for_bi_regulator(self, service_with_llm_only):

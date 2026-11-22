@@ -9,6 +9,7 @@ Advanced users only.
 """
 
 import json
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -43,32 +44,63 @@ GROUND_TRUTH = _load_golden_dataset()
 AUDIT_RESULTS_DIR = Path("/app/data/audit_results")
 
 
-def _latest_eval_file() -> Optional[Path]:
+_TS_RE = re.compile(r"(\d{8}_\d{6})\.json$")
+
+
+def _is_valid_run(data: dict) -> bool:
+    return not data.get("invalid") and not any(r.get("error") for r in data.get("results", []))
+
+
+def _latest_eval() -> Optional[tuple]:
     """
-    File evaluasi GPT-5.4-mini terbaru dengan konfigurasi proposal
-    (RETRIEVAL_STRATEGY=query_aware). Run ablation (dense / rrf_equal) diabaikan.
-    Nama lama tanpa strategi (sebelum Phase 14) tetap dikenali sebagai fallback.
+    (path, isi) file evaluasi GPT-5.4-mini terbaru yang valid dengan konfigurasi proposal
+    (RETRIEVAL_STRATEGY=query_aware). Run ablation (dense / rrf_equal) dan run yang
+    berisi error API diabaikan. Urutan memakai timestamp di nama file, bukan mtime
+    (mtime sama semua setelah git checkout di server).
     """
     if not AUDIT_RESULTS_DIR.exists():
         return None
-    files = [
-        f for f in AUDIT_RESULTS_DIR.glob("eval_openai_gpt-5.4-mini_*.json")
-        if not any(tag in f.name for tag in ("_dense_", "_rrf_equal_"))
-    ]
-    return max(files, key=lambda f: f.stat().st_mtime) if files else None
+    files = sorted(
+        (f for f in AUDIT_RESULTS_DIR.glob("eval_openai_gpt-5.4-mini_*.json")
+         if not any(tag in f.name for tag in ("_dense_", "_rrf_equal_")) and _TS_RE.search(f.name)),
+        key=lambda f: _TS_RE.search(f.name).group(1),
+        reverse=True,
+    )
+    for f in files:
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if _is_valid_run(data):
+            return f, data
+    return None
 
 
-def _load_latest_predictions() -> dict:
-    """Load latest GPT-5.4-mini evaluation results if available."""
-    latest = _latest_eval_file()
-    if latest is None:
-        return {}
-    try:
-        with open(latest) as f:
-            data = json.load(f)
-        return {r["clause_id"]: r for r in data.get("results", [])}
-    except Exception:
-        return {}
+def _repeat_summary(run_name: str) -> Optional[dict]:
+    """Ringkasan repeat_*_xN.json yang memuat run ini (rerata ± SD di laporan)."""
+    for f in sorted(AUDIT_RESULTS_DIR.glob("repeat_*.json")):
+        try:
+            data = json.loads(f.read_text(encoding="utf-8"))
+        except Exception:
+            continue
+        if run_name in data.get("runs", []):
+            acc = data.get("metrics", {}).get("accuracy_6class", {})
+            return {
+                "file": f.name,
+                "n_runs": data.get("n_runs"),
+                "run_index": data["runs"].index(run_name) + 1,
+                "accuracy_mean": acc.get("mean"),
+                "accuracy_sd": acc.get("sd"),
+            }
+    return None
+
+
+class RepeatSummary(BaseModel):
+    file: str
+    n_runs: Optional[int] = None
+    run_index: int
+    accuracy_mean: Optional[float] = None
+    accuracy_sd: Optional[float] = None
 
 
 class GoldenDatasetItem(BaseModel):
@@ -93,18 +125,19 @@ class GoldenDatasetResponse(BaseModel):
     accuracy: Optional[float] = None
     has_predictions: bool
     evaluation_file: Optional[str] = None
+    evaluation_timestamp: Optional[str] = None
+    model: Optional[str] = None
+    retrieval_strategy: Optional[str] = None
+    repeat: Optional[RepeatSummary] = None
     items: List[GoldenDatasetItem]
 
 
 @router.get("/golden-dataset", response_model=GoldenDatasetResponse)
 def get_golden_dataset():
-    predictions = _load_latest_predictions()
+    latest = _latest_eval()
+    eval_path, eval_data = latest if latest else (None, {})
+    predictions = {r["clause_id"]: r for r in eval_data.get("results", [])}
     has_predictions = bool(predictions)
-    eval_file = None
-
-    if has_predictions:
-        latest = _latest_eval_file()
-        eval_file = latest.name if latest else None
 
     items = []
     correct_count = 0
@@ -143,6 +176,10 @@ def get_golden_dataset():
         correct=correct_count if has_predictions else None,
         accuracy=accuracy,
         has_predictions=has_predictions,
-        evaluation_file=eval_file,
+        evaluation_file=eval_path.name if eval_path else None,
+        evaluation_timestamp=eval_data.get("timestamp"),
+        model=eval_data.get("model"),
+        retrieval_strategy=(eval_data.get("retrieval_setup") or {}).get("strategy"),
+        repeat=_repeat_summary(eval_data["run_name"]) if eval_data.get("run_name") else None,
         items=items,
     )

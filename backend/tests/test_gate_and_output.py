@@ -11,8 +11,8 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from app.api.v1.audit import _map_risk_score, _map_status
-from app.models.audit import ComplianceStatus
+from app.api.v1.audit import _extract_verdict_data, _map_risk_score, _map_status
+from app.models.audit import AuditResponse, ComplianceStatus
 
 
 @pytest.fixture
@@ -72,6 +72,37 @@ def test_evidence_trail_built_from_topk(service):
 def test_risk_score_mapping_includes_critical():
     assert _map_risk_score("CRITICAL") == 1.0
     assert _map_risk_score("LOW") == 0.25
+
+
+def test_risk_level_is_ordinal_and_none_when_not_assessed():
+    def response(risk):
+        agent = _extract_verdict_data(None, "BI_SPECIALIST")
+        return AuditResponse(
+            request_id="r", clause="c", bi_verdict=agent, ojk_verdict=agent,
+            final_status=ComplianceStatus.NON_COMPLIANT, overall_confidence=0.9,
+            risk_score=_map_risk_score(risk), latency_ms=1.0,
+        )
+    assert response("HIGH").risk_level == "HIGH"
+    assert response("HIGH").model_dump()["risk_level"] == "HIGH"
+    # Mode LLM-only (risk None) dan penolakan gate (0.0) tidak punya tingkat risiko
+    assert response(None).risk_level is None
+    assert response(0.0).risk_level is None
+
+
+def test_violated_articles_keep_grounded_flag():
+    verdict = _extract_verdict_data({
+        "verdict": "NON_COMPLIANT",
+        "confidence_score": 0.9,
+        "violated_articles": [
+            {"regulation": "PBI 23/6/PBI/2021", "article": "Pasal 160", "violation_detail": "Batas saldo",
+             "required_value": "Rp 2.000.000", "actual_value": "Rp 20.000.000", "grounded": True},
+            {"regulation": "POJK 22/2023", "article": "Pasal 99", "violation_detail": "Tidak ada di Top-K",
+             "grounded": False},
+        ],
+    }, "BI_SPECIALIST")
+    assert [a.grounded for a in verdict.violated_articles] == [True, False]
+    assert verdict.violated_articles[0].required_value == "Rp 2.000.000"
+    assert verdict.violations[0].startswith("PBI 23/6/PBI/2021 — Pasal 160: Batas saldo")
 
 
 def test_upload_pdf_extraction_uses_pymupdf():

@@ -14,17 +14,37 @@ import { toneClasses } from "@/lib/compliance";
 import { MLFLOW_URL } from "@/lib/config";
 import { cn, formatDateTime } from "@/lib/utils";
 
-const MAX_METRICS = 4;
+// Metrik yang dilaporkan di Bab 4 (skema 6 kelas), urut sesuai tabel laporan
+const KEY_METRICS: [key: string, label: string][] = [
+  ["accuracy", "Akurasi"],
+  ["macro_f1", "Macro-F1"],
+  ["recall_non_compliant_strict", "Recall NC ketat"],
+  ["recall_non_compliant_broad", "Recall NC longgar"],
+  ["mrr", "MRR"],
+  ["hit_rate_at_5", "Hit@5"],
+  ["citation_grounding_rate", "Grounding"],
+];
 
 function ExperimentCard({ run }: { run: ExperimentRun }) {
   const finished = run.status === "FINISHED";
-  const metrics = Object.entries(run.metrics ?? {}).slice(0, MAX_METRICS);
+  const params = run.params ?? {};
+  const tags = run.tags ?? {};
+  const metrics = KEY_METRICS.flatMap(([key, label]) => {
+    const value = run.metrics?.[key];
+    return typeof value === "number" ? [[label, value.toFixed(3)] as const] : [];
+  });
+  const latency = run.metrics?.avg_latency_ms;
+  if (typeof latency === "number") metrics.push(["Latensi", `${(latency / 1000).toFixed(1)} dtk`]);
 
   return (
     <Card size="sm">
       <CardHeader>
-        <CardTitle className="truncate">{run.experiment_name}</CardTitle>
-        <CardDescription>
+        <CardTitle className="truncate" title={run.run_name ?? run.run_id}>
+          {String(params.model ?? run.experiment_name ?? run.run_id)}
+        </CardTitle>
+        <CardDescription className="flex flex-wrap items-center gap-1.5">
+          {tags.strategy && <Badge variant="secondary">{tags.strategy}</Badge>}
+          {tags.repeat_group && <Badge variant="outline">ulangan x3</Badge>}
           <Badge variant="outline" className={cn("border-transparent", (finished ? toneClasses.success : toneClasses.warning).soft)}>
             {finished ? <CheckCircle2 data-icon="inline-start" /> : <FlaskConical data-icon="inline-start" />}
             {run.status}
@@ -43,10 +63,10 @@ function ExperimentCard({ run }: { run: ExperimentRun }) {
               Metrics
             </div>
             <dl className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-              {metrics.map(([key, value]) => (
-                <div key={key} className="flex min-w-0 justify-between gap-2">
-                  <dt className="truncate text-muted-foreground">{key}:</dt>
-                  <dd className="font-mono tabular-nums">{typeof value === "number" ? value.toFixed(3) : String(value)}</dd>
+              {metrics.map(([label, value]) => (
+                <div key={label} className="flex min-w-0 justify-between gap-2">
+                  <dt className="truncate text-muted-foreground">{label}</dt>
+                  <dd className="font-mono tabular-nums">{value}</dd>
                 </div>
               ))}
             </dl>
@@ -119,15 +139,17 @@ export default function ExperimentsPage() {
         </CardHeader>
         <CardContent className="flex flex-col gap-3 text-sm text-muted-foreground">
           <p>
-            MLflow digunakan untuk track metrik eksperimen, parameter model, dan artifacts. Setiap audit yang dijalankan akan
-            dicatat sebagai run eksperimen dengan metrics:
+            Setiap run evaluasi pada golden dataset (<code>src/evaluation_runner.py</code>) dicatat di MLflow beserta
+            parameter, metrik, dan file hasilnya. Audit dari halaman Audit tidak dicatat di sini; riwayatnya ada di
+            halaman Riwayat.
           </p>
           <ul className="list-inside list-disc space-y-1">
-            <li>Latency waktu proses</li>
-            <li>Confidence score</li>
-            <li>Tokens yang digunakan</li>
-            <li>Model yang dipakai</li>
+            <li>Klasifikasi 6 kelas: akurasi, macro-F1, recall Non-Compliant ketat dan longgar</li>
+            <li>Retrieval: MRR dan Hit@3/Hit@5</li>
+            <li>Citation grounding rate dan rata-rata latensi per klausul</li>
+            <li>Model LLM dan strategi retrieval (query_aware, rrf_equal, dense)</li>
           </ul>
+          <p>Run yang diberi label &ldquo;ulangan x3&rdquo; adalah tiga ulangan yang dirata-ratakan di laporan.</p>
           <Button asChild variant="outline" size="sm" className="self-start">
             <a href={MLFLOW_URL} target="_blank" rel="noopener noreferrer">
               Buka MLflow UI

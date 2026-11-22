@@ -43,45 +43,43 @@ class ExperimentTracker:
         if run_id == self.current_run_id or run_id is None:
             self.current_run_id = None
     
+    @staticmethod
+    def _run_to_dict(run, experiment_name: Optional[str] = None) -> Dict[str, Any]:
+        tags = run.data.tags or {}
+        return {
+            "run_id": run.info.run_id,
+            "run_name": getattr(run.info, "run_name", None) or tags.get("mlflow.runName"),
+            "experiment_id": run.info.experiment_id,
+            "experiment_name": experiment_name,
+            "status": run.info.status,
+            "start_time": datetime.fromtimestamp(run.info.start_time / 1000),
+            "end_time": datetime.fromtimestamp(run.info.end_time / 1000) if run.info.end_time else None,
+            "params": run.data.params,
+            "metrics": run.data.metrics,
+            # Tag internal MLflow (mlflow.*) tidak berguna di UI
+            "tags": {k: v for k, v in tags.items() if not k.startswith("mlflow.")},
+        }
+
     def get_run(self, run_id: str) -> Optional[Dict[str, Any]]:
         try:
             run = self.client.get_run(run_id)
-            return {
-                "run_id": run.info.run_id,
-                "experiment_id": run.info.experiment_id,
-                "status": run.info.status,
-                "start_time": datetime.fromtimestamp(run.info.start_time / 1000),
-                "end_time": datetime.fromtimestamp(run.info.end_time / 1000) if run.info.end_time else None,
-                "params": run.data.params,
-                "metrics": run.data.metrics,
-                "tags": run.data.tags
-            }
+            exp = self.client.get_experiment(run.info.experiment_id)
+            return self._run_to_dict(run, exp.name if exp else None)
         except Exception:
             return None
-    
+
     def list_experiments(self, skip: int = 0, limit: int = 20) -> List[Dict[str, Any]]:
-        experiments = self.client.search_experiments()
-        runs = []
-        
-        for exp in experiments:
-            exp_runs = self.client.search_runs(
-                experiment_ids=[exp.experiment_id],
-                max_results=limit
-            )
-            for run in exp_runs[skip:skip + limit]:
-                runs.append({
-                    "run_id": run.info.run_id,
-                    "experiment_id": exp.experiment_id,
-                    "experiment_name": exp.name,
-                    "status": run.info.status,
-                    "start_time": datetime.fromtimestamp(run.info.start_time / 1000),
-                    "end_time": datetime.fromtimestamp(run.info.end_time / 1000) if run.info.end_time else None,
-                    "params": run.data.params,
-                    "metrics": run.data.metrics
-                })
-        
-        return runs
-    
+        """Run semua eksperimen, terbaru dulu (start_time), lalu dipaginasi."""
+        names = {exp.experiment_id: exp.name for exp in self.client.search_experiments()}
+        if not names:
+            return []
+        runs = self.client.search_runs(
+            experiment_ids=list(names),
+            max_results=skip + limit,
+            order_by=["attributes.start_time DESC"],
+        )
+        return [self._run_to_dict(run, names.get(run.info.experiment_id)) for run in runs[skip:skip + limit]]
+
     def compare_runs(self, run_ids: List[str]) -> Dict[str, Any]:
         runs_data = []
         metrics_keys = set()

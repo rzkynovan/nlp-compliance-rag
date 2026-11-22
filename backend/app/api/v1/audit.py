@@ -13,7 +13,8 @@ from sqlalchemy import func, case
 
 from app.models.audit import (
     AuditRequest, AuditResponse, BatchAuditRequest, BatchAuditResponse,
-    ComplianceStatus, AgentVerdict, EvidenceItem, AuditHistoryItem
+    ComplianceStatus, AgentVerdict, EvidenceItem, AuditHistoryItem,
+    ViolatedArticle, RISK_SCORE_MAP,
 )
 from app.services.rag_service import get_rag_service
 from app.db import get_db, _to_row, _from_row, AuditHistoryRow
@@ -25,7 +26,6 @@ router = APIRouter(prefix="/audit", tags=["audit"])
 
 _SENTINEL = object()  # used by _extract_verdict_data for getattr fallback
 
-RISK_SCORE_MAP = {"LOW": 0.25, "MEDIUM": 0.5, "HIGH": 0.75, "CRITICAL": 1.0}
 
 
 def _map_status(status: str) -> ComplianceStatus:
@@ -48,7 +48,8 @@ def _map_status(status: str) -> ComplianceStatus:
 def _map_risk_score(risk_score) -> float:
     if isinstance(risk_score, str):
         return RISK_SCORE_MAP.get(risk_score.upper(), 0.5)
-    return float(risk_score) if risk_score is not None else 0.5
+    # None = risiko tidak dinilai (mode LLM-only tidak melewati Conflict Resolver)
+    return float(risk_score) if risk_score is not None else 0.0
 
 
 def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
@@ -79,7 +80,10 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
     # Extract violations - handle both dict and string formats
     raw_violations = _get("violations", "violated_articles", default=[])
     violations = []
+    violated_articles = []
     for v in raw_violations:
+        if hasattr(v, "model_dump"):
+            v = v.model_dump()
         if isinstance(v, dict):
             regulation = v.get("regulation", v.get("reg", ""))
             article    = v.get("article", v.get("pasal", ""))
@@ -101,6 +105,11 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
                 body += f" (nilai wajib: {required})"
 
             violations.append(f"{prefix}: {body}" if body else prefix)
+            violated_articles.append(ViolatedArticle(
+                regulation=regulation, article=article, violation_detail=detail or "",
+                required_value=required or None, actual_value=actual or None,
+                grounded=v.get("grounded"),
+            ))
         elif isinstance(v, str) and v.strip():
             violations.append(v.strip())
     
@@ -120,6 +129,7 @@ def _extract_verdict_data(verdict_data, agent_name: str) -> AgentVerdict:
         status=_map_status(_get("verdict", "status", default="UNCLEAR")),
         confidence=_get("confidence_score", "confidence", default=0.5),
         violations=violations,
+        violated_articles=violated_articles,
         evidence=evidence,
         reasoning=_get("reasoning_trace", "reasoning", default=""),
         checklist_topic=_get("checklist_topic", default=None),
@@ -148,8 +158,8 @@ async def analyze_sop(request: AuditRequest, current_user: UserResponse = Depend
         bi_verdict = _extract_verdict_data(result.get("bi_verdict"), "BI_SPECIALIST")
         ojk_verdict = _extract_verdict_data(result.get("ojk_verdict"), "OJK_SPECIALIST")
 
-        # Aggregate violations from both agents into root field
-        all_violations = list(result.get("violations") or [])
+        # Pelanggaran pasal kedua agen → field root; konflik antar-regulator terpisah
+        all_violations = []
         for v in (bi_verdict.violations or []):
             if v and v not in all_violations:
                 all_violations.append(v)
@@ -168,6 +178,7 @@ async def analyze_sop(request: AuditRequest, current_user: UserResponse = Depend
             overall_confidence=result.get("overall_confidence", 0.5),
             risk_score=_map_risk_score(result.get("risk_score")),
             violations=all_violations,
+            regulatory_conflicts=result.get("regulatory_conflicts") or [],
             recommendations=result.get("recommendations", []),
             latency_ms=result.get("latency_ms", latency_ms),
             model_used=result.get("model_used", "gpt-5.4-mini"),

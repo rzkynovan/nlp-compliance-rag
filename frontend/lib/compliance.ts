@@ -13,7 +13,7 @@ import {
   ShieldOff,
   XCircle,
 } from "lucide-react";
-import type { AnalysisMode, AuditResponse, ComplianceStatus, QueryType, RetrievalMode } from "@/lib/api/types";
+import type { AnalysisMode, AuditResponse, ComplianceStatus, QueryType, RetrievalMode, RiskLevel } from "@/lib/api/types";
 
 type Tone = "success" | "danger" | "warning" | "neutral" | "info";
 
@@ -161,11 +161,13 @@ export const regulatorOptions = [
   { value: "OJK", label: "OJK" },
 ] as const;
 
-export function riskTone(score: number): Tone {
-  if (score >= 0.7) return "danger";
-  if (score >= 0.4) return "warning";
-  return "success";
-}
+/** Tingkat risiko ordinal dari Conflict Resolver (bukan peluang). */
+export const riskMeta: Record<RiskLevel, { label: string; tone: Tone }> = {
+  LOW: { label: "Rendah", tone: "success" },
+  MEDIUM: { label: "Sedang", tone: "warning" },
+  HIGH: { label: "Tinggi", tone: "danger" },
+  CRITICAL: { label: "Kritis", tone: "danger" },
+};
 
 export function violationCount(result: Pick<AuditResponse, "bi_verdict" | "ojk_verdict">): number {
   return (result.bi_verdict?.violations?.length ?? 0) + (result.ojk_verdict?.violations?.length ?? 0);

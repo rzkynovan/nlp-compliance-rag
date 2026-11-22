@@ -44,6 +44,20 @@ class ExperimentRun(BaseModel):
     tags: Dict[str, str] = Field(default_factory=dict)
 
 
+class ExperimentRunSummary(BaseModel):
+    """Run MLflow apa adanya: params/metrics bebas kunci, sesuai yang dicatat evaluation_runner."""
+    run_id: str
+    run_name: Optional[str] = None
+    experiment_id: str
+    experiment_name: Optional[str] = None
+    status: ExperimentStatus
+    start_time: datetime
+    end_time: Optional[datetime] = None
+    params: Dict[str, str] = Field(default_factory=dict)
+    metrics: Dict[str, float] = Field(default_factory=dict)
+    tags: Dict[str, str] = Field(default_factory=dict)
+
+
 class ExperimentComparison(BaseModel):
     experiment_ids: List[str]
     comparison_table: List[Dict[str, Any]]
@@ -59,5 +73,5 @@ class ExperimentCreate(BaseModel):
 
 
 class ExperimentListResponse(BaseModel):
-    experiments: List[ExperimentRun]
+    experiments: List[ExperimentRunSummary]
     total: int
